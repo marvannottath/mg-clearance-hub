@@ -1090,18 +1090,6 @@ function AdminPanel({
                   ))}
                 </select>
 
-                <label style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--text-secondary)' }}>Stock Age:</label>
-                <select 
-                  className="filter-select"
-                  value={inventoryAgeFilter} 
-                  onChange={(e) => setInventoryAgeFilter(e.target.value)}
-                  style={{ padding: '0.35rem 0.75rem', fontSize: '0.75rem', borderRadius: '6px' }}
-                >
-                  <option value="ALL">All Ages</option>
-                  <option value="6">Aging &gt; 6 Months</option>
-                  <option value="12">Aging &gt; 12 Months (1 Year+)</option>
-                </select>
-
                 <label style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--text-secondary)' }}>Availability:</label>
                 <select 
                   className="filter-select"
@@ -1196,7 +1184,6 @@ function AdminPanel({
                     <th>Product Details</th>
                     <th>Brand</th>
                     <th>Stock</th>
-                    <th>Stock Age</th>
                     <th>Landing Cost</th>
                     <th>MRP Rate</th>
                     <th>Clearance Price</th>
@@ -1247,20 +1234,6 @@ function AdminPanel({
                             onChange={(e) => onUpdateStock(p.id, e.target.value)}
                             style={{ width: '65px', padding: '0.25rem 0.5rem', textAlign: 'center', background: 'rgba(255,255,255,0.01)' }}
                           />
-                        </td>
-                        <td>
-                          {(() => {
-                            const ageMonths = getProductStockAgeMonths(p);
-                            return ageMonths >= 12 ? (
-                              <span className="badge" style={{ background: 'rgba(239, 68, 68, 0.1)', color: 'var(--accent-rose)', border: '1px solid rgba(239, 68, 68, 0.2)', padding: '0.15rem 0.35rem', borderRadius: '4px', fontWeight: 'bold', fontSize: '0.65rem', display: 'inline-flex', alignItems: 'center' }}>
-                                ⚠️ {ageMonths}m (1Yr+)
-                              </span>
-                            ) : (
-                              <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>
-                                {ageMonths} months
-                              </span>
-                            );
-                          })()}
                         </td>
                         <td>{formatRupee(p.landingCost || Math.round(p.specialPrice * 0.8))}</td>
                         <td style={{ textDecoration: 'line-through', color: 'var(--text-muted)' }}>{formatRupee(p.mrp)}</td>
