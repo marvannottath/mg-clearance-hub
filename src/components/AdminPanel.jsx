@@ -16,7 +16,7 @@ function AdminPanel({
   onUpdateStock, onAddProduct, onEditProduct, onDeleteProduct, 
   onBulkUpdateStock, onAddExecutive, onDeleteExecutive, onUpdateDb, db
 }) {
-  const [activeTab, setActiveTab] = useState('reports'); // 'inventory' | 'verify' | 'specials' | 'brands_margins' | 'import' | 'stickers' | 'executives' | 'reports'
+  const [activeTab, setActiveTab] = useState(() => currentUser.role === 'manager' ? 'inventory' : 'reports'); // 'inventory' | 'verify' | 'quotes_audit' | 'specials' | 'brands_margins' | 'import' | 'stickers' | 'executives' | 'reports'
   const divisionsList = Array.from(new Set(products.map(p => p.division || 'Bathing')));
   const [isSyncing, setIsSyncing] = useState(false);
 
@@ -824,7 +824,7 @@ function AdminPanel({
           <span>{toast}</span>
         </div>
       )}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', flexWrap: 'wrap', gap: '1rem' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem', flexWrap: 'wrap', gap: '1rem' }}>
         <div>
           <h2 style={{ fontSize: '1.5rem', fontWeight: 700 }}>
             {currentUser.role === 'admin' ? 'System Admin Controller' : 'Manager Stock Controller'}
@@ -832,9 +832,96 @@ function AdminPanel({
           <p style={{ color: 'var(--text-secondary)', fontSize: '0.85rem' }}>
             {currentUser.role === 'admin' 
               ? 'System configurations, user account credentials & security controls' 
-              : 'Manage clearance stock, brand margins, weekly offers, invoice verification & QR tags'}
+              : 'Manage clearance stock, executive quotation audit, brand margins, weekly offers & invoice verification'}
           </p>
         </div>
+      </div>
+
+      {/* Top Quick Navigation Tabs */}
+      <div className="glass-panel" style={{ padding: '0.5rem', marginBottom: '1.5rem', display: 'flex', gap: '0.5rem', flexWrap: 'wrap', background: 'rgba(15, 23, 42, 0.6)', borderRadius: '12px' }}>
+        <button 
+          className={`btn ${activeTab === 'inventory' ? 'btn-primary' : 'btn-secondary'}`}
+          onClick={() => setActiveTab('inventory')}
+          style={{ padding: '0.4rem 0.85rem', fontSize: '0.8rem', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '0.35rem' }}
+        >
+          📦 Clearance Stock
+        </button>
+
+        <button 
+          className={`btn ${activeTab === 'quotes_audit' ? 'btn-primary' : 'btn-secondary'}`}
+          onClick={() => setActiveTab('quotes_audit')}
+          style={{ padding: '0.4rem 0.85rem', fontSize: '0.8rem', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '0.35rem' }}
+        >
+          🔒 Quotation & Stock Audit
+          {quotations.filter(q => q.status === 'draft' || q.status === 'pending_verification').length > 0 && (
+            <span className="badge badge-cyan" style={{ marginLeft: '0.2rem', padding: '0.1rem 0.35rem', fontSize: '0.65rem' }}>
+              {quotations.filter(q => q.status === 'draft' || q.status === 'pending_verification').length}
+            </span>
+          )}
+        </button>
+
+        <button 
+          className={`btn ${activeTab === 'verify' ? 'btn-primary' : 'btn-secondary'}`}
+          onClick={() => setActiveTab('verify')}
+          style={{ padding: '0.4rem 0.85rem', fontSize: '0.8rem', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '0.35rem' }}
+        >
+          ⏳ Verify Invoices
+          {pendingQuotes.length > 0 && (
+            <span className="badge badge-rose" style={{ marginLeft: '0.2rem', padding: '0.1rem 0.35rem', fontSize: '0.65rem' }}>
+              {pendingQuotes.length}
+            </span>
+          )}
+        </button>
+
+        <button 
+          className={`btn ${activeTab === 'specials' ? 'btn-primary' : 'btn-secondary'}`}
+          onClick={() => setActiveTab('specials')}
+          style={{ padding: '0.4rem 0.85rem', fontSize: '0.8rem', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '0.35rem' }}
+        >
+          ⚡ Weekly Offers
+        </button>
+
+        <button 
+          className={`btn ${activeTab === 'brands_margins' ? 'btn-primary' : 'btn-secondary'}`}
+          onClick={() => setActiveTab('brands_margins')}
+          style={{ padding: '0.4rem 0.85rem', fontSize: '0.8rem', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '0.35rem' }}
+        >
+          📊 Brand Margins
+        </button>
+
+        <button 
+          className={`btn ${activeTab === 'stickers' ? 'btn-primary' : 'btn-secondary'}`}
+          onClick={() => setActiveTab('stickers')}
+          style={{ padding: '0.4rem 0.85rem', fontSize: '0.8rem', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '0.35rem' }}
+        >
+          🏷️ QR Stickers
+        </button>
+
+        <button 
+          className={`btn ${activeTab === 'import' ? 'btn-primary' : 'btn-secondary'}`}
+          onClick={() => setActiveTab('import')}
+          style={{ padding: '0.4rem 0.85rem', fontSize: '0.8rem', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '0.35rem' }}
+        >
+          📥 Bulk Import
+        </button>
+
+        <button 
+          className={`btn ${activeTab === 'reports' ? 'btn-primary' : 'btn-secondary'}`}
+          onClick={() => setActiveTab('reports')}
+          style={{ padding: '0.4rem 0.85rem', fontSize: '0.8rem', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '0.35rem' }}
+        >
+          📈 Analytics
+        </button>
+
+        {currentUser.role === 'admin' && (
+          <button 
+            className={`btn ${activeTab === 'executives' ? 'btn-primary' : 'btn-secondary'}`}
+            onClick={() => setActiveTab('executives')}
+            style={{ padding: '0.4rem 0.85rem', fontSize: '0.8rem', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '0.35rem' }}
+          >
+            👤 Executives & Security
+          </button>
+        )}
       </div>
 
       <div className="admin-panel-layout" style={{ display: 'grid', gridTemplateColumns: '260px 1fr', gap: '1.5rem', alignItems: 'start' }}>
