@@ -3,7 +3,7 @@ import {
   Plus, Edit, Trash2, Download, UploadCloud, 
   Printer, Users, CheckCircle, FileSpreadsheet, PlusCircle, 
   CheckSquare, Square, DollarSign, AlertCircle, Percent, Star, 
-  Volume2, RefreshCw, Eye
+  Volume2, RefreshCw, Eye, FileText, Zap, ShieldAlert
 } from 'lucide-react';
 import MDDashboard from './MDDashboard';
 import { isWeeklySpecialActive, getLocalDateString, syncProductsFromSAP, getProductStockAgeMonths, getSapApiUrl, getSfClientId, getSfClientSecret } from '../data/mockData';
