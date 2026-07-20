@@ -229,6 +229,34 @@ export const INITIAL_EXECUTIVES = [
   { id: "exec-004", name: "Sandeep Pillai", email: "sandeep.p@marblegallery.com", target: 6000000, cleared: 1200000, salesCount: 4, username: "sandeep", password: "sandeep123" }
 ];
 
+export const INITIAL_QUOTATIONS = [
+  {
+    id: "MG-QT-723709",
+    executiveId: "exec-001",
+    executiveName: "Rajesh Kumar",
+    customerName: "Walk-in Showroom Client",
+    customerMobile: "+91 9876543210",
+    date: "2026-07-20T11:00:00.000Z",
+    status: "draft",
+    items: [
+      { id: "SA42322", name: "TOTO Washlet SW Bidet Seat", qty: 1, specialPrice: 175000, mrp: 350000 },
+      { id: "FT55648", name: "Almar Temptation Shower", qty: 1, specialPrice: 145000, mrp: 290000 }
+    ]
+  },
+  {
+    id: "MG-QT-051067",
+    executiveId: "exec-001",
+    executiveName: "Rajesh Kumar",
+    customerName: "Walk-in Showroom Client",
+    customerMobile: "+91 9876543210",
+    date: "2026-07-20T10:30:00.000Z",
+    status: "cancelled",
+    items: [
+      { id: "KAJ-HORIZON-WALL", name: "Kajaria Horizon Grey Wall Tile", qty: 1, specialPrice: 115, mrp: 410 }
+    ]
+  }
+];
+
 export const INITIAL_SALES_LEDGER = [
   {
     billNo: "MG-CS-1001",
@@ -411,8 +439,8 @@ export function loadDatabase() {
   }
 
   // 4. Ensure quotations list exists
-  if (!db.quotations) {
-    db.quotations = [];
+  if (!db.quotations || db.quotations.length === 0) {
+    db.quotations = INITIAL_QUOTATIONS;
     migrated = true;
   }
 

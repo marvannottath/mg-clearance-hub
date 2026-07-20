@@ -31,7 +31,7 @@ function readDb() {
   } catch (err) {
     console.error("Error reading database file:", err);
   }
-  return null; // Fallback to client side if empty
+  return null;
 }
 
 // Helper to save database
