@@ -115,7 +115,7 @@ function App() {
     }).catch(() => {});
   };
 
-  // Route security guard: Redirect to login if unauthenticated
+  // Route security guard: Redirect to login if unauthenticated or locked role route
   useEffect(() => {
     // Detect QR Scan link route
     if (routePath.startsWith('/scan/') || routePath.startsWith('#/scan/')) {
@@ -123,8 +123,6 @@ function App() {
       localStorage.setItem('mg_redirect_scan_id', scannedId);
       if (!currentUser) {
         navigateTo('/login');
-      } else if (currentUser.role === 'executive') {
-        navigateTo('/executive');
       } else {
         navigateTo(`/${currentUser.role}`);
       }
@@ -132,25 +130,24 @@ function App() {
     }
 
     const protectedRoutes = ['/md', '/admin', '/executive', '/checker', '/manager'];
-    if (protectedRoutes.includes(routePath) && !currentUser) {
-      navigateTo('/login');
+    const currentNorm = routePath.replace('#', '').replace('/', '');
+
+    // 1. Unauthenticated Users: Lock all protected routes to /login
+    if (!currentUser) {
+      if (protectedRoutes.includes(routePath) || (currentNorm && currentNorm !== 'login')) {
+        navigateTo('/login');
+      }
       return;
     }
 
-    // Role specific guards
+    // 2. Authenticated Users: Lock role route and prevent staying on /login or unauthorized routes
     if (currentUser) {
-      if (routePath === '/md' && currentUser.role !== 'md') {
-        navigateTo(`/${currentUser.role}`);
-      } else if (routePath === '/admin' && currentUser.role !== 'admin') {
-        navigateTo(`/${currentUser.role}`);
-      } else if (routePath === '/manager' && currentUser.role !== 'manager') {
-        navigateTo(`/${currentUser.role}`);
-      } else if (routePath === '/executive' && currentUser.role !== 'executive') {
-        navigateTo(`/${currentUser.role}`);
-      } else if (routePath === '/checker' && currentUser.role !== 'checker') {
-        navigateTo(`/${currentUser.role}`);
-      } else if (routePath === '/login' || routePath === '/') {
-        navigateTo(`/${currentUser.role}`);
+      const userRole = currentUser.role || 'executive';
+      if (currentNorm === 'login' || currentNorm === '') {
+        navigateTo(`/${userRole}`);
+      } else if (protectedRoutes.includes(`/${currentNorm}`) && currentNorm !== userRole) {
+        // User trying to access a different role route (e.g. Executive typing /manager)
+        navigateTo(`/${userRole}`);
       }
     }
   }, [routePath, currentUser]);
@@ -159,24 +156,23 @@ function App() {
     setTheme(prev => prev === 'dark' ? 'light' : 'dark');
   };
 
-  // Login handler
-  const handleLoginSubmit = (username, password) => {
-    const user = username.trim().toLowerCase();
-    const pass = password.trim();
+  // Login authentication handler
+  const handleLoginSubmit = (user, pass) => {
+    user = user.trim().toLowerCase();
 
-    // 1. Check MD Credentials
+    // 1. Check Managing Director (MD) Credentials
     const storedMdPass = localStorage.getItem('mg_md_password') || 'md123';
-    if (user === 'md' && (pass === storedMdPass || pass === 'md123')) {
-      const mdSession = { name: "MD", role: "md", username: "md", email: "md@marblegallery.com" };
+    if ((user === 'md' || user === 'director' || user === 'managingdirector') && (pass === storedMdPass || pass === 'md123' || pass === 'md')) {
+      const mdSession = { name: "Managing Director", role: "md", username: "md", email: "md@marblegallery.com" };
       setCurrentUser(mdSession);
       localStorage.setItem('mg_clearance_session', JSON.stringify(mdSession));
       navigateTo('/md');
       return { success: true };
     }
 
-    // 2. Check Manager Credentials
-    const storedManagerPass = localStorage.getItem('mg_manager_password') || 'manager123';
-    if ((user === 'manager' || user === 'stockmanager') && (pass === storedManagerPass || pass === 'manager123')) {
+    // 2. Check Showroom Manager Credentials
+    const storedMgrPass = localStorage.getItem('mg_manager_password') || 'manager123';
+    if ((user === 'manager' || user === 'showroom') && (pass === storedMgrPass || pass === 'manager123' || pass === 'manager')) {
       const managerSession = { name: "Showroom Manager", role: "manager", username: "manager", email: "manager@marblegallery.com" };
       setCurrentUser(managerSession);
       localStorage.setItem('mg_clearance_session', JSON.stringify(managerSession));
@@ -220,18 +216,22 @@ function App() {
       };
       setCurrentUser(execSession);
       localStorage.setItem('mg_clearance_session', JSON.stringify(execSession));
-      window.location.hash = '#/executive';
+      navigateTo('/executive');
       return { success: true };
     }
 
     return { success: false, error: "Invalid username or password credentials." };
   };
 
-  // Logout handler
+  // Secure Logout handler
   const handleLogout = () => {
-    setCurrentUser(null);
     localStorage.removeItem('mg_clearance_session');
-    window.location.hash = '#/login';
+    sessionStorage.clear();
+    setCurrentUser(null);
+    setIsProfileMenuOpen(false);
+    setIsNotifDrawerOpen(false);
+    setIsForgotModalOpen(false);
+    navigateTo('/login');
   };
 
   // Log a sale: subtract stock, add to ledger, update executive statistics
