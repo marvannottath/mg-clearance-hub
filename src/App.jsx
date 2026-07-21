@@ -467,8 +467,18 @@ function App() {
           </div>
 
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+            {/* Quick Theme Toggle Icon Button */}
+            <button 
+              className="theme-toggle-btn"
+              onClick={toggleTheme}
+              title={theme === 'dark' ? "Switch to Light Mode" : "Switch to Dark Mode"}
+              style={{ width: '36px', height: '36px', borderRadius: '50%', padding: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+            >
+              {theme === 'dark' ? <Sun size={18} color="var(--accent-amber)" /> : <Moon size={18} color="var(--accent-cyan)" />}
+            </button>
+
             {/* Authenticated User Profile Pill Button */}
-            {currentUser ? (
+            {currentUser && (
               <button 
                 onClick={() => setIsProfileMenuOpen(true)}
                 style={{ 
@@ -503,14 +513,6 @@ function App() {
                 <span className="badge badge-cyan" style={{ fontSize: '0.6rem', padding: '0.1rem 0.35rem', textTransform: 'uppercase' }}>
                   {currentUser.role}
                 </span>
-              </button>
-            ) : (
-              <button 
-                className="theme-toggle-btn"
-                onClick={toggleTheme}
-                title={theme === 'dark' ? "Switch to Light Mode" : "Switch to Dark Mode"}
-              >
-                {theme === 'dark' ? <Sun size={18} /> : <Moon size={18} />}
               </button>
             )}
           </div>
@@ -554,112 +556,6 @@ function App() {
             {/* Quick Actions List */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.85rem', marginBottom: '1.5rem' }}>
               
-              {/* Theme Toggle */}
-              <div 
-                onClick={toggleTheme}
-                style={{ 
-                  display: 'flex', 
-                  justify: 'space-between', 
-                  alignItems: 'center', 
-                  background: 'rgba(255,255,255,0.03)', 
-                  padding: '0.85rem 1rem', 
-                  borderRadius: '10px', 
-                  border: '1px solid var(--border-color)',
-                  cursor: 'pointer'
-                }}
-              >
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
-                  {theme === 'dark' ? <Sun size={18} color="var(--accent-amber)" /> : <Moon size={18} color="var(--accent-cyan)" />}
-                  <span style={{ fontSize: '0.85rem', fontWeight: 600 }}>App Theme Appearance</span>
-                </div>
-                <span style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--accent-cyan)' }}>
-                  {theme === 'dark' ? '🌙 Dark Mode' : '☀️ Light Mode'}
-                </span>
-              </div>
-
-              {/* Dynamic PWA / Device Mode Card */}
-              {(() => {
-                const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
-                const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
-
-                if (isStandalone) {
-                  return (
-                    <div 
-                      style={{ 
-                        display: 'flex', 
-                        justify: 'space-between', 
-                        alignItems: 'center', 
-                        background: 'rgba(16, 185, 129, 0.08)', 
-                        padding: '0.85rem 1rem', 
-                        borderRadius: '10px', 
-                        border: '1px solid rgba(16, 185, 129, 0.3)'
-                      }}
-                    >
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
-                        <span style={{ fontSize: '1.1rem' }}>📱</span>
-                        <div>
-                          <div style={{ fontSize: '0.85rem', fontWeight: 700, color: 'var(--accent-emerald)' }}>MG Clearance Mobile App</div>
-                          <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>Status: Running as Installed Standalone App</div>
-                        </div>
-                      </div>
-                      <span style={{ fontSize: '0.7rem', fontWeight: 700, color: '#fff', background: 'var(--accent-emerald)', padding: '0.15rem 0.45rem', borderRadius: '4px' }}>Installed ✓</span>
-                    </div>
-                  );
-                }
-
-                if (isMobile) {
-                  return (
-                    <div 
-                      onClick={handleInstallPWA}
-                      style={{ 
-                        display: 'flex', 
-                        justify: 'space-between', 
-                        alignItems: 'center', 
-                        background: 'rgba(16, 185, 129, 0.06)', 
-                        padding: '0.85rem 1rem', 
-                        borderRadius: '10px', 
-                        border: '1px solid rgba(16, 185, 129, 0.25)',
-                        cursor: 'pointer'
-                      }}
-                    >
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
-                        <span style={{ fontSize: '1.1rem' }}>📲</span>
-                        <div>
-                          <div style={{ fontSize: '0.85rem', fontWeight: 700, color: 'var(--accent-emerald)' }}>Install MG App on Phone</div>
-                          <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>Add to Home Screen for fast mobile access</div>
-                        </div>
-                      </div>
-                      <span style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--accent-emerald)' }}>Install ➔</span>
-                    </div>
-                  );
-                }
-
-                return (
-                  <div 
-                    onClick={handleInstallPWA}
-                    style={{ 
-                      display: 'flex', 
-                      justify: 'space-between', 
-                      alignItems: 'center', 
-                      background: 'rgba(14, 165, 233, 0.06)', 
-                      padding: '0.85rem 1rem', 
-                      borderRadius: '10px', 
-                      border: '1px solid rgba(14, 165, 233, 0.2)',
-                      cursor: 'pointer'
-                    }}
-                  >
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
-                      <span style={{ fontSize: '1.1rem' }}>💻</span>
-                      <div>
-                        <div style={{ fontSize: '0.85rem', fontWeight: 700, color: 'var(--accent-cyan)' }}>Desktop Web App Mode</div>
-                        <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>Running in Web Browser (clearance.mggroupin.com)</div>
-                      </div>
-                    </div>
-                    <span style={{ fontSize: '0.7rem', fontWeight: 700, color: 'var(--accent-cyan)', background: 'rgba(14, 165, 233, 0.15)', padding: '0.15rem 0.45rem', borderRadius: '4px' }}>PWA Active</span>
-                  </div>
-                );
-              })()}
-
               {/* Password Assistance Notice */}
               <div 
                 onClick={() => { setIsProfileMenuOpen(false); setIsForgotModalOpen(true); }}
@@ -679,6 +575,30 @@ function App() {
                   <div style={{ fontSize: '0.85rem', fontWeight: 600 }}>Password Assistance</div>
                   <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>Contact projects@mggroupin.com</div>
                 </div>
+              </div>
+
+              {/* Install PWA App Button at Bottom */}
+              <div 
+                onClick={handleInstallPWA}
+                style={{ 
+                  display: 'flex', 
+                  justify: 'space-between', 
+                  alignItems: 'center', 
+                  background: 'rgba(16, 185, 129, 0.08)', 
+                  padding: '0.85rem 1rem', 
+                  borderRadius: '10px', 
+                  border: '1px solid rgba(16, 185, 129, 0.3)',
+                  cursor: 'pointer'
+                }}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
+                  <span style={{ fontSize: '1.1rem' }}>📲</span>
+                  <div>
+                    <div style={{ fontSize: '0.85rem', fontWeight: 700, color: 'var(--accent-emerald)' }}>Install MG App</div>
+                    <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>Add to Home Screen for mobile access</div>
+                  </div>
+                </div>
+                <span style={{ fontSize: '0.75rem', fontWeight: 700, color: '#fff', background: 'var(--accent-emerald)', padding: '0.25rem 0.65rem', borderRadius: '6px' }}>Install ➔</span>
               </div>
 
             </div>
