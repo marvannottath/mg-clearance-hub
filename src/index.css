@@ -369,7 +369,7 @@ h1, h2, h3, h4, h5, h6 {
 .brand-pill.grohe { background: rgba(6, 182, 212, 0.1); color: var(--accent-cyan); border: 1px solid rgba(6, 182, 212, 0.15); }
 .brand-pill.kohler { background: rgba(245, 158, 11, 0.1); color: var(--accent-amber); border: 1px solid rgba(245, 158, 11, 0.15); }
 .brand-pill.jaquar { background: rgba(16, 185, 129, 0.1); color: var(--accent-emerald); border: 1px solid rgba(16, 185, 129, 0.15); }
-.brand-pill.toto { background: rgba(239, 68, 68, 0.1); color: var(--accent-rose); border: 1px solid rgba(239, 68, 68, 0.15); }
+.brand-pill.toto { background: rgba(14, 165, 233, 0.1); color: var(--accent-cyan); border: 1px solid rgba(14, 165, 233, 0.2); }
 
 /* Tables */
 .custom-table-container {

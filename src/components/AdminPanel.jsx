@@ -183,6 +183,7 @@ function AdminPanel({
 
   // Weekly specials adding states
   const [specSelectedId, setSpecSelectedId] = useState('');
+  const [isSpecDropdownOpen, setIsSpecDropdownOpen] = useState(false);
   const [specExtraDiscount, setSpecExtraDiscount] = useState(0);
   const [specIncentiveOverride, setSpecIncentiveOverride] = useState(0);
   const [specExpiryDate, setSpecExpiryDate] = useState('');
@@ -662,29 +663,32 @@ function AdminPanel({
   // Sticker print selector rendering list
   const stickersToPrint = products.filter(p => selectedStickerIds.includes(p.id));
 
-  // CSV downloads
+  // CSV downloads via Blob
   const downloadCSVSample = () => {
-    let csvContent = "data:text/csv;charset=utf-8,";
-    csvContent += "id,name,brand,category,division,description,stock,mrp,mgPrice,specialPrice,landingCost,size,finishing,location,inStockSince,image\n";
+    let rows = ["id,name,brand,category,division,description,stock,mrp,mgPrice,specialPrice,landingCost,size,finishing,location,inStockSince,image"];
     
     products.forEach(p => {
-      const desc = p.description ? p.description.replace(/,/g, ';').replace(/\n/g, ' ') : "";
+      const desc = p.description ? p.description.replace(/"/g, '""').replace(/\n/g, ' ') : "";
       const img = p.image ? p.image : "";
       const div = p.division || ((p.category || '').toLowerCase().includes('tiles') ? 'Tiles' : 'Bathing');
       const sz = p.size || "";
       const fin = p.finishing || "";
       const loc = p.location || "";
       const since = p.inStockSince || "2025-11-20";
-      csvContent += `"${p.id}","${p.name}","${p.brand}","${p.category}","${div}","${desc}",${p.stock},${p.mrp},${p.mgPrice},${p.specialPrice},${p.landingCost || Math.round(p.specialPrice * 0.8)},"${sz}","${fin}","${loc}","${since}","${img}"\n`;
+      rows.push(`"${p.id}","${(p.name || '').replace(/"/g, '""')}","${p.brand}","${p.category}","${div}","${desc}",${p.stock},${p.mrp},${p.mgPrice},${p.specialPrice},${p.landingCost || Math.round(p.specialPrice * 0.8)},"${sz}","${fin}","${loc}","${since}","${img}"`);
     });
 
-    const encodedUri = encodeURI(csvContent);
+    const csvString = rows.join("\n");
+    const blob = new Blob([csvString], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
-    link.setAttribute("href", encodedUri);
-    link.setAttribute("download", "mg_clearance_stock_sheet.csv");
+    link.href = url;
+    link.setAttribute("download", "mg_clearance_inventory_sheet.csv");
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+    showToast("Current Inventory CSV downloaded successfully!");
   };
 
   // Parse CSV file upload supporting dynamic headers and smart upsert
@@ -1529,27 +1533,96 @@ function AdminPanel({
               </h4>
               
               <form onSubmit={handleAddWeeklySpecial} style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '1.25rem', alignItems: 'flex-end' }}>
-                <div className="form-group" style={{ marginBottom: 0 }}>
+                <div className="form-group" style={{ marginBottom: 0, position: 'relative' }}>
                   <label className="form-label">Select Clearance Product</label>
-                  <input 
-                    type="text" 
-                    className="form-input" 
-                    placeholder="🔍 Search code, name or brand..." 
-                    value={specSearchQuery}
-                    onChange={(e) => setSpecSearchQuery(e.target.value)}
-                    style={{ marginBottom: '0.35rem', fontSize: '0.75rem', padding: '0.25rem 0.5rem' }}
-                  />
-                  <select 
-                    className="form-input"
-                    value={specSelectedId}
-                    onChange={(e) => setSpecSelectedId(e.target.value)}
-                    required
-                  >
-                    <option value="">-- Choose Showroom Item ({products.filter(p => !isWeeklySpecialActive(p) && p.stock > 0 && (!specSearchQuery || (p.id + p.name + p.brand).toLowerCase().includes(specSearchQuery.toLowerCase()))).length} items) --</option>
-                    {products.filter(p => !isWeeklySpecialActive(p) && p.stock > 0 && (!specSearchQuery || (p.id + p.name + p.brand).toLowerCase().includes(specSearchQuery.toLowerCase()))).map(p => (
-                      <option key={p.id} value={p.id}>{p.id} - {p.name} ({p.brand})</option>
-                    ))}
-                  </select>
+                  <div style={{ position: 'relative' }}>
+                    <input 
+                      type="text" 
+                      className="form-input" 
+                      placeholder="🔍 Type code or name (e.g. SA41495, WATERO)..." 
+                      value={specSearchQuery}
+                      onChange={(e) => {
+                        setSpecSearchQuery(e.target.value);
+                        setIsSpecDropdownOpen(true);
+                      }}
+                      onFocus={() => setIsSpecDropdownOpen(true)}
+                      style={{ fontSize: '0.85rem', fontWeight: 600 }}
+                    />
+                    {specSelectedId && (
+                      <span style={{ position: 'absolute', right: '10px', top: '10px', fontSize: '0.7rem', color: 'var(--accent-emerald)', background: 'rgba(16, 185, 129, 0.1)', padding: '0.1rem 0.4rem', borderRadius: '4px', fontWeight: 700 }}>
+                        ✓ Selected ({specSelectedId})
+                      </span>
+                    )}
+                  </div>
+
+                  {/* Interactive Floating Dropdown Results */}
+                  {isSpecDropdownOpen && (
+                    <div 
+                      className="search-results-list"
+                      style={{ 
+                        position: 'absolute', 
+                        top: '100%', 
+                        left: 0, 
+                        right: 0, 
+                        maxHeight: '240px', 
+                        overflowY: 'auto', 
+                        zIndex: 9999,
+                        background: 'var(--bg-card)',
+                        border: '1px solid var(--accent-cyan)',
+                        borderRadius: '8px',
+                        boxShadow: '0 8px 24px rgba(0,0,0,0.5)',
+                        marginTop: '4px'
+                      }}
+                    >
+                      {(() => {
+                        const matching = products.filter(p => !isWeeklySpecialActive(p) && p.stock > 0 && (!specSearchQuery.trim() || (p.id + p.name + p.brand).toLowerCase().includes(specSearchQuery.trim().toLowerCase())));
+                        if (matching.length === 0) {
+                          return (
+                            <div style={{ padding: '0.75rem', fontSize: '0.8rem', color: 'var(--text-muted)', textAlign: 'center' }}>
+                              No matching products found.
+                            </div>
+                          );
+                        }
+                        return matching.map(p => (
+                          <div 
+                            key={p.id}
+                            onClick={() => {
+                              setSpecSelectedId(p.id);
+                              setSpecSearchQuery(`${p.id} - ${p.name}`);
+                              setIsSpecDropdownOpen(false);
+                            }}
+                            style={{
+                              padding: '0.6rem 0.85rem',
+                              borderBottom: '1px solid var(--border-color)',
+                              cursor: 'pointer',
+                              display: 'flex',
+                              justifyContent: 'space-between',
+                              alignItems: 'center',
+                              background: specSelectedId === p.id ? 'rgba(14, 165, 233, 0.15)' : 'transparent',
+                              transition: 'background 0.2s ease'
+                            }}
+                          >
+                            <div>
+                              <div style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--text-primary)' }}>
+                                <strong style={{ color: 'var(--accent-cyan)' }}>{p.id}</strong> - {p.name}
+                              </div>
+                              <div style={{ fontSize: '0.68rem', color: 'var(--text-muted)', marginTop: '0.1rem' }}>
+                                Brand: <strong>{p.brand}</strong> • Stock: <strong>{p.stock}</strong>
+                              </div>
+                            </div>
+                            <div style={{ textAlign: 'right' }}>
+                              <div style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--accent-emerald)' }}>
+                                {formatRupee(p.specialPrice)}
+                              </div>
+                              <div style={{ fontSize: '0.65rem', color: 'var(--text-muted)', textDecoration: 'line-through' }}>
+                                {formatRupee(p.mrp)}
+                              </div>
+                            </div>
+                          </div>
+                        ));
+                      })()}
+                    </div>
+                  )}
                 </div>
 
                 <div className="form-group" style={{ marginBottom: 0 }}>
