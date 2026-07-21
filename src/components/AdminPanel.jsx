@@ -1814,6 +1814,94 @@ function AdminPanel({
           </div>
         )}
 
+        {/* Tab 3.5: Bulk Stock CSV Import */}
+        {activeTab === 'import' && (
+          <div className="fade-in">
+            <h3 className="panel-title" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <Upload size={20} color="var(--accent-cyan)" />
+              Bulk Clearance Stock CSV Import
+            </h3>
+            <p style={{ color: 'var(--text-secondary)', fontSize: '0.85rem', marginBottom: '1.5rem' }}>
+              Upload your showroom clearance CSV or Excel sheet to bulk import products. Supports automatic mapping of Product Code, Brand, Stock, MRP Rate, Clearance Price, and Landing Cost directly from your uploaded columns.
+            </p>
+
+            {/* Clickable Drag & Drop Upload Box */}
+            <div className="glass-panel" style={{ padding: '2rem', marginBottom: '1.5rem' }}>
+              <div 
+                onClick={() => fileInputRef.current?.click()}
+                style={{ 
+                  border: '2px dashed var(--accent-cyan)', 
+                  borderRadius: '16px', 
+                  padding: '2.5rem 1.5rem', 
+                  textAlign: 'center', 
+                  background: 'rgba(6, 182, 212, 0.03)', 
+                  cursor: 'pointer',
+                  transition: 'all 0.2s ease'
+                }}
+              >
+                <Upload size={44} color="var(--accent-cyan)" style={{ marginBottom: '0.75rem' }} />
+                <h4 style={{ fontSize: '1.15rem', fontWeight: 800, marginBottom: '0.35rem', color: 'var(--text-primary)' }}>
+                  Click to Browse or Drag & Drop CSV File Here
+                </h4>
+                <p style={{ fontSize: '0.82rem', color: 'var(--text-secondary)', marginBottom: '1.25rem' }}>
+                  Upload clearance inventory spreadsheet (.csv or .txt file)
+                </p>
+                
+                <div style={{ display: 'flex', justifyContent: 'center', gap: '0.75rem', flexWrap: 'wrap' }}>
+                  <button 
+                    type="button"
+                    className="btn btn-cyan" 
+                    style={{ padding: '0.65rem 1.5rem', fontWeight: 700, pointerEvents: 'none', display: 'inline-flex', alignItems: 'center', gap: '0.4rem' }}
+                  >
+                    <Upload size={16} /> Select & Upload CSV File
+                  </button>
+
+                  <button 
+                    type="button"
+                    className="btn btn-secondary" 
+                    onClick={(e) => { 
+                      e.stopPropagation(); 
+                      const sampleContent = "Product Code,Product Name,Brand,Category,Division,Description,Stock,MRP Rate,Clearance Price,Landing Cost\nSA41560,CORNIA CORNER WASH BASIN,WATERO,Sanitaryware,Bathing,Corner basin,5,1760,1056,715\nSA41557,CUTE BLACK WITH UF SEAT COVER EWC,WATERO,Sanitaryware,Bathing,Black EWC toilet,3,12977,7786,5278";
+                      const blob = new Blob([sampleContent], { type: 'text/csv' });
+                      const url = URL.createObjectURL(blob);
+                      const a = document.createElement('a');
+                      a.href = url;
+                      a.download = "mg_clearance_stock_template.csv";
+                      a.click();
+                    }}
+                    style={{ padding: '0.65rem 1.25rem', fontWeight: 600, display: 'inline-flex', alignItems: 'center', gap: '0.4rem' }}
+                  >
+                    <Download size={16} /> Download Sample CSV Template
+                  </button>
+                </div>
+
+                <input 
+                  type="file" 
+                  accept=".csv, .txt" 
+                  ref={fileInputRef} 
+                  onChange={handleCSVImport} 
+                  style={{ display: 'none' }} 
+                />
+              </div>
+
+              {importStatus && (
+                <div style={{ 
+                  marginTop: '1.25rem', 
+                  padding: '1rem', 
+                  borderRadius: '10px', 
+                  background: importStatus.success ? 'rgba(16, 185, 129, 0.1)' : 'rgba(239, 68, 68, 0.1)',
+                  border: `1px solid ${importStatus.success ? 'var(--accent-emerald)' : 'var(--accent-rose)'}`,
+                  color: importStatus.success ? 'var(--accent-emerald)' : 'var(--accent-rose)',
+                  fontSize: '0.85rem',
+                  fontWeight: 600
+                }}>
+                  {importStatus.message}
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
         {/* Tab 4: Brands & Margins Setup */}
         {activeTab === 'brands_margins' && (
           <div className="fade-in">

@@ -621,42 +621,29 @@ function App() {
               {theme === 'dark' ? <Sun size={18} color="var(--accent-amber)" /> : <Moon size={18} color="var(--accent-cyan)" />}
             </button>
 
-            {/* Authenticated User Profile Pill Button */}
+            {/* Authenticated User Profile Avatar Circle Button */}
             {currentUser && (
               <button 
                 onClick={() => setIsProfileMenuOpen(true)}
                 style={{ 
-                  background: 'rgba(255, 255, 255, 0.05)', 
-                  border: '1px solid var(--border-color)', 
-                  borderRadius: '30px', 
-                  padding: '0.35rem 0.75rem 0.35rem 0.35rem', 
-                  display: 'flex', 
-                  alignItems: 'center', 
-                  gap: '0.5rem', 
-                  cursor: 'pointer',
-                  transition: 'all 0.2s ease',
-                  color: 'var(--text-primary)'
-                }}
-                title="Account Settings & Profile"
-              >
-                <div style={{ 
-                  width: '28px', 
-                  height: '28px', 
+                  width: '38px', 
+                  height: '38px', 
                   borderRadius: '50%', 
                   background: 'linear-gradient(135deg, #0284c7, #10b981)', 
                   color: '#fff', 
-                  fontWeight: 800, 
-                  fontSize: '0.75rem', 
+                  fontWeight: 900, 
+                  fontSize: '0.85rem', 
                   display: 'flex', 
                   alignItems: 'center', 
-                  justifyContent: 'center' 
-                }}>
-                  {getUserInitials(currentUser.name)}
-                </div>
-                <span style={{ fontSize: '0.8rem', fontWeight: 700 }}>{currentUser.name.split(' ')[0]}</span>
-                <span className="badge badge-cyan" style={{ fontSize: '0.6rem', padding: '0.1rem 0.35rem', textTransform: 'uppercase' }}>
-                  {currentUser.role}
-                </span>
+                  justifyContent: 'center', 
+                  border: '2px solid rgba(255, 255, 255, 0.2)',
+                  cursor: 'pointer',
+                  boxShadow: '0 2px 8px rgba(2, 132, 199, 0.3)',
+                  transition: 'transform 0.15s ease'
+                }}
+                title={`${currentUser.name} (${currentUser.role.toUpperCase()}) - Click for Account Options`}
+              >
+                {getUserInitials(currentUser.name)}
               </button>
             )}
           </div>
@@ -666,18 +653,18 @@ function App() {
       {/* User Profile & Account Settings Modal */}
       {isProfileMenuOpen && currentUser && (
         <div className="modal-overlay" onClick={() => setIsProfileMenuOpen(false)} style={{ zIndex: 99999 }}>
-          <div className="glass-panel modal-content" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '420px', width: '92%', padding: '1.5rem', borderRadius: '16px' }}>
+          <div className="glass-panel modal-content" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '400px', width: '92%', padding: '1.5rem', borderRadius: '16px' }}>
             
-            {/* Greeting Header (NO EMOJIS) */}
+            {/* Account Header */}
             <div style={{ textAlign: 'center', borderBottom: '1px solid var(--border-color)', paddingBottom: '1.25rem', marginBottom: '1.25rem' }}>
               <div style={{ 
-                width: '60px', 
-                height: '60px', 
+                width: '64px', 
+                height: '64px', 
                 borderRadius: '50%', 
                 background: 'linear-gradient(135deg, #0284c7, #10b981)', 
                 color: '#fff', 
                 fontWeight: 900, 
-                fontSize: '1.4rem', 
+                fontSize: '1.5rem', 
                 display: 'flex', 
                 alignItems: 'center', 
                 justifyContent: 'center',
@@ -687,12 +674,9 @@ function App() {
                 {getUserInitials(currentUser.name)}
               </div>
               <h3 style={{ fontSize: '1.15rem', fontWeight: 800, color: 'var(--text-primary)', margin: 0 }}>
-                {getGreeting()}, {currentUser.name.split(' ')[0]}!
+                {currentUser.name}
               </h3>
-              <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', marginTop: '0.2rem' }}>
-                {currentUser.email || `${currentUser.username}@marblegallery.com`}
-              </div>
-              <span className="badge badge-success" style={{ marginTop: '0.5rem', display: 'inline-block', fontSize: '0.7rem', padding: '0.2rem 0.6rem', textTransform: 'uppercase' }}>
+              <span className="badge badge-success" style={{ marginTop: '0.4rem', display: 'inline-block', fontSize: '0.68rem', padding: '0.2rem 0.6rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
                 Role: {currentUser.role}
               </span>
             </div>
