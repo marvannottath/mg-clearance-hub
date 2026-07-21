@@ -32,17 +32,23 @@ function App() {
     localStorage.setItem('mg_clearance_theme', theme);
   }, [theme]);
 
-  // Fetch live database state from server if backend is running
+  // Fetch live database state from server if backend is running (real-time polling every 4s)
   useEffect(() => {
-    fetch('/api/db')
-      .then(res => res.json())
-      .then(result => {
-        if (result && result.success && result.data) {
-          setDb(result.data);
-          saveDatabase(result.data);
-        }
-      })
-      .catch(() => {});
+    const syncDb = () => {
+      fetch('/api/db')
+        .then(res => res.json())
+        .then(result => {
+          if (result && result.success && result.data) {
+            setDb(result.data);
+            saveDatabase(result.data);
+          }
+        })
+        .catch(() => {});
+    };
+
+    syncDb();
+    const interval = setInterval(syncDb, 4000);
+    return () => clearInterval(interval);
   }, []);
 
   const updateDb = (newDb) => {
@@ -110,7 +116,7 @@ function App() {
 
     // 1. Check MD Credentials
     if (user === 'md' && pass === 'md123') {
-      const mdSession = { name: "Campaign MD", role: "md", username: "md", email: "md@marblegallery.com" };
+      const mdSession = { name: "MD", role: "md", username: "md", email: "md@marblegallery.com" };
       setCurrentUser(mdSession);
       localStorage.setItem('mg_clearance_session', JSON.stringify(mdSession));
       window.location.hash = '#/md';
@@ -439,7 +445,7 @@ function App() {
       <main className={isShareRoute ? "fade-in" : "main-content fade-in"}>
         {/* Render routes based on current hash */}
         {isShareRoute ? (
-          <QuotationShareView />
+          <QuotationShareView db={db} />
         ) : (!currentUser || hash === '#/login') ? (
           <LoginView onLoginSubmit={handleLoginSubmit} />
         ) : (
@@ -661,17 +667,29 @@ function LoginView({ onLoginSubmit }) {
   );
 }
 
-// Standalone Quotation View for shared Base64 URLs
-function QuotationShareView() {
+// Standalone Quotation View for shared URLs and Base64 links
+function QuotationShareView({ db }) {
   const hash = window.location.hash;
-  const encodedData = hash.replace('#/share/', '');
+  const param = hash.replace('#/share/', '');
   
   let quote = null;
-  try {
-    const decodedStr = decodeURIComponent(escape(atob(encodedData)));
-    quote = JSON.parse(decodedStr);
-  } catch (e) {
-    console.error("Failed to decode quotation data", e);
+
+  // 1. Try finding quotation directly by Quote ID from database
+  if (db && db.quotations && param) {
+    const found = db.quotations.find(q => q.id === param || q.id === decodeURIComponent(param));
+    if (found) {
+      quote = found;
+    }
+  }
+
+  // 2. Fallback to decoding Base64 string if not found in live DB
+  if (!quote && param) {
+    try {
+      const decodedStr = decodeURIComponent(escape(atob(param)));
+      quote = JSON.parse(decodedStr);
+    } catch (e) {
+      console.error("Failed to decode quotation data", e);
+    }
   }
 
   if (!quote) {
@@ -684,7 +702,7 @@ function QuotationShareView() {
   }
 
   // Formatting helper
-  const formatRupee = (value) => `₹${value.toLocaleString('en-IN')}`;
+  const formatRupee = (value) => `₹${(value || 0).toLocaleString('en-IN')}`;
 
   const totalItemsCount = quote.items.reduce((sum, item) => sum + item.qty, 0);
   const cartTotalMrp = quote.items.reduce((sum, item) => sum + (item.mrp * item.qty), 0);
@@ -698,8 +716,8 @@ function QuotationShareView() {
   return (
     <div style={{ maxWidth: '800px', margin: '2rem auto', padding: '1rem' }} className="share-quotation-wrapper">
       <div className="no-print" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', background: 'var(--bg-secondary)', padding: '1rem', borderRadius: '12px', border: '1px solid var(--border-color)' }}>
-        <span style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', fontWeight: 600 }}>Marble Gallery Shared Clearance Quotation</span>
-        <button className="btn btn-emerald" onClick={handlePrint}>Download PDF / Print</button>
+        <span style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', fontWeight: 600 }}>Marble Gallery Shared Quotation Sheet</span>
+        <button className="btn btn-emerald" onClick={handlePrint}>Download PDF / Print Sheet</button>
       </div>
 
       <div className="print-invoice-sheet" style={{ background: '#fff', color: '#000', padding: '2.5rem', borderRadius: '8px', boxShadow: '0 4px 25px rgba(0,0,0,0.15)', fontFamily: '"Outfit", "Inter", sans-serif' }}>
@@ -710,11 +728,11 @@ function QuotationShareView() {
             <span style={{ fontSize: '0.75rem', color: '#64748b', fontWeight: 700, letterSpacing: '0.15em' }}>MG LUXE BATH & TILE DIVISION</span>
             <div style={{ fontSize: '0.75rem', color: '#64748b', marginTop: '0.25rem', lineHeight: '1.4' }}>
               MG Group Premium Showroom<br/>
-              Luxe Bath & Tile Floor Stock Liquidation
+              Luxe Bath & Tile Special Offer Collection
             </div>
           </div>
           <div style={{ textAlign: 'right' }}>
-            <h3 style={{ fontSize: '1.1rem', fontWeight: 700, color: '#0f172a', margin: 0 }}>CLEARANCE QUOTATION</h3>
+            <h3 style={{ fontSize: '1.1rem', fontWeight: 700, color: '#0f172a', margin: 0 }}>SPECIAL PRICE QUOTATION</h3>
             <div style={{ fontSize: '0.75rem', color: '#64748b', marginTop: '0.25rem', lineHeight: '1.4' }}>
               <strong>Quote No:</strong> {quote.id || `MG-QT-${Date.now().toString().slice(-6)}`}<br/>
               <strong>Date:</strong> {quote.date ? new Date(quote.date).toLocaleDateString('en-IN') : new Date().toLocaleDateString('en-IN')}<br/>
@@ -728,10 +746,11 @@ function QuotationShareView() {
           <div>
             <strong>Prepared By:</strong> {quote.executiveName || 'Marble Gallery Showroom Sales'}<br/>
             <strong>Client Name:</strong> {quote.customerName || 'Walk-in Showroom Client'}
+            {quote.customerAddress && <><br/><strong>Location:</strong> {quote.customerAddress}</>}
           </div>
           <div style={{ textAlign: 'right' }}>
             <strong>Client Mobile:</strong> {quote.customerMobile || 'N/A'}<br/>
-            <strong>Quotation Status:</strong> Clearance Offer Price
+            <strong>Price Scheme:</strong> Showroom Discount Offer
           </div>
         </div>
 
@@ -741,8 +760,8 @@ function QuotationShareView() {
             <tr style={{ background: '#0f172a', color: '#fff', textAlign: 'left' }}>
               <th style={{ padding: '0.65rem 0.5rem', borderRadius: '4px 0 0 4px' }}>Item Description</th>
               <th style={{ padding: '0.65rem 0.5rem', textAlign: 'center' }}>Qty</th>
-              <th style={{ padding: '0.65rem 0.5rem', textAlign: 'right' }}>Original MRP</th>
-              <th style={{ padding: '0.65rem 0.5rem', textAlign: 'right' }}>Clearance Rate</th>
+              <th style={{ padding: '0.65rem 0.5rem', textAlign: 'right' }}>MRP</th>
+              <th style={{ padding: '0.65rem 0.5rem', textAlign: 'right' }}>Special Rate</th>
               <th style={{ padding: '0.65rem 0.5rem', textAlign: 'right', borderRadius: '0 4px 4px 0' }}>Subtotal</th>
             </tr>
           </thead>
@@ -758,7 +777,7 @@ function QuotationShareView() {
                 </td>
                 <td style={{ padding: '0.75rem 0.5rem', textAlign: 'center', fontWeight: 700, color: '#0f172a' }}>{item.qty}</td>
                 <td style={{ padding: '0.75rem 0.5rem', textAlign: 'right', color: '#94a3b8', textDecoration: 'line-through' }}>{formatRupee(item.mrp)}</td>
-                <td style={{ padding: '0.75rem 0.5rem', textAlign: 'right', fontWeight: 600, color: '#ef4444' }}>{formatRupee(item.specialPrice)}</td>
+                <td style={{ padding: '0.75rem 0.5rem', textAlign: 'right', fontWeight: 600, color: '#0284c7' }}>{formatRupee(item.specialPrice)}</td>
                 <td style={{ padding: '0.75rem 0.5rem', textAlign: 'right', fontWeight: 700, color: '#0f172a' }}>{formatRupee(item.specialPrice * item.qty)}</td>
               </tr>
             ))}
@@ -780,7 +799,7 @@ function QuotationShareView() {
                   <span style={{ fontWeight: 700 }}>{totalItemsCount} units</span>
                 </div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.3rem' }}>
-                  <span>Original MRP Value:</span>
+                  <span>MRP Value:</span>
                   <span style={{ textDecoration: 'line-through', color: '#94a3b8' }}>{formatRupee(cartTotalMrp)}</span>
                 </div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.3rem', borderTop: '1px dashed #e2e8f0', paddingTop: '0.3rem' }}>
@@ -796,12 +815,12 @@ function QuotationShareView() {
                   <span>{formatRupee(sgst)}</span>
                 </div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.4rem', paddingBottom: '0.4rem', borderBottom: '1px solid #e2e8f0', fontSize: '0.95rem', fontWeight: 800, color: '#0f172a' }}>
-                  <span>Clearance Total (Incl. GST):</span>
-                  <span style={{ color: '#10b981' }}>{formatRupee(cartTotalPaid)}</span>
+                  <span>Offer Total (Incl. GST):</span>
+                  <span style={{ color: '#0284c7' }}>{formatRupee(cartTotalPaid)}</span>
                 </div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', color: '#ef4444', fontWeight: 700 }}>
-                  <span>Net Savings:</span>
-                  <span>{formatRupee(totalSavings)} ({((totalSavings / cartTotalMrp) * 100).toFixed(0)}% Off)</span>
+                <div style={{ display: 'flex', justifyContent: 'space-between', color: '#10b981', fontWeight: 700 }}>
+                  <span>Discount Savings:</span>
+                  <span>{formatRupee(totalSavings)} ({cartTotalMrp > 0 ? ((totalSavings / cartTotalMrp) * 100).toFixed(0) : 0}% Off)</span>
                 </div>
               </div>
             </div>
@@ -811,14 +830,6 @@ function QuotationShareView() {
         {/* Terms and Conditions */}
         <div style={{ fontSize: '0.65rem', color: '#64748b', borderTop: '1px solid #e2e8f0', paddingTop: '0.75rem', lineHeight: '1.4' }}>
           <strong style={{ display: 'block', marginBottom: '0.2rem', color: '#475569' }}>Terms & Conditions:</strong>
-          1. This is a special clearance campaign price valid only for concept showroom floor display stocks.<br/>
-          2. Items once sold under the clearance deal cannot be returned or exchanged.<br/>
-          3. Quotation prices are valid for 7 days or until available display stocks last.<br/>
-          4. Transportation, delivery, and display fitting/installation charges are extra.
-        </div>
-
-        {/* Footer Message */}
-        <div style={{ textAlign: 'center', marginTop: '1.5rem', fontSize: '0.75rem', color: '#94a3b8', borderTop: '1px dashed #e2e8f0', paddingTop: '0.5rem' }}>
           Thank you for choosing Marble Gallery Group. We value your business.
         </div>
       </div>

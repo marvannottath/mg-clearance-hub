@@ -787,20 +787,30 @@ function AdminPanel({
 
         extractedBrand = extractedBrand.toUpperCase();
 
-        // Smart Price Parsing
-        const rowNumbers = row.map(v => safeParseInt(v, 0)).filter(num => num > 0);
+        // Smart Price Parsing across line string
+        const allNumbersInLine = (line.match(/\d+(?:\.\d+)?/g) || []).map(n => Math.round(parseFloat(n))).filter(n => n > 20);
+        
         let mrpValue = safeParseInt(row[mrpIdx], 0);
         let specValue = safeParseInt(row[specIdx], 0);
         let landingValue = safeParseInt(row[landingIdx], 0);
 
-        if (rowNumbers.length > 0) {
-          if (!landingValue) landingValue = rowNumbers[0] || 1000;
-          if (!mrpValue) mrpValue = rowNumbers[1] || Math.round(landingValue * 1.4);
-          if (!specValue) specValue = rowNumbers[2] || Math.round(mrpValue * 0.4);
+        if (allNumbersInLine.length >= 2) {
+          // Highest number in line is MRP e.g. 1056, 7786, 8753
+          const highestNum = Math.max(...allNumbersInLine);
+          mrpValue = mrpValue > 0 ? mrpValue : highestNum;
+          
+          const lowerNumbers = allNumbersInLine.filter(n => n < mrpValue);
+          if (lowerNumbers.length > 0) {
+            landingValue = landingValue > 0 ? landingValue : lowerNumbers[0];
+            specValue = specValue > 0 ? specValue : (lowerNumbers[1] || Math.round(mrpValue * 0.8));
+          } else {
+            landingValue = landingValue > 0 ? landingValue : Math.round(mrpValue * 0.6);
+            specValue = specValue > 0 ? specValue : Math.round(mrpValue * 0.8);
+          }
         } else {
           mrpValue = mrpValue || 15000;
-          specValue = specValue || Math.round(mrpValue * 0.4);
-          landingValue = landingValue || Math.round(specValue * 0.8);
+          specValue = specValue || Math.round(mrpValue * 0.8);
+          landingValue = landingValue || Math.round(specValue * 0.75);
         }
 
         parsedItems.push({
@@ -1610,9 +1620,28 @@ function AdminPanel({
                             ) : 'Indefinite'}
                           </td>
                           <td>
-                            <button className="btn btn-danger" style={{ padding: '0.25rem 0.6rem', fontSize: '0.75rem', border: 'none' }} onClick={() => handleRemoveWeeklySpecial(p.id)}>
-                              Remove
-                            </button>
+                            <div style={{ display: 'flex', gap: '0.4rem' }}>
+                              <button 
+                                className="btn btn-secondary" 
+                                style={{ padding: '0.25rem 0.5rem', fontSize: '0.75rem' }} 
+                                onClick={() => {
+                                  setSelectedOfferProductId(p.id);
+                                  setExtraCustomerDiscount(p.extraCustomerDiscount || 0);
+                                  setExecIncentiveOverride(p.weeklySpecialIncentive || 0);
+                                  setWeeklySpecialUntil(p.weeklySpecialUntil || '');
+                                  window.scrollTo({ top: 0, behavior: 'smooth' });
+                                }}
+                              >
+                                Edit
+                              </button>
+                              <button 
+                                className="btn btn-danger" 
+                                style={{ padding: '0.25rem 0.5rem', fontSize: '0.75rem', border: 'none' }} 
+                                onClick={() => handleRemoveWeeklySpecial(p.id)}
+                              >
+                                Remove
+                              </button>
+                            </div>
                           </td>
                         </tr>
                       );
@@ -2410,17 +2439,25 @@ function AdminPanel({
               </div>
             </div>
 
-            {/* Receipt Image Zoom Panel */}
+            {/* Receipt Image / PDF Preview Panel */}
             <div style={{ textAlign: 'center', background: 'var(--bg-secondary)', padding: '1rem', borderRadius: '8px', border: '1px solid var(--border-color)', marginBottom: '1.5rem' }}>
-              {selectedInvoiceDetail.uploadedBill?.startsWith('data:image/') ? (
-                <img 
-                  src={selectedInvoiceDetail.uploadedBill} 
-                  alt="Salesforce Receipt Attachment" 
-                  style={{ maxWidth: '100%', maxHeight: '350px', objectFit: 'contain', borderRadius: '4px' }} 
-                />
+              {selectedInvoiceDetail.uploadedBill ? (
+                selectedInvoiceDetail.uploadedBill.startsWith('data:application/pdf') || selectedInvoiceDetail.uploadedBill.includes('pdf') ? (
+                  <iframe 
+                    src={selectedInvoiceDetail.uploadedBill} 
+                    title="Uploaded Invoice PDF Receipt" 
+                    style={{ width: '100%', height: '420px', border: 'none', borderRadius: '8px' }} 
+                  />
+                ) : (
+                  <img 
+                    src={selectedInvoiceDetail.uploadedBill} 
+                    alt="Salesforce Receipt Attachment" 
+                    style={{ maxWidth: '100%', maxHeight: '380px', objectFit: 'contain', borderRadius: '4px' }} 
+                  />
+                )
               ) : (
                 <div style={{ padding: '2rem', color: 'var(--text-secondary)', fontSize: '0.9rem' }}>
-                  📄 PDF Document attached. Salesforce Invoice ref: <strong>{selectedInvoiceDetail.invoiceNo}</strong>
+                  No receipt image or PDF file attached for invoice <strong>{selectedInvoiceDetail.invoiceNo}</strong>.
                 </div>
               )}
             </div>

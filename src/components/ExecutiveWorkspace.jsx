@@ -23,6 +23,7 @@ function ExecutiveWorkspace({ products, activeExecutive, db, onUpdateDb }) {
   // Client Details States
   const [customerName, setCustomerName] = useState('');
   const [customerMobile, setCustomerMobile] = useState('');
+  const [customerAddress, setCustomerAddress] = useState('');
   const [activeMobileTab, setActiveMobileTab] = useState('catalog');
   const [mobileTab, setMobileTab] = useState('overview'); // 'overview' | 'catalog' | 'cart' | 'quotes' | 'wallet'
 
@@ -421,20 +422,26 @@ function ExecutiveWorkspace({ products, activeExecutive, db, onUpdateDb }) {
   const totalItemsCount = cart.reduce((sum, item) => sum + item.qty, 0);
 
   // Generate WhatsApp compressed Base64 URL link
+  // Generate WhatsApp clean short URL link
   const generateWhatsAppLink = () => {
     if (!customerMobile) {
       alert("Please enter the customer's WhatsApp/Mobile number first.");
       return;
     }
 
-    const quoteObj = {
-      id: `MG-QT-${Date.now().toString().slice(-6)}`,
+    const currentQuoteId = editingQuoteId || `MG-QT-${Date.now().toString().slice(-6)}`;
+
+    // Ensure quote exists in db.quotations for short URL lookup
+    const newQuote = {
+      id: currentQuoteId,
       customerName: customerName.trim() || 'Walk-in Showroom Client',
-      customerMobile: customerMobile,
+      customerMobile: customerMobile || 'N/A',
+      customerAddress: customerAddress || '',
+      executiveId: activeExecutive.id,
       executiveName: activeExecutive.name,
-      date: new Date().toISOString(),
       items: cart.map(item => ({
         id: item.id,
+        productId: item.id,
         name: item.name,
         brand: item.brand,
         qty: item.qty,
@@ -444,27 +451,38 @@ function ExecutiveWorkspace({ products, activeExecutive, db, onUpdateDb }) {
         size: item.division === 'Tiles' ? item.size : undefined,
         finishing: item.division === 'Tiles' ? item.finishing : undefined,
         location: item.division === 'Tiles' ? item.location : undefined
-      }))
+      })),
+      status: 'draft',
+      date: new Date().toISOString(),
+      invoiceNo: '',
+      uploadedBill: '',
+      incentiveAmount: cart.reduce((sum, item) => sum + getProductIncentiveAmount(item, item.qty, db.brands), 0)
     };
 
-    const jsonStr = JSON.stringify(quoteObj);
-    const base64Str = btoa(unescape(encodeURIComponent(jsonStr)));
-    const shareUrl = `${window.location.origin}${window.location.pathname}#/share/${base64Str}`;
+    const existingQuotes = db.quotations || [];
+    const quoteExists = existingQuotes.some(q => q.id === currentQuoteId);
+    const updatedQuotes = quoteExists 
+      ? existingQuotes.map(q => q.id === currentQuoteId ? { ...q, ...newQuote } : q)
+      : [...existingQuotes, newQuote];
+
+    onUpdateDb({ ...db, quotations: updatedQuotes });
+
+    const shortShareUrl = `${window.location.origin}/#/share/${currentQuoteId}`;
     
     let cleanMobile = customerMobile.replace(/\D/g, '');
     if (cleanMobile.length === 10) {
       cleanMobile = '91' + cleanMobile;
     }
 
-    let messageText = `*MARBLE GALLERY CLEARANCE OFFERS* 💎🛁\n`;
+    let messageText = `*MARBLE GALLERY SPECIAL OFFERS* 💎🛁\n`;
     messageText += `-----------------------------------------\n`;
-    messageText += `Hi ${customerName.trim() || 'Valued Customer'}!\n`;
-    messageText += `Here is your special price clearance quotation. Click the link below to view/download your PDF sheet:\n\n`;
-    messageText += `${shareUrl}\n\n`;
-    messageText += `*Clearance Total: ${formatRupee(cartTotalPaid)}*\n`;
-    messageText += `🎉 *Your Net Savings: ${formatRupee(totalSavings)}* (Save ${((totalSavings/cartTotalMrp)*100).toFixed(0)}%)\n`;
+    messageText += `Hi ${customerName.trim() || 'Valued Client'}!\n`;
+    messageText += `Here is your special price quotation. Click the link below to view/download your PDF sheet:\n\n`;
+    messageText += `${shortShareUrl}\n\n`;
+    messageText += `*Offer Total: ${formatRupee(cartTotalPaid)}*\n`;
+    messageText += `🎉 *Your Net Savings: ${formatRupee(totalSavings)}* (Save ${cartTotalMrp > 0 ? ((totalSavings/cartTotalMrp)*100).toFixed(0) : 0}%)\n`;
     messageText += `-----------------------------------------\n`;
-    messageText += `Shared by: *${activeExecutive.name}* (Sales Showroom)\n`;
+    messageText += `Shared by: *${activeExecutive.name}* (Marble Gallery)\n`;
 
     const encodedText = encodeURIComponent(messageText);
     const waUrl = `https://api.whatsapp.com/send?phone=${cleanMobile}&text=${encodedText}`;
@@ -1066,7 +1084,7 @@ function ExecutiveWorkspace({ products, activeExecutive, db, onUpdateDb }) {
             Client Details
           </h3>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '0.5rem' }}>
               <div>
                 <label className="form-label" style={{ fontSize: '0.65rem' }}>Name</label>
                 <input 
@@ -1096,6 +1114,17 @@ function ExecutiveWorkspace({ products, activeExecutive, db, onUpdateDb }) {
                       setIsSessionActive(true);
                     }
                   }}
+                  style={{ height: '36px', fontSize: '0.8rem' }}
+                />
+              </div>
+              <div>
+                <label className="form-label" style={{ fontSize: '0.65rem' }}>Client Location / Address</label>
+                <input 
+                  type="text" 
+                  className="form-input" 
+                  placeholder="e.g. Calicut, Kerala"
+                  value={customerAddress}
+                  onChange={(e) => setCustomerAddress(e.target.value)}
                   style={{ height: '36px', fontSize: '0.8rem' }}
                 />
               </div>
