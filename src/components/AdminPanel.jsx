@@ -383,14 +383,17 @@ function AdminPanel({
       return;
     }
 
-    // 1. Decrement Stock
-    const updatedProducts = db.products.map(p => {
-      const item = quote.items.find(i => i.id === p.id || i.productId === p.id);
-      if (item) {
-        return { ...p, stock: Math.max(0, p.stock - item.qty) };
-      }
-      return p;
-    });
+    // 1. Only deduct stock if it wasn't already deducted upon invoice upload
+    let updatedProducts = [...(db.products || [])];
+    if (!quote.stockDeducted) {
+      updatedProducts = updatedProducts.map(p => {
+        const item = quote.items.find(i => i.id === p.id || i.productId === p.id);
+        if (item) {
+          return { ...p, stock: Math.max(0, (p.stock || 0) - item.qty) };
+        }
+        return p;
+      });
+    }
 
     // 2. Credit Wallet Ledger
     const walletTx = {
@@ -437,35 +440,77 @@ function AdminPanel({
     // 4. Update Quotations status
     const updatedQuotations = db.quotations.map(q => {
       if (q.id === quote.id) {
-        return { ...q, status: 'verified' };
+        return { ...q, status: 'approved', stockDeducted: true };
       }
       return q;
     });
+
+    // 5. Send Notification to Executive
+    const newNotif = {
+      id: `notif-${Date.now()}`,
+      targetRole: 'executive',
+      targetUserId: quote.executiveId,
+      title: 'Incentive Credited',
+      message: `Invoice #${quote.invoiceNo} verified! ${formatRupee(quote.incentiveAmount)} incentive credited to your wallet.`,
+      timestamp: new Date().toISOString(),
+      read: false,
+      type: 'success'
+    };
 
     onUpdateDb({
       ...db,
       products: updatedProducts,
       executives: updatedExecutives,
       salesLedger: [newSalesLedgerEntry, ...(db.salesLedger || [])],
-      quotations: updatedQuotations
+      quotations: updatedQuotations,
+      notifications: [newNotif, ...(db.notifications || [])]
     });
 
-    alert(`Quotation verified! Wallet credited and stocks updated.`);
+    alert(`Quotation verified! ${formatRupee(quote.incentiveAmount)} credited to executive wallet.`);
   };
 
-  // Reject Salesforce Invoice
+  // Reject Salesforce Invoice (Restores Stock back to clearance inventory)
   const handleRejectInvoice = (quote) => {
     const reason = prompt("Enter reason for rejecting verification:") || "Rejection details not specified by Manager";
     
+    let updatedProducts = [...(db.products || [])];
+    if (quote.stockDeducted) {
+      quote.items.forEach(item => {
+        updatedProducts = updatedProducts.map(p => {
+          if (p.id === item.productId || p.id === item.id) {
+            return { ...p, stock: (p.stock || 0) + item.qty };
+          }
+          return p;
+        });
+      });
+    }
+
     const updatedQuotations = db.quotations.map(q => {
       if (q.id === quote.id) {
-        return { ...q, status: 'rejected', rejectionReason: reason };
+        return { ...q, status: 'rejected', rejectionReason: reason, stockDeducted: false };
       }
       return q;
     });
 
-    onUpdateDb({ ...db, quotations: updatedQuotations });
-    alert("Verification rejected. Executive notified.");
+    // Send Notification to Executive
+    const newNotif = {
+      id: `notif-${Date.now()}`,
+      targetRole: 'executive',
+      targetUserId: quote.executiveId,
+      title: 'Invoice Verification Rejected',
+      message: `Verification for Invoice #${quote.invoiceNo} was rejected. Reason: ${reason}`,
+      timestamp: new Date().toISOString(),
+      read: false,
+      type: 'warning'
+    };
+
+    onUpdateDb({ 
+      ...db, 
+      products: updatedProducts, 
+      quotations: updatedQuotations,
+      notifications: [newNotif, ...(db.notifications || [])]
+    });
+    alert("Verification rejected. Stock released back to clearance inventory & Executive notified.");
   };
 
   // Brand Margin Setup updates
