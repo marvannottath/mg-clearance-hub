@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { 
-  Plus, Edit, Trash2, Download, UploadCloud, 
+  Plus, Edit, Trash2, Download, Upload, UploadCloud, 
   Printer, Users, CheckCircle, FileSpreadsheet, PlusCircle, 
   CheckSquare, Square, DollarSign, AlertCircle, Percent, Star, 
   Volume2, RefreshCw, Eye, FileText, Zap, ShieldAlert, Globe, Database
@@ -16,6 +16,7 @@ function AdminPanel({
   onUpdateStock, onAddProduct, onEditProduct, onDeleteProduct, 
   onBulkUpdateStock, onAddExecutive, onDeleteExecutive, onUpdateDb, db
 }) {
+  const fileInputRef = useRef(null);
   const [activeTab, setActiveTab] = useState(() => currentUser.role === 'manager' ? 'inventory' : 'executives'); // 'inventory' | 'verify' | 'quotes_audit' | 'specials' | 'brands_margins' | 'import' | 'stickers' | 'executives' | 'reports'
   const divisionsList = Array.from(new Set(products.map(p => p.division || 'Bathing')));
   const [isSyncing, setIsSyncing] = useState(false);
