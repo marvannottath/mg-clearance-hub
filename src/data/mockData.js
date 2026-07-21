@@ -300,13 +300,25 @@ export function loadDatabase() {
     });
   }
 
-  // 2. Ensure products have landingCost, stickerStatus, isWeeklySpecial, extraCustomerDiscount, weeklySpecialIncentive, division, size, finishing, location
+  // 2. Ensure products have distinct MRP, landingCost, stickerStatus, etc.
   if (db.products) {
     db.products = db.products.map(p => {
       let updated = { ...p };
       let updatedStatus = false;
-      if (updated.landingCost === undefined) {
-        updated.landingCost = Math.round(p.specialPrice * 0.8);
+
+      const specialP = p.specialPrice || p.mrp || 0;
+      let mrpP = p.mrp || 0;
+
+      // Auto-correct identical or inverted MRP and Clearance prices
+      if (mrpP <= specialP && specialP > 0) {
+        mrpP = Math.round(specialP / (1 - 0.40)); // Standard 40% margin calculation for MRP
+        updated.mrp = mrpP;
+        updatedStatus = true;
+      }
+
+      // Ensure realistic Landing Cost (net cost price ~20% below clearance rate)
+      if (updated.landingCost === undefined || updated.landingCost >= specialP) {
+        updated.landingCost = Math.round(specialP * 0.8);
         updatedStatus = true;
       }
       if (updated.stickerStatus === undefined) {

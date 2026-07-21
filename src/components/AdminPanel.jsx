@@ -809,22 +809,20 @@ function AdminPanel({
         let landingValue = safeParseInt(row[landingIdx], 0);
 
         if (allNumbersInLine.length >= 2) {
-          // Highest number in line is MRP e.g. 1056, 7786, 8753
-          const highestNum = Math.max(...allNumbersInLine);
-          mrpValue = mrpValue > 0 ? mrpValue : highestNum;
-          
-          const lowerNumbers = allNumbersInLine.filter(n => n < mrpValue);
-          if (lowerNumbers.length > 0) {
-            landingValue = landingValue > 0 ? landingValue : lowerNumbers[0];
-            specValue = specValue > 0 ? specValue : (lowerNumbers[1] || Math.round(mrpValue * 0.8));
-          } else {
-            landingValue = landingValue > 0 ? landingValue : Math.round(mrpValue * 0.6);
-            specValue = specValue > 0 ? specValue : Math.round(mrpValue * 0.8);
-          }
-        } else {
-          mrpValue = mrpValue || 15000;
-          specValue = specValue || Math.round(mrpValue * 0.8);
-          landingValue = landingValue || Math.round(specValue * 0.75);
+          const sortedNums = [...allNumbersInLine].sort((a, b) => b - a);
+          // Highest number is MRP e.g. ₹9,890 or ₹1,192
+          mrpValue = mrpValue > sortedNums[0] ? mrpValue : sortedNums[0];
+          specValue = specValue > 0 && specValue < mrpValue ? specValue : (sortedNums[1] || Math.round(mrpValue * 0.6));
+          landingValue = landingValue > 0 && landingValue < specValue ? landingValue : Math.round(specValue * 0.8);
+        }
+
+        // If MRP is equal to or lower than Clearance Price, calculate realistic MRP using 40% margin
+        if (mrpValue <= specValue && specValue > 0) {
+          mrpValue = Math.round(specValue / (1 - 0.40));
+        }
+
+        if (!landingValue || landingValue >= specValue) {
+          landingValue = Math.round(specValue * 0.8);
         }
 
         parsedItems.push({
