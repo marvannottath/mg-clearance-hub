@@ -463,21 +463,15 @@ function App() {
   );
 }
 
-// Render Login view as a static component with 4 role switcher tabs
+// Render Clean Unified Login View
 function LoginView({ onLoginSubmit }) {
-  const [loginMode, setLoginMode] = useState('executive'); // 'executive' | 'manager' | 'md' | 'admin'
   const [loginUser, setLoginUser] = useState('');
   const [loginPass, setLoginPass] = useState('');
   const [errorMsg, setErrorMsg] = useState('');
 
   const handleLogin = (e) => {
     e.preventDefault();
-    let targetUser = loginUser;
-    if (loginMode === 'admin' && !loginUser) targetUser = 'admin';
-    if (loginMode === 'manager' && !loginUser) targetUser = 'manager';
-    if (loginMode === 'md' && !loginUser) targetUser = 'md';
-    
-    const res = onLoginSubmit(targetUser, loginPass);
+    const res = onLoginSubmit(loginUser, loginPass);
     if (!res.success) {
       setErrorMsg(res.error);
     }
@@ -485,49 +479,13 @@ function LoginView({ onLoginSubmit }) {
 
   return (
     <div className="login-view-wrapper" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '75vh', padding: '1rem' }}>
-      <div className="glass-panel login-card" style={{ maxWidth: '540px', width: '100%', padding: '2.5rem', borderRadius: '16px' }}>
-        <div style={{ textAlign: 'center' }}>
+      <div className="glass-panel login-card" style={{ maxWidth: '420px', width: '100%', padding: '2.5rem', borderRadius: '16px' }}>
+        <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
           <Layers className="logo-icon" size={42} style={{ marginBottom: '0.75rem', display: 'inline-block' }} />
           <h2 style={{ fontSize: '1.65rem', fontWeight: 800, letterSpacing: '-0.02em' }}>MG Clearance Hub</h2>
-          <p style={{ color: 'var(--text-secondary)', fontSize: '0.85rem', marginTop: '0.25rem', marginBottom: '1.5rem' }}>
+          <p style={{ color: 'var(--text-secondary)', fontSize: '0.85rem', marginTop: '0.25rem' }}>
             Showroom Inventory & Liquidation System
           </p>
-        </div>
-
-        {/* 4 Login Role Switcher Tabs */}
-        <div style={{ display: 'flex', background: 'rgba(255, 255, 255, 0.03)', padding: '0.3rem', borderRadius: '10px', marginBottom: '1.5rem', border: '1px solid var(--border-color)', gap: '0.2rem' }}>
-          <button 
-            type="button" 
-            className={`btn ${loginMode === 'executive' ? 'btn-primary' : 'btn-ghost'}`}
-            onClick={() => { setLoginMode('executive'); setErrorMsg(''); setLoginUser(''); setLoginPass(''); }}
-            style={{ flex: 1, padding: '0.45rem 0.2rem', fontSize: '0.75rem', fontWeight: 700, borderRadius: '8px' }}
-          >
-            Executive
-          </button>
-          <button 
-            type="button" 
-            className={`btn ${loginMode === 'manager' ? 'btn-warning' : 'btn-ghost'}`}
-            onClick={() => { setLoginMode('manager'); setErrorMsg(''); setLoginUser('manager'); setLoginPass(''); }}
-            style={{ flex: 1, padding: '0.45rem 0.2rem', fontSize: '0.75rem', fontWeight: 700, borderRadius: '8px' }}
-          >
-            Manager
-          </button>
-          <button 
-            type="button" 
-            className={`btn ${loginMode === 'md' ? 'btn-cyan' : 'btn-ghost'}`}
-            onClick={() => { setLoginMode('md'); setErrorMsg(''); setLoginUser('md'); setLoginPass(''); }}
-            style={{ flex: 1, padding: '0.45rem 0.2rem', fontSize: '0.75rem', fontWeight: 700, borderRadius: '8px' }}
-          >
-            MD (Analytics)
-          </button>
-          <button 
-            type="button" 
-            className={`btn ${loginMode === 'admin' ? 'btn-emerald' : 'btn-ghost'}`}
-            onClick={() => { setLoginMode('admin'); setErrorMsg(''); setLoginUser('admin'); setLoginPass(''); }}
-            style={{ flex: 1, padding: '0.45rem 0.2rem', fontSize: '0.75rem', fontWeight: 700, borderRadius: '8px' }}
-          >
-            Admin
-          </button>
         </div>
 
         {errorMsg && (
@@ -537,22 +495,16 @@ function LoginView({ onLoginSubmit }) {
           </div>
         )}
 
-        <form onSubmit={handleLogin} style={{ display: 'flex', flexDirection: 'column', gap: '1.1rem' }}>
+        <form onSubmit={handleLogin} style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
           <div className="form-group">
             <label className="form-label" style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
               <User size={13} />
-              {loginMode === 'admin' 
-                ? 'System Admin Username' 
-                : loginMode === 'md'
-                ? 'Managing Director Username'
-                : loginMode === 'manager' 
-                ? 'Showroom Manager Username' 
-                : 'Sales Executive Username'}
+              Username
             </label>
             <input 
               type="text" 
               className="form-input" 
-              placeholder={loginMode === 'admin' ? 'admin' : loginMode === 'md' ? 'md' : loginMode === 'manager' ? 'manager' : 'e.g. rajesh'} 
+              placeholder="Username / Staff ID" 
               value={loginUser}
               onChange={(e) => setLoginUser(e.target.value)}
               required
@@ -567,7 +519,7 @@ function LoginView({ onLoginSubmit }) {
             <input 
               type="password" 
               className="form-input" 
-              placeholder="••••••••" 
+              placeholder="Password" 
               value={loginPass}
               onChange={(e) => setLoginPass(e.target.value)}
               required
@@ -576,38 +528,12 @@ function LoginView({ onLoginSubmit }) {
 
           <button 
             type="submit" 
-            className={`btn ${loginMode === 'admin' ? 'btn-emerald' : loginMode === 'md' ? 'btn-cyan' : loginMode === 'manager' ? 'btn-warning' : 'btn-primary'}`} 
-            style={{ width: '100%', padding: '0.8rem', marginTop: '0.5rem', fontWeight: 700, fontSize: '0.95rem' }}
+            className="btn btn-primary" 
+            style={{ width: '100%', padding: '0.8rem', marginTop: '0.5rem', fontWeight: 700, fontSize: '1rem' }}
           >
-            {loginMode === 'admin' 
-              ? 'Access Security & System Settings' 
-              : loginMode === 'md'
-              ? 'Access MD Executive Forecasts & Analytics'
-              : loginMode === 'manager' 
-              ? 'Access Stock Management & Rates' 
-              : 'Access Sales Workspace'}
+            Login
           </button>
         </form>
-
-        <div style={{ marginTop: '1.5rem', borderTop: '1px solid var(--border-color)', paddingTop: '1rem', fontSize: '0.75rem', color: 'var(--text-muted)', lineHeight: '1.5' }}>
-          {loginMode === 'admin' ? (
-            <span style={{ color: 'var(--accent-emerald)', fontWeight: 600 }}>
-              🛡️ System Admin: Master system configurations, user credentials & security parameters.
-            </span>
-          ) : loginMode === 'md' ? (
-            <span style={{ color: 'var(--accent-cyan)', fontWeight: 600 }}>
-              📈 Managing Director: Read-only executive forecasts, liquidation pace graphs, revenue surplus & performance matrix.
-            </span>
-          ) : loginMode === 'manager' ? (
-            <span style={{ color: 'var(--accent-amber)', fontWeight: 600 }}>
-              📊 Stock Manager: Stock management, brand margins, weekly offers, quotation audit, invoice verification & QR tags.
-            </span>
-          ) : (
-            <span>
-              💼 Sales Executive: Customer billing, QR scanning, quotation PDFs & incentive earnings.
-            </span>
-          )}
-        </div>
       </div>
     </div>
   );
