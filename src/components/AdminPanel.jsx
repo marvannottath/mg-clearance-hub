@@ -16,7 +16,7 @@ function AdminPanel({
   onUpdateStock, onAddProduct, onEditProduct, onDeleteProduct, 
   onBulkUpdateStock, onAddExecutive, onDeleteExecutive, onUpdateDb, db
 }) {
-  const [activeTab, setActiveTab] = useState(() => currentUser.role === 'manager' ? 'inventory' : 'reports'); // 'inventory' | 'verify' | 'quotes_audit' | 'specials' | 'brands_margins' | 'import' | 'stickers' | 'executives' | 'reports'
+  const [activeTab, setActiveTab] = useState(() => currentUser.role === 'manager' ? 'inventory' : 'executives'); // 'inventory' | 'verify' | 'quotes_audit' | 'specials' | 'brands_margins' | 'import' | 'stickers' | 'executives' | 'reports'
   const divisionsList = Array.from(new Set(products.map(p => p.division || 'Bathing')));
   const [isSyncing, setIsSyncing] = useState(false);
 
@@ -890,99 +890,104 @@ function AdminPanel({
         {/* Left Sidebar Navigation */}
         <aside className="admin-sidebar" style={{ padding: '1.25rem', display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
           
-          <div>
-            <span style={{ fontSize: '0.65rem', color: 'var(--text-muted)', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', display: 'block', marginBottom: '0.4rem', paddingLeft: '0.5rem' }}>
-              Main Operations
-            </span>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
-              <button 
-                type="button"
-                className={`sidebar-nav-btn ${activeTab === 'reports' ? 'active' : ''}`} 
-                onClick={() => setActiveTab('reports')}
-              >
-                Campaign Analytics
-              </button>
-              <button 
-                type="button"
-                className={`sidebar-nav-btn ${activeTab === 'verify' ? 'active' : ''}`} 
-                onClick={() => setActiveTab('verify')}
-                style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}
-              >
-                <span>Verify Invoices</span>
-                {pendingQuotes.length > 0 && (
-                  <span className="badge badge-rose" style={{ padding: '0.1rem 0.35rem', fontSize: '0.65rem', borderRadius: '10px' }}>
-                    {pendingQuotes.length}
-                  </span>
-                )}
-              </button>
-              <button 
-                type="button"
-                className={`sidebar-nav-btn ${activeTab === 'quotes_audit' ? 'active' : ''}`} 
-                onClick={() => setActiveTab('quotes_audit')}
-                style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}
-              >
-                <span>Quotation & Stock Audit</span>
-                {quotations.filter(q => q.status === 'draft' || q.status === 'pending_verification').length > 0 && (
-                  <span className="badge badge-cyan" style={{ padding: '0.1rem 0.35rem', fontSize: '0.65rem', borderRadius: '10px' }}>
-                    {quotations.filter(q => q.status === 'draft' || q.status === 'pending_verification').length}
-                  </span>
-                )}
-              </button>
-            </div>
-          </div>
+          {/* Manager Operations Sidebar - ONLY shown for Manager role */}
+          {currentUser.role === 'manager' && (
+            <>
+              <div>
+                <span style={{ fontSize: '0.65rem', color: 'var(--text-muted)', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', display: 'block', marginBottom: '0.4rem', paddingLeft: '0.5rem' }}>
+                  Main Operations
+                </span>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
+                  <button 
+                    type="button"
+                    className={`sidebar-nav-btn ${activeTab === 'inventory' ? 'active' : ''}`} 
+                    onClick={() => setActiveTab('inventory')}
+                  >
+                    Clearance Stock Inventory
+                  </button>
+                  <button 
+                    type="button"
+                    className={`sidebar-nav-btn ${activeTab === 'verify' ? 'active' : ''}`} 
+                    onClick={() => setActiveTab('verify')}
+                    style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}
+                  >
+                    <span>Verify Invoices</span>
+                    {pendingQuotes.length > 0 && (
+                      <span className="badge badge-rose" style={{ padding: '0.1rem 0.35rem', fontSize: '0.65rem', borderRadius: '10px' }}>
+                        {pendingQuotes.length}
+                      </span>
+                    )}
+                  </button>
+                  <button 
+                    type="button"
+                    className={`sidebar-nav-btn ${activeTab === 'quotes_audit' ? 'active' : ''}`} 
+                    onClick={() => setActiveTab('quotes_audit')}
+                    style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}
+                  >
+                    <span>Quotation & Stock Audit</span>
+                    {quotations.filter(q => q.status === 'draft' || q.status === 'pending_verification').length > 0 && (
+                      <span className="badge badge-cyan" style={{ padding: '0.1rem 0.35rem', fontSize: '0.65rem', borderRadius: '10px' }}>
+                        {quotations.filter(q => q.status === 'draft' || q.status === 'pending_verification').length}
+                      </span>
+                    )}
+                  </button>
+                  <button 
+                    type="button"
+                    className={`sidebar-nav-btn ${activeTab === 'reports' ? 'active' : ''}`} 
+                    onClick={() => setActiveTab('reports')}
+                  >
+                    Campaign Stock Analytics
+                  </button>
+                </div>
+              </div>
 
-          <div>
-            <span style={{ fontSize: '0.65rem', color: 'var(--text-muted)', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', display: 'block', marginBottom: '0.4rem', paddingLeft: '0.5rem' }}>
-              Stock Management
-            </span>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
-              <button 
-                type="button"
-                className={`sidebar-nav-btn ${activeTab === 'inventory' ? 'active' : ''}`} 
-                onClick={() => setActiveTab('inventory')}
-              >
-                Clearance Stock
-              </button>
-              <button 
-                type="button"
-                className={`sidebar-nav-btn ${activeTab === 'stickers' ? 'active' : ''}`} 
-                onClick={() => setActiveTab('stickers')}
-              >
-                Showroom QR Stickers
-              </button>
-              <button 
-                type="button"
-                className={`sidebar-nav-btn ${activeTab === 'import' ? 'active' : ''}`} 
-                onClick={() => setActiveTab('import')}
-              >
-                Bulk Stock Import
-              </button>
-            </div>
-          </div>
+              <div>
+                <span style={{ fontSize: '0.65rem', color: 'var(--text-muted)', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', display: 'block', marginBottom: '0.4rem', paddingLeft: '0.5rem' }}>
+                  Stock Management
+                </span>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
+                  <button 
+                    type="button"
+                    className={`sidebar-nav-btn ${activeTab === 'stickers' ? 'active' : ''}`} 
+                    onClick={() => setActiveTab('stickers')}
+                  >
+                    Showroom QR Stickers
+                  </button>
+                  <button 
+                    type="button"
+                    className={`sidebar-nav-btn ${activeTab === 'import' ? 'active' : ''}`} 
+                    onClick={() => setActiveTab('import')}
+                  >
+                    Bulk Stock Import
+                  </button>
+                </div>
+              </div>
 
-          <div>
-            <span style={{ fontSize: '0.65rem', color: 'var(--text-muted)', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', display: 'block', marginBottom: '0.4rem', paddingLeft: '0.5rem' }}>
-              Campaign Config
-            </span>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
-              <button 
-                type="button"
-                className={`sidebar-nav-btn ${activeTab === 'specials' ? 'active' : ''}`} 
-                onClick={() => setActiveTab('specials')}
-              >
-                Weekly Specials
-              </button>
-              <button 
-                type="button"
-                className={`sidebar-nav-btn ${activeTab === 'brands_margins' ? 'active' : ''}`} 
-                onClick={() => setActiveTab('brands_margins')}
-              >
-                Brand Setup & Margins
-              </button>
-            </div>
-          </div>
+              <div>
+                <span style={{ fontSize: '0.65rem', color: 'var(--text-muted)', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', display: 'block', marginBottom: '0.4rem', paddingLeft: '0.5rem' }}>
+                  Campaign Config
+                </span>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
+                  <button 
+                    type="button"
+                    className={`sidebar-nav-btn ${activeTab === 'specials' ? 'active' : ''}`} 
+                    onClick={() => setActiveTab('specials')}
+                  >
+                    Weekly Specials
+                  </button>
+                  <button 
+                    type="button"
+                    className={`sidebar-nav-btn ${activeTab === 'brands_margins' ? 'active' : ''}`} 
+                    onClick={() => setActiveTab('brands_margins')}
+                  >
+                    Brand Setup & Margins
+                  </button>
+                </div>
+              </div>
+            </>
+          )}
 
-          {/* Admin Only System Operations */}
+          {/* Admin Only Root System Operations - ONLY shown for Admin role */}
           {currentUser.role === 'admin' && (
             <div>
               <span style={{ fontSize: '0.65rem', color: 'var(--accent-emerald)', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', display: 'block', marginBottom: '0.4rem', paddingLeft: '0.5rem' }}>
@@ -994,7 +999,21 @@ function AdminPanel({
                   className={`sidebar-nav-btn ${activeTab === 'executives' ? 'active' : ''}`} 
                   onClick={() => setActiveTab('executives')}
                 >
-                  Executives & Security
+                  🔑 Team Passwords & Security
+                </button>
+                <button 
+                  type="button"
+                  className={`sidebar-nav-btn ${activeTab === 'dns' ? 'active' : ''}`} 
+                  onClick={() => setActiveTab('dns')}
+                >
+                  🌐 DNS & Custom Domain
+                </button>
+                <button 
+                  type="button"
+                  className={`sidebar-nav-btn ${activeTab === 'db_tools' ? 'active' : ''}`} 
+                  onClick={() => setActiveTab('db_tools')}
+                >
+                  💾 Database Reset & Backup
                 </button>
               </div>
             </div>
@@ -1934,59 +1953,120 @@ function AdminPanel({
           </div>
         )}
 
-        {/* Tab 7: Executive Credentials & Payouts */}
+        {/* Tab 7: Team Accounts & Password Security Center */}
         {activeTab === 'executives' && (
           <div className="fade-in">
-            <h3 className="panel-title">
-              <Users size={20} color="var(--accent-amber)" />
-              Sales Campaign Credentials & Disbursements
+            <h3 className="panel-title" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', borderBottom: '1px solid var(--border-color)', paddingBottom: '0.75rem', marginBottom: '1.25rem' }}>
+              <ShieldAlert size={22} color="var(--accent-emerald)" />
+              Team Accounts & Password Security Administration
             </h3>
             
-            <div className="dashboard-grid" style={{ gridTemplateColumns: '1fr 2fr', gap: '1.5rem' }}>
+            <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: '1.5rem', background: 'rgba(16, 185, 129, 0.05)', border: '1px solid rgba(16, 185, 129, 0.2)', padding: '0.85rem 1.25rem', borderRadius: '10px' }}>
+              🔑 As System Admin, you hold full root authority to manage credentials and reset passwords for all roles across Marble Gallery (MD, Showroom Manager, Salesforce Checker, System Admin, and Sales Executives). Password reset requests submitted via <strong>projects@mggroupin.com</strong> are managed here.
+            </p>
+
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem', marginBottom: '2rem' }}>
               
-              {/* Main Admin Password Security Panel */}
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-                <div className="glass-panel" style={{ padding: '1.25rem', border: '1px solid var(--accent-emerald)', borderRadius: '12px', background: 'rgba(16, 185, 129, 0.02)' }}>
-                  <h4 style={{ fontSize: '0.95rem', fontWeight: 700, marginBottom: '0.75rem', display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--accent-emerald)', borderBottom: '1px solid var(--border-color)', paddingBottom: '0.4rem' }}>
-                    <ShieldAlert size={16} />
-                    Main Admin Password Security
-                  </h4>
-                  <p style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', marginBottom: '1rem' }}>
-                    Change the password used to access system settings, API configs, stock controls, and executive accounts.
-                  </p>
-                  <form onSubmit={handleUpdateAdminPassword} style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-                    <div className="form-group" style={{ marginBottom: 0 }}>
-                      <label className="form-label" style={{ fontSize: '0.75rem' }}>New Admin Password</label>
-                      <input 
-                        type="password" 
-                        className="form-input" 
-                        value={adminPassword}
-                        onChange={(e) => setAdminPassword(e.target.value)}
-                        placeholder="Set new admin password"
-                        required
-                      />
-                    </div>
-                    <button type="submit" className="btn btn-emerald" style={{ padding: '0.5rem', fontSize: '0.8rem', fontWeight: 700 }}>
-                      Update Admin Password
-                    </button>
-                    {adminPassSuccess && (
-                      <span style={{ fontSize: '0.75rem', color: 'var(--accent-emerald)', fontWeight: 600 }}>
-                        ✓ {adminPassSuccess}
-                      </span>
-                    )}
+              {/* Card 1: Core System Roles Passwords */}
+              <div className="glass-panel" style={{ padding: '1.25rem', borderRadius: '12px', background: 'var(--bg-card)', border: '1px solid var(--border-color)' }}>
+                <h4 style={{ fontSize: '1rem', fontWeight: 700, color: 'var(--accent-cyan)', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem', borderBottom: '1px dashed var(--border-color)', paddingBottom: '0.5rem' }}>
+                  <Users size={18} />
+                  Core System Accounts Password Reset
+                </h4>
+
+                {/* Manager Password Reset */}
+                <div style={{ marginBottom: '1.25rem', background: 'rgba(255,255,255,0.01)', padding: '0.85rem', borderRadius: '8px', border: '1px solid var(--border-color)' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
+                    <span style={{ fontWeight: 700, fontSize: '0.85rem' }}>👨‍💼 Showroom Manager Account (`manager`)</span>
+                    <span style={{ fontSize: '0.7rem', color: 'var(--accent-emerald)', background: 'rgba(16, 185, 129, 0.1)', padding: '0.1rem 0.4rem', borderRadius: '4px' }}>Role: manager</span>
+                  </div>
+                  <form onSubmit={(e) => {
+                    e.preventDefault();
+                    const newP = e.target.managerPass.value;
+                    if (newP) {
+                      localStorage.setItem('mg_manager_password', newP);
+                      showToast("Showroom Manager password updated successfully!");
+                      e.target.reset();
+                    }
+                  }} style={{ display: 'flex', gap: '0.5rem' }}>
+                    <input type="password" name="managerPass" className="form-input text-xs" placeholder="New Manager Password" required style={{ height: '34px' }} />
+                    <button type="submit" className="btn btn-cyan" style={{ padding: '0.2rem 0.75rem', fontSize: '0.75rem', whiteSpace: 'nowrap' }}>Reset Password</button>
                   </form>
                 </div>
 
-                {/* Form to add executive */}
-                <div className="glass-panel" style={{ padding: '1.25rem' }}>
-                  <h4 style={{ fontSize: '1rem', fontWeight: 600, marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem', borderBottom: '1px solid var(--border-color)', paddingBottom: '0.4rem' }}>
-                    <PlusCircle size={16} />
-                    Add Sales Executive
-                  </h4>
+                {/* Checker Password Reset */}
+                <div style={{ marginBottom: '1.25rem', background: 'rgba(255,255,255,0.01)', padding: '0.85rem', borderRadius: '8px', border: '1px solid var(--border-color)' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
+                    <span style={{ fontWeight: 700, fontSize: '0.85rem' }}>🧾 Salesforce Billing Checker (`checker`)</span>
+                    <span style={{ fontSize: '0.7rem', color: 'var(--accent-cyan)', background: 'rgba(14, 165, 233, 0.1)', padding: '0.1rem 0.4rem', borderRadius: '4px' }}>Role: checker</span>
+                  </div>
+                  <form onSubmit={(e) => {
+                    e.preventDefault();
+                    const newP = e.target.checkerPass.value;
+                    if (newP) {
+                      localStorage.setItem('mg_checker_password', newP);
+                      showToast("Salesforce Checker password updated successfully!");
+                      e.target.reset();
+                    }
+                  }} style={{ display: 'flex', gap: '0.5rem' }}>
+                    <input type="password" name="checkerPass" className="form-input text-xs" placeholder="New Checker Password" required style={{ height: '34px' }} />
+                    <button type="submit" className="btn btn-cyan" style={{ padding: '0.2rem 0.75rem', fontSize: '0.75rem', whiteSpace: 'nowrap' }}>Reset Password</button>
+                  </form>
+                </div>
+
+                {/* MD Password Reset */}
+                <div style={{ marginBottom: '1.25rem', background: 'rgba(255,255,255,0.01)', padding: '0.85rem', borderRadius: '8px', border: '1px solid var(--border-color)' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
+                    <span style={{ fontWeight: 700, fontSize: '0.85rem' }}>👑 Managing Director Account (`md`)</span>
+                    <span style={{ fontSize: '0.7rem', color: 'var(--accent-amber)', background: 'rgba(245, 158, 11, 0.1)', padding: '0.1rem 0.4rem', borderRadius: '4px' }}>Role: md</span>
+                  </div>
+                  <form onSubmit={(e) => {
+                    e.preventDefault();
+                    const newP = e.target.mdPass.value;
+                    if (newP) {
+                      localStorage.setItem('mg_md_password', newP);
+                      showToast("MD Account password updated successfully!");
+                      e.target.reset();
+                    }
+                  }} style={{ display: 'flex', gap: '0.5rem' }}>
+                    <input type="password" name="mdPass" className="form-input text-xs" placeholder="New MD Password" required style={{ height: '34px' }} />
+                    <button type="submit" className="btn btn-cyan" style={{ padding: '0.2rem 0.75rem', fontSize: '0.75rem', whiteSpace: 'nowrap' }}>Reset Password</button>
+                  </form>
+                </div>
+
+                {/* Main Admin Password Security Panel */}
+                <div style={{ background: 'rgba(255,255,255,0.01)', padding: '0.85rem', borderRadius: '8px', border: '1px solid var(--accent-emerald)' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
+                    <span style={{ fontWeight: 700, fontSize: '0.85rem', color: 'var(--accent-emerald)' }}>🛡️ System Admin Account (`admin`)</span>
+                    <span style={{ fontSize: '0.7rem', color: '#fff', background: 'var(--accent-emerald)', padding: '0.1rem 0.4rem', borderRadius: '4px' }}>Role: admin</span>
+                  </div>
+                  <form onSubmit={handleUpdateAdminPassword} style={{ display: 'flex', gap: '0.5rem' }}>
+                    <input 
+                      type="password" 
+                      className="form-input text-xs" 
+                      value={adminPassword}
+                      onChange={(e) => setAdminPassword(e.target.value)}
+                      placeholder="New System Admin Password"
+                      required
+                      style={{ height: '34px' }}
+                    />
+                    <button type="submit" className="btn btn-emerald" style={{ padding: '0.2rem 0.75rem', fontSize: '0.75rem', whiteSpace: 'nowrap' }}>
+                      Update Admin Password
+                    </button>
+                  </form>
+                </div>
+
+              </div>
+
+              {/* Card 2: Add New Sales Executive */}
+              <div className="glass-panel" style={{ padding: '1.25rem', borderRadius: '12px', background: 'var(--bg-card)', border: '1px solid var(--border-color)' }}>
+                <h4 style={{ fontSize: '1rem', fontWeight: 700, color: 'var(--accent-amber)', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem', borderBottom: '1px dashed var(--border-color)', paddingBottom: '0.5rem' }}>
+                  <PlusCircle size={18} />
+                  Add New Sales Executive Account
+                </h4>
                 <form onSubmit={handleExecSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '0.85rem' }}>
-                  
-                  <div className="form-group">
-                    <label className="form-label">Full Name</label>
+                  <div className="form-group" style={{ marginBottom: 0 }}>
+                    <label className="form-label" style={{ fontSize: '0.75rem' }}>Full Name</label>
                     <input 
                       type="text" 
                       className="form-input" 
@@ -1994,133 +2074,95 @@ function AdminPanel({
                       onChange={(e) => setExecName(e.target.value)}
                       placeholder="e.g. Ramesh Nair"
                       required
+                      style={{ height: '36px' }}
                     />
                   </div>
 
-                  <div className="form-group">
-                    <label className="form-label">Email ID</label>
+                  <div className="form-group" style={{ marginBottom: 0 }}>
+                    <label className="form-label" style={{ fontSize: '0.75rem' }}>Email Address</label>
                     <input 
                       type="email" 
                       className="form-input" 
                       value={execEmail}
                       onChange={(e) => setExecEmail(e.target.value)}
-                      placeholder="e.g. ramesh.n@marblegallery.com"
+                      placeholder="e.g. ramesh.n@mggroupin.com"
                       required
+                      style={{ height: '36px' }}
                     />
                   </div>
 
-                  {/* Modern Aligned Grid fields */}
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
-                    <div className="form-group">
-                      <label className="form-label">Login Username</label>
+                    <div className="form-group" style={{ marginBottom: 0 }}>
+                      <label className="form-label" style={{ fontSize: '0.75rem' }}>Login Username</label>
                       <input 
                         type="text" 
                         className="form-input" 
                         value={execUsername}
                         onChange={(e) => setExecUsername(e.target.value)}
-                        placeholder="username"
+                        placeholder="e.g. ramesh"
                         required
+                        style={{ height: '36px' }}
                       />
                     </div>
-
-                    <div className="form-group">
-                      <label className="form-label">Login Password</label>
+                    <div className="form-group" style={{ marginBottom: 0 }}>
+                      <label className="form-label" style={{ fontSize: '0.75rem' }}>Login Password</label>
                       <input 
                         type="password" 
                         className="form-input" 
                         value={execPassword}
                         onChange={(e) => setExecPassword(e.target.value)}
-                        placeholder="password"
+                        placeholder="Set password"
                         required
+                        style={{ height: '36px' }}
                       />
                     </div>
                   </div>
 
-                  <div className="form-group">
-                    <label className="form-label">Campaign Clearance Target (₹)</label>
-                    <input 
-                      type="number" 
-                      className="form-input" 
-                      value={execTarget}
-                      onChange={(e) => setExecTarget(e.target.value)}
-                      placeholder="8000000"
-                      required
-                    />
-                  </div>
-
-                  <button type="submit" className="btn btn-emerald" style={{ width: '100%', marginTop: '0.25rem' }}>
-                    Create Account
+                  <button type="submit" className="btn btn-primary" style={{ marginTop: '0.5rem', fontWeight: 700 }}>
+                    + Register Executive Account
                   </button>
                 </form>
               </div>
+
             </div>
 
-              {/* Executives list table with wallet payouts */}
-              <div className="custom-table-container">
-                <h4 style={{ fontSize: '0.95rem', fontWeight: 600, marginBottom: '0.5rem' }}>Active Showroom team</h4>
-                <table className="custom-table">
-                  <thead>
-                    <tr>
-                      <th>Exec ID</th>
-                      <th>Sales Executive</th>
-                      <th>Credentials</th>
-                      <th>Target</th>
-                      <th>Cleared Sales</th>
-                      <th>Wallet Balance</th>
-                      <th>Payout Actions</th>
-                      <th>Delete</th>
+            {/* Sales Executive Accounts Table */}
+            <div className="glass-panel" style={{ padding: '1.25rem', borderRadius: '12px' }}>
+              <h4 style={{ fontSize: '1rem', fontWeight: 700, marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <Users size={18} color="var(--accent-cyan)" />
+                Active Sales Executive Team Accounts ({executives.length})
+              </h4>
+              <table className="data-table" style={{ width: '100%', fontSize: '0.8rem' }}>
+                <thead>
+                  <tr>
+                    <th>Executive Name</th>
+                    <th>Username</th>
+                    <th>Email</th>
+                    <th>Wallet Balance</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {executives.map(exec => (
+                    <tr key={exec.id}>
+                      <td style={{ fontWeight: 700 }}>{exec.name}</td>
+                      <td><code style={{ background: 'rgba(255,255,255,0.05)', padding: '0.1rem 0.4rem', borderRadius: '4px' }}>{exec.username}</code></td>
+                      <td style={{ color: 'var(--text-secondary)' }}>{exec.email}</td>
+                      <td style={{ fontWeight: 700, color: 'var(--accent-emerald)' }}>{formatRupee(exec.walletBalance || 0)}</td>
+                      <td>
+                        <button className="btn btn-danger" style={{ padding: '0.2rem 0.5rem', fontSize: '0.7rem' }} onClick={() => onDeleteExecutive(exec.id)}>
+                          Delete
+                        </button>
+                      </td>
                     </tr>
-                  </thead>
-                  <tbody>
-                    {executives.map(exec => {
-                      const pct = exec.target > 0 ? ((exec.cleared / exec.target) * 100).toFixed(0) : 0;
-                      const balance = exec.walletBalance || 0;
-                      return (
-                        <tr key={exec.id}>
-                          <td style={{ fontFamily: 'monospace', fontWeight: 'bold' }}>{exec.id}</td>
-                          <td>
-                            <div style={{ fontWeight: 600 }}>{exec.name}</div>
-                            <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{exec.email}</div>
-                          </td>
-                          <td>
-                            <div style={{ fontSize: '0.75rem' }}>User: <code style={{ color: 'var(--accent-cyan)' }}>{exec.username || 'N/A'}</code></div>
-                            <div style={{ fontSize: '0.75rem' }}>Pass: <code style={{ color: 'var(--accent-cyan)' }}>{exec.password || 'N/A'}</code></div>
-                          </td>
-                          <td>{formatRupee(exec.target)}</td>
-                          <td style={{ color: 'var(--accent-emerald)', fontWeight: 600 }}>
-                            {formatRupee(exec.cleared)} ({pct}%)
-                          </td>
-                          <td style={{ fontWeight: 700, color: 'var(--accent-emerald)' }}>{formatRupee(balance)}</td>
-                          <td>
-                            <button 
-                              className="btn btn-emerald"
-                              disabled={balance <= 0}
-                              style={{ padding: '0.3rem 0.6rem', fontSize: '0.7rem', fontWeight: 600 }}
-                              onClick={() => handleAdminPayout(exec)}
-                            >
-                              <DollarSign size={10} style={{ marginRight: '0.1rem' }} />
-                              Pay Out Cash
-                            </button>
-                          </td>
-                          <td>
-                            <button 
-                              className="btn btn-danger" 
-                              style={{ padding: '0.25rem 0.5rem', border: 'none' }}
-                              onClick={() => { if(confirm(`Delete account for ${exec.name}?`)) onDeleteExecutive(exec.id) }}
-                            >
-                              <Trash2 size={12} />
-                            </button>
-                          </td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
-              </div>
-
+                  ))}
+                </tbody>
+              </table>
             </div>
+
           </div>
         )}
+
 
         {/* Tab 8: Campaign Analytics MD dashboard */}
         {activeTab === 'reports' && (

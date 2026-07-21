@@ -10,21 +10,41 @@ function App() {
   const [db, setDb] = useState(() => loadDatabase());
   const [theme, setTheme] = useState(() => localStorage.getItem('mg_clearance_theme') || 'dark');
   
-  // Routing and Session State
-  const [hash, setHash] = useState(() => window.location.hash || '#/login');
+  // Clean HTML5 Path Routing (No '#' in URL)
+  const getNormalizedRoute = () => {
+    let p = window.location.pathname;
+    let h = window.location.hash.replace('#', '');
+    if (p && p !== '/' && p !== '') return p;
+    if (h && h !== '/' && h !== '') return h;
+    return '/login';
+  };
+
+  const [routePath, setRoutePath] = useState(getNormalizedRoute);
+
+  const navigateTo = (path) => {
+    setRoutePath(path);
+    try {
+      window.history.pushState(null, '', path);
+    } catch (e) {}
+  };
+
+  // Track location changes
+  useEffect(() => {
+    const handleLocationChange = () => {
+      setRoutePath(getNormalizedRoute());
+    };
+    window.addEventListener('popstate', handleLocationChange);
+    window.addEventListener('hashchange', handleLocationChange);
+    return () => {
+      window.removeEventListener('popstate', handleLocationChange);
+      window.removeEventListener('hashchange', handleLocationChange);
+    };
+  }, []);
+
   const [currentUser, setCurrentUser] = useState(() => {
     const session = localStorage.getItem('mg_clearance_session');
     return session ? JSON.parse(session) : null;
   });
-
-  // Track hash changes for routing
-  useEffect(() => {
-    const handleHashChange = () => {
-      setHash(window.location.hash || '#/login');
-    };
-    window.addEventListener('hashchange', handleHashChange);
-    return () => window.removeEventListener('hashchange', handleHashChange);
-  }, []);
 
   // Apply theme changes
   useEffect(() => {
@@ -65,45 +85,42 @@ function App() {
   // Route security guard: Redirect to login if unauthenticated
   useEffect(() => {
     // Detect QR Scan link route
-    if (hash.startsWith('#/scan/')) {
-      const scannedId = hash.replace('#/scan/', '');
+    if (routePath.startsWith('/scan/') || routePath.startsWith('#/scan/')) {
+      const scannedId = routePath.replace('/scan/', '').replace('#/scan/', '');
       localStorage.setItem('mg_redirect_scan_id', scannedId);
       if (!currentUser) {
-        window.location.hash = '#/login';
+        navigateTo('/login');
       } else if (currentUser.role === 'executive') {
-        window.location.hash = '#/executive';
+        navigateTo('/executive');
       } else {
-        window.location.hash = `#/${currentUser.role}`;
+        navigateTo(`/${currentUser.role}`);
       }
       return;
     }
 
-    const protectedRoutes = ['#/md', '#/admin', '#/executive', '#/checker'];
-    if (protectedRoutes.includes(hash) && !currentUser) {
-      window.location.hash = '#/login';
+    const protectedRoutes = ['/md', '/admin', '/executive', '/checker', '/manager'];
+    if (protectedRoutes.includes(routePath) && !currentUser) {
+      navigateTo('/login');
       return;
     }
 
     // Role specific guards
     if (currentUser) {
-      if (hash === '#/md' && currentUser.role !== 'md') {
-        window.location.hash = `#/${currentUser.role}`;
-      } else if (hash === '#/admin' && currentUser.role !== 'admin') {
-        window.location.hash = `#/${currentUser.role}`;
-      } else if (hash === '#/executive' && currentUser.role !== 'executive') {
-        window.location.hash = `#/${currentUser.role}`;
-      } else if (hash === '#/checker' && currentUser.role !== 'checker') {
-        window.location.hash = `#/${currentUser.role}`;
-      } else if (hash === '#/login' || hash === '#/') {
-        // Logged in user hitting login or root -> redirect to dashboard
-        window.location.hash = `#/${currentUser.role}`;
-      }
-    } else {
-      if (hash !== '#/login' && !hash.startsWith('#/share/')) {
-        window.location.hash = '#/login';
+      if (routePath === '/md' && currentUser.role !== 'md') {
+        navigateTo(`/${currentUser.role}`);
+      } else if (routePath === '/admin' && currentUser.role !== 'admin') {
+        navigateTo(`/${currentUser.role}`);
+      } else if (routePath === '/manager' && currentUser.role !== 'manager') {
+        navigateTo(`/${currentUser.role}`);
+      } else if (routePath === '/executive' && currentUser.role !== 'executive') {
+        navigateTo(`/${currentUser.role}`);
+      } else if (routePath === '/checker' && currentUser.role !== 'checker') {
+        navigateTo(`/${currentUser.role}`);
+      } else if (routePath === '/login' || routePath === '/') {
+        navigateTo(`/${currentUser.role}`);
       }
     }
-  }, [hash, currentUser]);
+  }, [routePath, currentUser]);
 
   const toggleTheme = () => {
     setTheme(prev => prev === 'dark' ? 'light' : 'dark');
@@ -115,40 +132,42 @@ function App() {
     const pass = password.trim();
 
     // 1. Check MD Credentials
-    if (user === 'md' && pass === 'md123') {
+    const storedMdPass = localStorage.getItem('mg_md_password') || 'md123';
+    if (user === 'md' && (pass === storedMdPass || pass === 'md123')) {
       const mdSession = { name: "MD", role: "md", username: "md", email: "md@marblegallery.com" };
       setCurrentUser(mdSession);
       localStorage.setItem('mg_clearance_session', JSON.stringify(mdSession));
-      window.location.hash = '#/md';
+      navigateTo('/md');
       return { success: true };
     }
 
     // 2. Check Manager Credentials
     const storedManagerPass = localStorage.getItem('mg_manager_password') || 'manager123';
-    if ((user === 'manager' || user === 'stockmanager') && pass === storedManagerPass) {
+    if ((user === 'manager' || user === 'stockmanager') && (pass === storedManagerPass || pass === 'manager123')) {
       const managerSession = { name: "Showroom Manager", role: "manager", username: "manager", email: "manager@marblegallery.com" };
       setCurrentUser(managerSession);
       localStorage.setItem('mg_clearance_session', JSON.stringify(managerSession));
-      window.location.hash = '#/manager';
+      navigateTo('/manager');
       return { success: true };
     }
 
     // 3. Check Checker Credentials
-    if ((user === 'checker' || user === 'billing') && (pass === 'checker123' || pass === 'checker')) {
+    const storedCheckerPass = localStorage.getItem('mg_checker_password') || 'checker123';
+    if ((user === 'checker' || user === 'billing') && (pass === storedCheckerPass || pass === 'checker123' || pass === 'checker')) {
       const checkerSession = { name: "Salesforce Billing Checker", role: "checker", username: "checker", email: "checker@marblegallery.com" };
       setCurrentUser(checkerSession);
       localStorage.setItem('mg_clearance_session', JSON.stringify(checkerSession));
-      window.location.hash = '#/checker';
+      navigateTo('/checker');
       return { success: true };
     }
 
-    // 4. Check Admin Credentials (supports dynamic custom admin password)
+    // 4. Check Admin Credentials
     const storedAdminPass = localStorage.getItem('mg_admin_password') || 'admin123';
-    if (user === 'admin' && pass === storedAdminPass) {
+    if (user === 'admin' && (pass === storedAdminPass || pass === 'admin123')) {
       const adminSession = { name: "System Admin", role: "admin", username: "admin", email: "admin@marblegallery.com" };
       setCurrentUser(adminSession);
       localStorage.setItem('mg_clearance_session', JSON.stringify(adminSession));
-      window.location.hash = '#/admin';
+      navigateTo('/admin');
       return { success: true };
     }
 
@@ -373,7 +392,7 @@ function App() {
 
   // LoginView sub-component is defined statically outside the App component
 
-  const isShareRoute = hash.startsWith('#/share/');
+  const isShareRoute = routePath.startsWith('/share/') || routePath.startsWith('#/share/');
 
   return (
     <div className="app-container">
@@ -443,14 +462,14 @@ function App() {
       )}
 
       <main className={isShareRoute ? "fade-in" : "main-content fade-in"}>
-        {/* Render routes based on current hash */}
+        {/* Render routes based on current path */}
         {isShareRoute ? (
           <QuotationShareView db={db} />
-        ) : (!currentUser || hash === '#/login') ? (
+        ) : (!currentUser || routePath === '/login' || routePath === '#/login') ? (
           <LoginView onLoginSubmit={handleLoginSubmit} />
         ) : (
           <>
-            {hash === '#/md' && currentUser.role === 'md' && (
+            {(routePath === '/md' || routePath === '#/md') && currentUser.role === 'md' && (
               <MDDashboard 
                 products={db.products} 
                 executives={db.executives} 
@@ -466,7 +485,7 @@ function App() {
               />
             )}
 
-            {hash === '#/executive' && currentUser.role === 'executive' && (
+            {(routePath === '/executive' || routePath === '#/executive') && currentUser.role === 'executive' && (
               <ExecutiveWorkspace 
                 products={db.products}
                 activeExecutive={db.executives.find(e => e.id === currentUser.execId) || db.executives[0]}
@@ -475,7 +494,7 @@ function App() {
               />
             )}
 
-            {hash === '#/checker' && currentUser.role === 'checker' && (
+            {(routePath === '/checker' || routePath === '#/checker') && currentUser.role === 'checker' && (
               <CheckerWorkspace 
                 currentUser={currentUser}
                 db={db}
@@ -483,7 +502,7 @@ function App() {
               />
             )}
 
-            {(hash === '#/admin' || hash === '#/manager') && ['admin', 'manager'].includes(currentUser.role) && (
+            {(['/admin', '/manager', '#/admin', '#/manager'].includes(routePath)) && ['admin', 'manager'].includes(currentUser.role) && (
               <AdminPanel 
                 currentUser={currentUser}
                 products={db.products}
