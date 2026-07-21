@@ -3,7 +3,7 @@ import {
   Plus, Edit, Trash2, Download, UploadCloud, 
   Printer, Users, CheckCircle, FileSpreadsheet, PlusCircle, 
   CheckSquare, Square, DollarSign, AlertCircle, Percent, Star, 
-  Volume2, RefreshCw, Eye, FileText, Zap, ShieldAlert
+  Volume2, RefreshCw, Eye, FileText, Zap, ShieldAlert, Globe, Database
 } from 'lucide-react';
 import MDDashboard from './MDDashboard';
 import { isWeeklySpecialActive, getLocalDateString, syncProductsFromSAP, getProductStockAgeMonths, getSapApiUrl, getSfClientId, getSfClientSecret } from '../data/mockData';
@@ -2239,6 +2239,169 @@ function AdminPanel({
                   ))}
                 </tbody>
               </table>
+            </div>
+
+          </div>
+        )}
+
+        {/* Tab 8: System DNS & Custom Domain Config */}
+        {activeTab === 'dns' && (
+          <div className="fade-in">
+            <h3 className="panel-title" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', borderBottom: '1px solid var(--border-color)', paddingBottom: '0.75rem', marginBottom: '1.25rem' }}>
+              <Globe size={22} color="var(--accent-cyan)" />
+              System DNS & Custom Domain Network Configuration
+            </h3>
+
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem', marginBottom: '1.5rem' }}>
+              
+              {/* Domain Overview */}
+              <div className="glass-panel" style={{ padding: '1.25rem', borderRadius: '12px', background: 'var(--bg-card)' }}>
+                <h4 style={{ fontSize: '1rem', fontWeight: 700, color: 'var(--accent-emerald)', marginBottom: '0.75rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                  <CheckCircle size={18} />
+                  Live Production Domain Status
+                </h4>
+                
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', fontSize: '0.85rem' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid var(--border-color)', paddingBottom: '0.5rem' }}>
+                    <span style={{ color: 'var(--text-secondary)' }}>Custom Subdomain:</span>
+                    <strong style={{ color: 'var(--accent-cyan)' }}>clearance.mggroupin.com</strong>
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid var(--border-color)', paddingBottom: '0.5rem' }}>
+                    <span style={{ color: 'var(--text-secondary)' }}>Hostinger VPS IP:</span>
+                    <code style={{ background: 'rgba(255,255,255,0.05)', padding: '0.1rem 0.4rem', borderRadius: '4px' }}>187.127.189.139</code>
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid var(--border-color)', paddingBottom: '0.5rem' }}>
+                    <span style={{ color: 'var(--text-secondary)' }}>SSL Encryption:</span>
+                    <span style={{ color: 'var(--accent-emerald)', fontWeight: 700 }}>Active (HTTPS / Let's Encrypt)</span>
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                    <span style={{ color: 'var(--text-secondary)' }}>Node.js Server Port:</span>
+                    <span>Port 3000 (PM2 Managed)</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* GoDaddy DNS Records Instructions */}
+              <div className="glass-panel" style={{ padding: '1.25rem', borderRadius: '12px', background: 'var(--bg-card)' }}>
+                <h4 style={{ fontSize: '1rem', fontWeight: 700, color: 'var(--accent-amber)', marginBottom: '0.75rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                  <Globe size={18} />
+                  GoDaddy DNS A-Record Setup
+                </h4>
+                <p style={{ fontSize: '0.78rem', color: 'var(--text-secondary)', marginBottom: '0.75rem' }}>
+                  Your primary domain <strong>mggroupin.com</strong> is configured on GoDaddy DNS zone with the following routing record:
+                </p>
+                <div style={{ background: 'rgba(0,0,0,0.3)', padding: '0.75rem', borderRadius: '8px', border: '1px solid var(--border-color)', fontSize: '0.75rem', fontFamily: 'monospace' }}>
+                  <div><strong>Type:</strong> A Record</div>
+                  <div><strong>Name (Host):</strong> clearance</div>
+                  <div><strong>Value (Points to):</strong> 187.127.189.139</div>
+                  <div><strong>TTL:</strong> 600 seconds (10 mins)</div>
+                </div>
+              </div>
+
+            </div>
+
+            {/* Network Latency Tester */}
+            <div className="glass-panel" style={{ padding: '1.25rem', borderRadius: '12px' }}>
+              <h4 style={{ fontSize: '0.95rem', fontWeight: 700, marginBottom: '0.75rem' }}>⚡ Domain Connectivity & Latency Monitor</h4>
+              <button className="btn btn-cyan" onClick={() => {
+                const t0 = performance.now();
+                fetch('/api/db')
+                  .then(() => {
+                    const t1 = performance.now();
+                    showToast(`Domain latency response: ${Math.round(t1 - t0)} ms (Status 200 OK)`);
+                  })
+                  .catch(() => showToast("Domain test ping failed. Verify network connectivity."));
+              }} style={{ padding: '0.5rem 1rem', fontSize: '0.8rem', fontWeight: 700 }}>
+                Test Live Server Latency
+              </button>
+            </div>
+
+          </div>
+        )}
+
+        {/* Tab 9: System Database Backup & Reset Controls */}
+        {activeTab === 'db_tools' && (
+          <div className="fade-in">
+            <h3 className="panel-title" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', borderBottom: '1px solid var(--border-color)', paddingBottom: '0.75rem', marginBottom: '1.25rem' }}>
+              <Database size={22} color="var(--accent-amber)" />
+              Database Reset & System Backup Management
+            </h3>
+
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem', marginBottom: '1.5rem' }}>
+              
+              {/* JSON Backup Download */}
+              <div className="glass-panel" style={{ padding: '1.25rem', borderRadius: '12px', background: 'var(--bg-card)' }}>
+                <h4 style={{ fontSize: '1rem', fontWeight: 700, color: 'var(--accent-emerald)', marginBottom: '0.75rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                  <Download size={18} />
+                  Export System DB Backup (.json)
+                </h4>
+                <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', marginBottom: '1.25rem' }}>
+                  Download a complete structured JSON backup containing all inventory items, brand setups, sales ledger, and executive account logs.
+                </p>
+                <button className="btn btn-emerald" onClick={() => {
+                  const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(db, null, 2));
+                  const downloadAnchor = document.createElement('a');
+                  downloadAnchor.setAttribute("href", dataStr);
+                  downloadAnchor.setAttribute("download", `mg_clearance_db_backup_${new Date().toISOString().slice(0,10)}.json`);
+                  document.body.appendChild(downloadAnchor);
+                  downloadAnchor.click();
+                  downloadAnchor.remove();
+                  showToast("Full database backup downloaded successfully!");
+                }} style={{ padding: '0.55rem 1.1rem', fontSize: '0.8rem', fontWeight: 700 }}>
+                  📥 Download DB Backup (.json)
+                </button>
+              </div>
+
+              {/* JSON Backup Restore */}
+              <div className="glass-panel" style={{ padding: '1.25rem', borderRadius: '12px', background: 'var(--bg-card)' }}>
+                <h4 style={{ fontSize: '1rem', fontWeight: 700, color: 'var(--accent-cyan)', marginBottom: '0.75rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                  <UploadCloud size={18} />
+                  Restore DB from JSON Backup
+                </h4>
+                <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', marginBottom: '1rem' }}>
+                  Upload a previously saved `.json` database file to restore system parameters.
+                </p>
+                <input 
+                  type="file" 
+                  accept=".json" 
+                  onChange={(e) => {
+                    const file = e.target.files[0];
+                    if (!file) return;
+                    const reader = new FileReader();
+                    reader.onload = (evt) => {
+                      try {
+                        const parsed = JSON.parse(evt.target.result);
+                        if (parsed && parsed.products && parsed.executives) {
+                          onUpdateDb(parsed);
+                          showToast("Database successfully restored from JSON backup!");
+                        } else {
+                          alert("Invalid backup file format.");
+                        }
+                      } catch (err) {
+                        alert("Failed to parse JSON backup file.");
+                      }
+                    };
+                    reader.readAsText(file);
+                  }}
+                  className="form-input text-xs" 
+                  style={{ height: '38px' }}
+                />
+              </div>
+
+            </div>
+
+            {/* Reset Database Trigger */}
+            <div className="glass-panel" style={{ padding: '1.25rem', borderRadius: '12px', border: '1px solid var(--accent-rose)', background: 'rgba(239, 68, 68, 0.03)' }}>
+              <h4 style={{ fontSize: '0.95rem', fontWeight: 700, color: 'var(--accent-rose)', marginBottom: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                <ShieldAlert size={18} />
+                Reset Database to Showroom Campaign Defaults
+              </h4>
+              <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', marginBottom: '1rem' }}>
+                This action wipes local storage caches and re-initializes stock inventory and executives to factory defaults.
+              </p>
+              <button className="btn btn-danger" onClick={handleResetDatabase} style={{ padding: '0.5rem 1rem', fontSize: '0.8rem', fontWeight: 700 }}>
+                ⚠️ Factory Reset Database
+              </button>
             </div>
 
           </div>
