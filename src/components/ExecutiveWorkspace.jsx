@@ -343,27 +343,20 @@ function ExecutiveWorkspace({ products, activeExecutive, db, onUpdateDb }) {
               qrbox: { width: 250, height: 250 }
             },
             (decodedText) => {
-              const cleanText = decodedText.trim().toUpperCase();
+              const cleanText = (decodedText || '').trim().toUpperCase();
+              const skuMatch = cleanText.match(/SA\d+/i) || cleanText.match(/PROD-\d+/i) || cleanText.match(/MG-[A-Z]+-\d+/i);
+              const extractedCode = skuMatch ? skuMatch[0].toUpperCase() : cleanText;
+
               const product = products.find(p => {
                 const pId = p.id.toUpperCase();
                 
                 // 1. Direct match or either string is a substring of the other
-                if (cleanText.includes(pId) || pId.includes(cleanText)) {
+                if (cleanText.includes(pId) || pId.includes(cleanText) || extractedCode === pId) {
                   return true;
                 }
                 
-                // 2. Split ID by '-' (e.g. MG-KOH-001 -> brand code "KOH" and serial "001")
-                const parts = pId.split('-');
-                if (parts.length >= 3) {
-                  const brandCode = parts[1];
-                  const serial = parts[2];
-                  if (cleanText.includes(brandCode) && cleanText.includes(serial)) {
-                    return true;
-                  }
-                }
-                
-                // 3. Match by imageCode/friendly handle (e.g. "veil", "euphoria")
-                if (p.imageCode && cleanText.includes(p.imageCode.toUpperCase())) {
+                // 2. Name or Code substring match
+                if (p.name && cleanText.includes(p.name.toUpperCase())) {
                   return true;
                 }
                 
@@ -371,15 +364,13 @@ function ExecutiveWorkspace({ products, activeExecutive, db, onUpdateDb }) {
               });
               
               if (product) {
+                addProductToCartDirect(product);
                 setIsScannerOpen(false);
-                html5QrCode.stop().then(() => {
-                  addProductToCartDirect(product);
-                }).catch(e => {
-                  console.warn("Failed to stop camera stream", e);
-                  addProductToCartDirect(product);
-                });
+                try {
+                  html5QrCode.stop().catch(() => {});
+                } catch (e) {}
               } else {
-                alert(`Unknown QR Code scanned: "${decodedText}".`);
+                alert(`Scanned code: "${decodedText}". Item SKU not found in clearance catalog.`);
               }
             },
             (errorMessage) => {
@@ -1084,7 +1075,7 @@ function ExecutiveWorkspace({ products, activeExecutive, db, onUpdateDb }) {
             Client Details
           </h3>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '0.5rem' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: '0.5rem' }}>
               <div>
                 <label className="form-label" style={{ fontSize: '0.65rem' }}>Name</label>
                 <input 

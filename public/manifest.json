@@ -1,18 +1,24 @@
 {
-  "name": "Marble Gallery Bathing Clearance",
   "short_name": "MG Clearance",
-  "description": "Marble Gallery Group clearance showroom analytics and quotation system.",
-  "start_url": "/",
-  "display": "standalone",
-  "background_color": "#080c14",
-  "theme_color": "#080c14",
-  "orientation": "portrait-primary",
+  "name": "Marble Gallery Clearance Hub",
+  "description": "MG Luxe Bath & Tile Showroom Stock Liquidation Portal",
   "icons": [
     {
-      "src": "/favicon.svg",
-      "sizes": "any",
-      "type": "image/svg+xml",
+      "src": "/icon-192.png",
+      "type": "image/png",
+      "sizes": "192x192",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icon-512.png",
+      "type": "image/png",
+      "sizes": "512x512",
       "purpose": "any maskable"
     }
-  ]
+  ],
+  "start_url": "/",
+  "background_color": "#0f172a",
+  "theme_color": "#0f172a",
+  "display": "standalone",
+  "orientation": "portrait"
 }
