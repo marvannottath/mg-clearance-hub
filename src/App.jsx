@@ -340,7 +340,23 @@ function App() {
       {!isShareRoute && (
         <header className="app-header">
           <div className="logo-container">
-            <Layers className="logo-icon" size={28} />
+            <div style={{ 
+              width: '36px', 
+              height: '36px', 
+              borderRadius: '8px', 
+              background: 'linear-gradient(135deg, #0284c7 0%, #0d9488 100%)', 
+              display: 'flex', 
+              alignItems: 'center', 
+              justifyContent: 'center', 
+              fontWeight: 900, 
+              color: '#ffffff', 
+              fontSize: '1.05rem', 
+              letterSpacing: '-0.05em',
+              boxShadow: '0 4px 12px rgba(2, 132, 199, 0.35)',
+              border: '1px solid rgba(255, 255, 255, 0.2)'
+            }}>
+              MG
+            </div>
             <div>
               <h1 className="logo-text">MG CLEARANCE</h1>
               <span style={{ fontSize: '0.65rem', color: 'var(--text-muted)', fontWeight: 600, letterSpacing: '0.1em' }}>
@@ -481,7 +497,24 @@ function LoginView({ onLoginSubmit }) {
     <div className="login-view-wrapper" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '75vh', padding: '1rem' }}>
       <div className="glass-panel login-card" style={{ maxWidth: '420px', width: '100%', padding: '2.5rem', borderRadius: '16px' }}>
         <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
-          <Layers className="logo-icon" size={42} style={{ marginBottom: '0.75rem', display: 'inline-block' }} />
+          <div style={{ 
+            width: '56px', 
+            height: '56px', 
+            borderRadius: '14px', 
+            background: 'linear-gradient(135deg, #0284c7 0%, #0d9488 100%)', 
+            display: 'inline-flex', 
+            alignItems: 'center', 
+            justifyContent: 'center', 
+            fontWeight: 900, 
+            color: '#ffffff', 
+            fontSize: '1.6rem', 
+            letterSpacing: '-0.05em',
+            boxShadow: '0 6px 20px rgba(2, 132, 199, 0.4)',
+            border: '2px solid rgba(255, 255, 255, 0.25)',
+            marginBottom: '0.85rem'
+          }}>
+            MG
+          </div>
           <h2 style={{ fontSize: '1.65rem', fontWeight: 800, letterSpacing: '-0.02em' }}>MG Clearance Hub</h2>
           <p style={{ color: 'var(--text-secondary)', fontSize: '0.85rem', marginTop: '0.25rem' }}>
             Showroom Inventory & Liquidation System
