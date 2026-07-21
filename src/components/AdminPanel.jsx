@@ -168,12 +168,53 @@ function AdminPanel({
   const [productLandingCost, setProductLandingCost] = useState(0);
   const [productImage, setProductImage] = useState('');
 
-  // Executive Form States
+  // Executive Form & Editing States
   const [execName, setExecName] = useState('');
   const [execEmail, setExecEmail] = useState('');
   const [execUsername, setExecUsername] = useState('');
   const [execPassword, setExecPassword] = useState('');
   const [execTarget, setExecTarget] = useState(8000000);
+
+  const [editingExec, setEditingExec] = useState(null);
+  const [isEditExecModalOpen, setIsEditExecModalOpen] = useState(false);
+  const [editExecName, setEditExecName] = useState('');
+  const [editExecEmail, setEditExecEmail] = useState('');
+  const [editExecUsername, setEditExecUsername] = useState('');
+  const [editExecPassword, setEditExecPassword] = useState('');
+  const [editExecTarget, setEditExecTarget] = useState(8000000);
+
+  const openEditExecModal = (exec) => {
+    setEditingExec(exec);
+    setEditExecName(exec.name);
+    setEditExecEmail(exec.email);
+    setEditExecUsername(exec.username || '');
+    setEditExecPassword(exec.password || '');
+    setEditExecTarget(exec.target || 8000000);
+    setIsEditExecModalOpen(true);
+  };
+
+  const handleSaveExecDetails = (e) => {
+    e.preventDefault();
+    if (!editingExec) return;
+
+    const updatedExecutives = db.executives.map(exec => {
+      if (exec.id === editingExec.id) {
+        return {
+          ...exec,
+          name: editExecName,
+          email: editExecEmail,
+          username: editExecUsername.trim().toLowerCase(),
+          password: editExecPassword.trim() || exec.password,
+          target: parseInt(editExecTarget) || exec.target
+        };
+      }
+      return exec;
+    });
+
+    onUpdateDb({ ...db, executives: updatedExecutives });
+    setIsEditExecModalOpen(false);
+    showToast(`Executive account details & password updated for ${editExecName}!`);
+  };
   
   // Brand Margin Form / Editing States
   const [editingBrandName, setEditingBrandName] = useState(null);
@@ -2219,6 +2260,7 @@ function AdminPanel({
                     <th>Executive Name</th>
                     <th>Username</th>
                     <th>Email</th>
+                    <th>Target</th>
                     <th>Wallet Balance</th>
                     <th>Actions</th>
                   </tr>
@@ -2229,17 +2271,112 @@ function AdminPanel({
                       <td style={{ fontWeight: 700 }}>{exec.name}</td>
                       <td><code style={{ background: 'rgba(255,255,255,0.05)', padding: '0.1rem 0.4rem', borderRadius: '4px' }}>{exec.username}</code></td>
                       <td style={{ color: 'var(--text-secondary)' }}>{exec.email}</td>
+                      <td>{formatRupee(exec.target || 8000000)}</td>
                       <td style={{ fontWeight: 700, color: 'var(--accent-emerald)' }}>{formatRupee(exec.walletBalance || 0)}</td>
                       <td>
-                        <button className="btn btn-danger" style={{ padding: '0.2rem 0.5rem', fontSize: '0.7rem' }} onClick={() => onDeleteExecutive(exec.id)}>
-                          Delete
-                        </button>
+                        <div style={{ display: 'flex', gap: '0.35rem' }}>
+                          <button 
+                            className="btn btn-secondary" 
+                            style={{ padding: '0.25rem 0.55rem', fontSize: '0.72rem', background: 'rgba(14, 165, 233, 0.15)', color: 'var(--accent-cyan)', border: '1px solid rgba(14, 165, 233, 0.3)' }} 
+                            onClick={() => openEditExecModal(exec)}
+                          >
+                            <Edit size={12} style={{ marginRight: '3px' }} />
+                            Edit / Reset Pass
+                          </button>
+                          <button 
+                            className="btn btn-danger" 
+                            style={{ padding: '0.25rem 0.55rem', fontSize: '0.72rem' }} 
+                            onClick={() => { if (confirm(`Delete executive account for ${exec.name}?`)) onDeleteExecutive(exec.id); }}
+                          >
+                            Delete
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   ))}
                 </tbody>
               </table>
             </div>
+
+            {/* Modal for Editing Executive Details & Resetting Password */}
+            {isEditExecModalOpen && editingExec && (
+              <div className="modal-overlay" onClick={() => setIsEditExecModalOpen(false)}>
+                <div className="glass-panel modal-content" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '480px', width: '92%', padding: '1.5rem', borderRadius: '16px' }}>
+                  <h3 style={{ fontSize: '1.1rem', fontWeight: 800, marginBottom: '1rem', borderBottom: '1px solid var(--border-color)', paddingBottom: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--accent-cyan)' }}>
+                    <Edit size={18} />
+                    Edit Executive Account & Password
+                  </h3>
+
+                  <form onSubmit={handleSaveExecDetails} style={{ display: 'flex', flexDirection: 'column', gap: '0.85rem' }}>
+                    <div className="form-group" style={{ marginBottom: 0 }}>
+                      <label className="form-label">Full Name</label>
+                      <input 
+                        type="text" 
+                        className="form-input" 
+                        value={editExecName}
+                        onChange={(e) => setEditExecName(e.target.value)}
+                        required 
+                      />
+                    </div>
+
+                    <div className="form-group" style={{ marginBottom: 0 }}>
+                      <label className="form-label">Email Address</label>
+                      <input 
+                        type="email" 
+                        className="form-input" 
+                        value={editExecEmail}
+                        onChange={(e) => setEditExecEmail(e.target.value)}
+                        required 
+                      />
+                    </div>
+
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
+                      <div className="form-group" style={{ marginBottom: 0 }}>
+                        <label className="form-label">Username</label>
+                        <input 
+                          type="text" 
+                          className="form-input" 
+                          value={editExecUsername}
+                          onChange={(e) => setEditExecUsername(e.target.value)}
+                          required 
+                        />
+                      </div>
+                      <div className="form-group" style={{ marginBottom: 0 }}>
+                        <label className="form-label">Reset Password</label>
+                        <input 
+                          type="text" 
+                          className="form-input" 
+                          value={editExecPassword}
+                          onChange={(e) => setEditExecPassword(e.target.value)}
+                          placeholder="New password"
+                          required 
+                        />
+                      </div>
+                    </div>
+
+                    <div className="form-group" style={{ marginBottom: 0 }}>
+                      <label className="form-label">Campaign Target (₹)</label>
+                      <input 
+                        type="number" 
+                        className="form-input" 
+                        value={editExecTarget}
+                        onChange={(e) => setEditExecTarget(e.target.value)}
+                        required 
+                      />
+                    </div>
+
+                    <div style={{ display: 'flex', gap: '0.75rem', marginTop: '0.5rem' }}>
+                      <button type="button" className="btn btn-secondary" style={{ flex: 1 }} onClick={() => setIsEditExecModalOpen(false)}>
+                        Cancel
+                      </button>
+                      <button type="submit" className="btn btn-cyan" style={{ flex: 1, fontWeight: 700 }}>
+                        Save Changes
+                      </button>
+                    </div>
+                  </form>
+                </div>
+              </div>
+            )}
 
           </div>
         )}
