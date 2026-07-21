@@ -2275,21 +2275,20 @@ function AdminPanel({
                       <td>{formatRupee(exec.target || 8000000)}</td>
                       <td style={{ fontWeight: 700, color: 'var(--accent-emerald)' }}>{formatRupee(exec.walletBalance || 0)}</td>
                       <td>
-                        <div style={{ display: 'flex', gap: '0.35rem' }}>
+                        <div style={{ display: 'flex', gap: '0.4rem' }}>
                           <button 
-                            className="btn btn-secondary" 
-                            style={{ padding: '0.25rem 0.55rem', fontSize: '0.72rem', background: 'rgba(14, 165, 233, 0.15)', color: 'var(--accent-cyan)', border: '1px solid rgba(14, 165, 233, 0.3)' }} 
+                            className="btn btn-icon btn-cyan" 
+                            title="Edit Account Details & Reset Password" 
                             onClick={() => openEditExecModal(exec)}
                           >
-                            <Edit size={12} style={{ marginRight: '3px' }} />
-                            Edit / Reset Pass
+                            <Edit size={16} />
                           </button>
                           <button 
-                            className="btn btn-danger" 
-                            style={{ padding: '0.25rem 0.55rem', fontSize: '0.72rem' }} 
+                            className="btn btn-icon btn-danger" 
+                            title="Delete Account" 
                             onClick={() => { if (confirm(`Delete executive account for ${exec.name}?`)) onDeleteExecutive(exec.id); }}
                           >
-                            Delete
+                            <Trash2 size={16} />
                           </button>
                         </div>
                       </td>

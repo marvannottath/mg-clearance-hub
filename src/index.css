@@ -1509,4 +1509,41 @@ h1, h2, h3, h4, h5, h6 {
   }
 }
 
+/* Announcement Toast High Contrast Styles for Light and Dark Modes */
+.showroom-announcement-toast {
+  background: var(--bg-card) !important;
+  border: 1px solid var(--accent-cyan) !important;
+  color: var(--text-primary) !important;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25) !important;
+}
+
+:root[data-theme="light"] .showroom-announcement-toast {
+  background: #ffffff !important;
+  border: 1.5px solid var(--accent-cyan) !important;
+  color: #0f172a !important;
+  box-shadow: 0 12px 32px rgba(15, 23, 42, 0.15) !important;
+}
+
+:root[data-theme="light"] .showroom-announcement-toast span,
+:root[data-theme="light"] .showroom-announcement-toast div,
+:root[data-theme="light"] .showroom-announcement-toast p {
+  color: #0f172a !important;
+}
+
+/* Icon Button Utilities for compact table action rows */
+.btn-icon {
+  width: 32px;
+  height: 32px;
+  padding: 0 !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  border-radius: 8px !important;
+  transition: transform 0.15s ease, background 0.15s ease !important;
+}
+
+.btn-icon:hover {
+  transform: translateY(-1px);
+}
+
 

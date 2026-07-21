@@ -1777,11 +1777,11 @@ function ExecutiveWorkspace({ products, activeExecutive, db, onUpdateDb }) {
                 
                 <div className="glass-panel stat-card cyan" style={{ padding: '1.25rem' }}>
                   <div className="stat-header">
-                    <span>Campaign Target Amount</span>
+                    <span>July 2026 Monthly Target</span>
                     <TrendingUp className="stat-icon" size={18} />
                   </div>
                   <div className="stat-value">{formatRupee(activeExecutive.target)}</div>
-                  <div className="stat-subtext">Sales target assigned for campaign</div>
+                  <div className="stat-subtext">Sales target assigned for July 2026</div>
                 </div>
 
                 <div className="glass-panel stat-card emerald" style={{ padding: '1.25rem' }}>
@@ -2890,8 +2890,23 @@ function ExecutiveWorkspace({ products, activeExecutive, db, onUpdateDb }) {
                     style={{ width: '100%', maxHeight: '200px', objectFit: 'contain', border: '1px solid var(--border-color)', borderRadius: '4px' }} 
                   />
                 ) : (
-                  <div style={{ padding: '0.75rem', background: 'rgba(255,255,255,0.02)', border: '1px dotted var(--border-color)', fontSize: '0.8rem', textAlign: 'center' }}>
-                    📄 Standalone Invoice PDF file uploaded
+                  <div style={{ padding: '0.85rem', background: 'rgba(255,255,255,0.03)', border: '1px solid var(--accent-cyan)', borderRadius: '8px', fontSize: '0.82rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontWeight: 600 }}>
+                      <FileText size={18} color="var(--accent-cyan)" />
+                      <span>Uploaded Invoice Receipt PDF Document</span>
+                    </div>
+                    <button 
+                      className="btn btn-cyan" 
+                      onClick={() => {
+                        const win = window.open();
+                        if (win) {
+                          win.document.write(`<iframe src="${selectedQuoteDetail.uploadedBill}" frameborder="0" style="border:0; top:0px; left:0px; bottom:0px; right:0px; width:100%; height:100%;" allowfullscreen></iframe>`);
+                        }
+                      }}
+                      style={{ padding: '0.35rem 0.75rem', fontSize: '0.75rem', fontWeight: 700, display: 'inline-flex', alignItems: 'center', gap: '0.35rem' }}
+                    >
+                      <Eye size={14} /> View PDF Receipt
+                    </button>
                   </div>
                 )}
               </div>
