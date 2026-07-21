@@ -130,11 +130,11 @@ function App() {
     }
 
     const protectedRoutes = ['/md', '/admin', '/executive', '/checker', '/manager'];
-    const currentNorm = routePath.replace('#', '').replace('/', '');
+    const cleanPath = routePath.replace(/^#?\/?/, '').replace(/\/$/, '').toLowerCase();
 
-    // 1. Unauthenticated Users: Lock all protected routes to /login
+    // 1. Unauthenticated Users: Redirect to /login if on root or protected routes
     if (!currentUser) {
-      if (protectedRoutes.includes(routePath) || (currentNorm && currentNorm !== 'login')) {
+      if (cleanPath !== 'login' && !cleanPath.startsWith('scan/')) {
         navigateTo('/login');
       }
       return;
@@ -142,11 +142,8 @@ function App() {
 
     // 2. Authenticated Users: Lock role route and prevent staying on /login or unauthorized routes
     if (currentUser) {
-      const userRole = currentUser.role || 'executive';
-      if (currentNorm === 'login' || currentNorm === '') {
-        navigateTo(`/${userRole}`);
-      } else if (protectedRoutes.includes(`/${currentNorm}`) && currentNorm !== userRole) {
-        // User trying to access a different role route (e.g. Executive typing /manager)
+      const userRole = (currentUser.role || 'executive').toLowerCase();
+      if (cleanPath === '' || cleanPath === 'login' || (protectedRoutes.includes(`/${cleanPath}`) && cleanPath !== userRole)) {
         navigateTo(`/${userRole}`);
       }
     }
@@ -819,7 +816,7 @@ function App() {
           <LoginView onLoginSubmit={handleLoginSubmit} />
         ) : (
           <>
-            {(routePath === '/md' || routePath === '#/md') && currentUser.role === 'md' && (
+            {currentUser.role === 'md' && (
               <MDDashboard 
                 products={db.products} 
                 executives={db.executives} 
@@ -835,7 +832,7 @@ function App() {
               />
             )}
 
-            {(routePath === '/executive' || routePath === '#/executive') && currentUser.role === 'executive' && (
+            {currentUser.role === 'executive' && (
               <ExecutiveWorkspace 
                 products={db.products}
                 activeExecutive={db.executives.find(e => e.id === currentUser.execId) || db.executives[0]}
@@ -844,7 +841,7 @@ function App() {
               />
             )}
 
-            {(routePath === '/checker' || routePath === '#/checker') && currentUser.role === 'checker' && (
+            {currentUser.role === 'checker' && (
               <CheckerWorkspace 
                 currentUser={currentUser}
                 db={db}
@@ -852,7 +849,7 @@ function App() {
               />
             )}
 
-            {(['/admin', '/manager', '#/admin', '#/manager'].includes(routePath)) && ['admin', 'manager'].includes(currentUser.role) && (
+            {['admin', 'manager'].includes(currentUser.role) && (
               <AdminPanel 
                 currentUser={currentUser}
                 products={db.products}
