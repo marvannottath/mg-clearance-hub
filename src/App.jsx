@@ -4,7 +4,7 @@ import MDDashboard from './components/MDDashboard';
 import ExecutiveWorkspace from './components/ExecutiveWorkspace';
 import AdminPanel from './components/AdminPanel';
 import CheckerWorkspace from './components/CheckerWorkspace';
-import { Layers, Sun, Moon, LogOut, ShieldAlert, KeyRound, User, Bell, CheckCheck, Info, AlertTriangle, CheckCircle2 } from 'lucide-react';
+import { Layers, Sun, Moon, LogOut, ShieldAlert, KeyRound, User, Bell, CheckCheck, Info, AlertTriangle, CheckCircle2, Download, Smartphone } from 'lucide-react';
 
 function App() {
   const [db, setDb] = useState(() => loadDatabase());
@@ -720,13 +720,19 @@ function App() {
                 }}
               >
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
-                  <User size={18} color="var(--accent-emerald)" />
+                  <Smartphone size={18} color="var(--accent-emerald)" />
                   <div>
                     <div style={{ fontSize: '0.85rem', fontWeight: 700, color: 'var(--accent-emerald)' }}>Install MG App</div>
                     <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>Add to Home Screen for mobile access</div>
                   </div>
                 </div>
-                <span style={{ fontSize: '0.75rem', fontWeight: 700, color: '#fff', background: 'var(--accent-emerald)', padding: '0.25rem 0.65rem', borderRadius: '6px' }}>Install ➔</span>
+                <div 
+                  className="btn-icon btn-emerald" 
+                  title="Install MG App to Home Screen"
+                  style={{ width: '32px', height: '32px', borderRadius: '8px', padding: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}
+                >
+                  <Download size={16} color="#ffffff" />
+                </div>
               </div>
 
             </div>
