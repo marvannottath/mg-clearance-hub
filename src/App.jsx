@@ -262,7 +262,29 @@ function App() {
     updateDb({ ...db, products: updatedProducts });
   };
 
-  const handleBulkUpdateStock = (updatedList) => {
+  const handleBulkUpdateStock = (updatedList, replaceMode = true) => {
+    // Auto register any new brands in db.brands if not present
+    const updatedBrands = [...(db.brands || [])];
+    updatedList.forEach(item => {
+      if (item.brand && !updatedBrands.some(b => b.name.toUpperCase() === item.brand.toUpperCase())) {
+        updatedBrands.push({
+          name: item.brand.toUpperCase(),
+          maxMargin: 45,
+          customerDiscount: 40,
+          executiveIncentive: 4
+        });
+      }
+    });
+
+    if (replaceMode) {
+      updateDb({
+        ...db,
+        products: updatedList,
+        brands: updatedBrands
+      });
+      return;
+    }
+
     const updatedProducts = db.products.map(p => {
       const match = updatedList.find(u => u.id === p.id);
       if (match) {
@@ -309,7 +331,7 @@ function App() {
       stickerStatus: 'new'
     }));
 
-    updateDb({ ...db, products: [...newItems, ...updatedProducts] });
+    updateDb({ ...db, products: [...newItems, ...updatedProducts], brands: updatedBrands });
   };
 
   const handleAddExecutive = (newExec) => {

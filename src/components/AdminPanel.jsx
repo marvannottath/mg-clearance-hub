@@ -757,25 +757,60 @@ function AdminPanel({
       for (let i = 1; i < lines.length; i++) {
         const line = lines[i].trim();
         if (!line) continue;
+        if (!line) continue;
 
         const row = parseCSVLine(line);
         if (row.length < 2) continue;
 
         const idValue = row[idIdx]?.trim();
-        if (!idValue || idValue.toLowerCase() === 'id' || idValue.toLowerCase() === 'productcode') continue;
+        if (!idValue || idValue.toLowerCase() === 'id' || idValue.toLowerCase() === 'productcode' || idValue.toLowerCase() === 'item no.') continue;
 
-        const mrpValue = safeParseInt(row[mrpIdx], 20000);
-        const specValue = safeParseInt(row[specIdx], Math.round(mrpValue * 0.4));
-        const landingValue = safeParseInt(row[landingIdx], Math.round(specValue * 0.8));
+        // Smart Brand Extraction from parentheses or text (e.g. "(WATERO)")
+        const fullText = (row[nameIdx] || '') + ' ' + (row[descIdx] || '') + ' ' + line;
+        let extractedBrand = row[brandIdx]?.trim() || '';
+
+        const parenthesizedMatch = fullText.match(/\(([^)]+)\)/);
+        if (parenthesizedMatch && parenthesizedMatch[1]) {
+          extractedBrand = parenthesizedMatch[1].trim();
+        }
+
+        if (!extractedBrand || extractedBrand.toUpperCase() === 'OTHER') {
+          if (fullText.toUpperCase().includes('WATERO')) extractedBrand = 'WATERO';
+          else if (fullText.toUpperCase().includes('TOTO')) extractedBrand = 'TOTO';
+          else if (fullText.toUpperCase().includes('ALMAR')) extractedBrand = 'ALMAR';
+          else if (fullText.toUpperCase().includes('KAJARIA')) extractedBrand = 'KAJARIA';
+          else if (fullText.toUpperCase().includes('FRANKE')) extractedBrand = 'FRANKE';
+          else if (fullText.toUpperCase().includes('REGINOX')) extractedBrand = 'REGINOX';
+          else if (fullText.toUpperCase().includes('SIMPOLO')) extractedBrand = 'SIMPOLO';
+          else extractedBrand = 'WATERO';
+        }
+
+        extractedBrand = extractedBrand.toUpperCase();
+
+        // Smart Price Parsing
+        const rowNumbers = row.map(v => safeParseInt(v, 0)).filter(num => num > 0);
+        let mrpValue = safeParseInt(row[mrpIdx], 0);
+        let specValue = safeParseInt(row[specIdx], 0);
+        let landingValue = safeParseInt(row[landingIdx], 0);
+
+        if (rowNumbers.length > 0) {
+          if (!landingValue) landingValue = rowNumbers[0] || 1000;
+          if (!mrpValue) mrpValue = rowNumbers[1] || Math.round(landingValue * 1.4);
+          if (!specValue) specValue = rowNumbers[2] || Math.round(mrpValue * 0.4);
+        } else {
+          mrpValue = mrpValue || 15000;
+          specValue = specValue || Math.round(mrpValue * 0.4);
+          landingValue = landingValue || Math.round(specValue * 0.8);
+        }
 
         parsedItems.push({
           id: idValue,
           name: row[nameIdx] || `Product ${idValue}`,
-          brand: (row[brandIdx] || 'OTHER').toUpperCase(),
-          category: row[catIdx] || 'Bathing Clearance',
+          brand: extractedBrand,
+          category: row[catIdx] || 'Sanitaryware Clearance',
           division: row[divIdx] || ((row[catIdx] || '').toLowerCase().includes('tiles') ? 'Tiles' : 'Bathing'),
-          description: row[descIdx] || '',
-          stock: safeParseInt(row[stockIdx], 0),
+          description: row[descIdx] || row[nameIdx] || '',
+          stock: safeParseInt(row[stockIdx], 1) || 1,
           mrp: mrpValue,
           mgPrice: safeParseInt(row[mgPriceIdx], Math.round(mrpValue * 0.8)),
           specialPrice: specValue,
@@ -790,14 +825,14 @@ function AdminPanel({
         updatedCount++;
       }
 
-      onBulkUpdateStock(parsedItems);
+      onBulkUpdateStock(parsedItems, true);
 
       const newProductIds = parsedItems.map(item => item.id);
       setSelectedStickerIds(prev => [...new Set([...prev, ...newProductIds])]);
 
       setImportStatus({
         success: true,
-        message: `Successfully processed ${updatedCount} products from CSV. Stocks, landing costs, and QR stickers registered!`
+        message: `Successfully processed ${updatedCount} products from CSV. All brand tags (WATERO) and inventory registered!`
       });
       setTimeout(() => setImportStatus(null), 6000);
     };
@@ -1086,6 +1121,7 @@ function AdminPanel({
               <table className="custom-table">
                 <thead>
                   <tr>
+                    <th>SL No.</th>
                     <th>ID / Code</th>
                     <th>Image</th>
                     <th>Product Details</th>
@@ -1106,8 +1142,11 @@ function AdminPanel({
                       </td>
                     </tr>
                   ) : (
-                    paginatedInventoryProducts.map(p => (
+                    paginatedInventoryProducts.map((p, index) => (
                       <tr key={p.id}>
+                        <td style={{ fontWeight: 'bold', color: 'var(--text-muted)', fontSize: '0.85rem' }}>
+                          {(currentPage - 1) * itemsPerPage + index + 1}
+                        </td>
                         <td style={{ fontWeight: 'bold', fontFamily: 'monospace' }}>{p.id}</td>
                         <td>
                           {p.image ? (
