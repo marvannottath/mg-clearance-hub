@@ -820,11 +820,11 @@ function App() {
         </div>
       )}
 
-      <main className={isShareRoute ? "fade-in" : "main-content fade-in"}>
+      <main className={isShareRoute ? "fade-in" : "main-content fade-in"} style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
         {/* Render routes based on current path */}
         {isShareRoute ? (
           <QuotationShareView db={db} />
-        ) : (!currentUser || routePath === '/login' || routePath === '#/login') ? (
+        ) : !currentUser ? (
           <LoginView onLoginSubmit={handleLoginSubmit} />
         ) : (
           <>

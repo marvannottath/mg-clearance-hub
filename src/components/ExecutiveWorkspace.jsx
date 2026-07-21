@@ -604,15 +604,32 @@ function ExecutiveWorkspace({ products, activeExecutive, db, onUpdateDb }) {
   };
 
   const handleDeleteQuotation = (quoteId) => {
-    if (!confirm(`Are you sure you want to permanently delete quotation ${quoteId}?`)) {
+    const targetQuote = (db.quotations || []).find(q => q.id === quoteId);
+    if (!targetQuote) return;
+
+    if (!confirm(`Are you sure you want to delete quotation ${quoteId}?`)) {
       return;
     }
+
+    let updatedProducts = [...(db.products || [])];
+    if (targetQuote.stockDeducted) {
+      targetQuote.items.forEach(item => {
+        updatedProducts = updatedProducts.map(p => {
+          if (p.id === item.productId || p.id === item.id) {
+            return { ...p, stock: (p.stock || 0) + item.qty };
+          }
+          return p;
+        });
+      });
+    }
+
     const updatedQuotes = (db.quotations || []).filter(q => q.id !== quoteId);
     onUpdateDb({
       ...db,
+      products: updatedProducts,
       quotations: updatedQuotes
     });
-    showToast(`Quotation ${quoteId} deleted successfully.`);
+    showToast(targetQuote.stockDeducted ? `Quotation ${quoteId} deleted & stock released back to inventory!` : `Quotation ${quoteId} deleted successfully.`);
   };
 
   // Print preview functions
@@ -637,13 +654,25 @@ function ExecutiveWorkspace({ products, activeExecutive, db, onUpdateDb }) {
     setIsUploadModalOpen(true);
   };
 
-  // Submit SAP Invoice
+  // Submit Salesforce Invoice (Deducts Main Stock immediately)
   const handleInvoiceSubmit = (e) => {
     e.preventDefault();
     if (!invoiceNumber.trim() || !receiptFile) {
-      alert("Please provide the SAP Invoice number and receipt file.");
+      alert("Please provide the Salesforce Invoice number and receipt file.");
       return;
     }
+
+    // Deduct stock for items in this quotation immediately upon invoice upload
+    let updatedProducts = [...(db.products || [])];
+    selectedQuoteToUpload.items.forEach(item => {
+      updatedProducts = updatedProducts.map(p => {
+        if (p.id === item.productId || p.id === item.id) {
+          const currentStock = p.stock || 0;
+          return { ...p, stock: Math.max(0, currentStock - item.qty) };
+        }
+        return p;
+      });
+    });
 
     const updatedQuotes = (db.quotations || []).map(q => {
       if (q.id === selectedQuoteToUpload.id) {
@@ -652,16 +681,34 @@ function ExecutiveWorkspace({ products, activeExecutive, db, onUpdateDb }) {
           invoiceNo: invoiceNumber.trim().toUpperCase(),
           uploadedBill: receiptFile,
           status: 'pending_verification',
+          stockDeducted: true,
           date: new Date().toISOString()
         };
       }
       return q;
     });
 
-    onUpdateDb({ ...db, quotations: updatedQuotes });
+    // Send Notification to Manager & Checker
+    const newNotif = {
+      id: `notif-${Date.now()}`,
+      targetRole: 'manager',
+      title: 'Invoice Submitted & Stock Deducted',
+      message: `${activeExecutive.name} uploaded invoice #${invoiceNumber.trim().toUpperCase()} for ${selectedQuoteToUpload.customerName}. Stock deducted from inventory.`,
+      timestamp: new Date().toISOString(),
+      read: false,
+      type: 'info'
+    };
+
+    onUpdateDb({ 
+      ...db, 
+      products: updatedProducts, 
+      quotations: updatedQuotes,
+      notifications: [newNotif, ...(db.notifications || [])]
+    });
+    
     setIsUploadModalOpen(false);
     setSelectedQuoteToUpload(null);
-    showToast("SAP bill submitted to Manager for verification!");
+    showToast("Salesforce bill uploaded! Stock deducted & submitted to Manager for incentive verification.");
   };
 
   // Payout request payout handler

@@ -618,14 +618,29 @@ function AdminPanel({
   });
 
   const handleCancelAuditQuotation = (quoteId) => {
+    const targetQuote = (quotations || []).find(q => q.id === quoteId);
+    if (!targetQuote) return;
+
     if (confirm(`Cancel quotation ${quoteId} and release reserved stock back to clearance inventory?`)) {
+      let updatedProducts = [...(db.products || [])];
+      if (targetQuote.stockDeducted) {
+        targetQuote.items.forEach(item => {
+          updatedProducts = updatedProducts.map(p => {
+            if (p.id === item.productId || p.id === item.id) {
+              return { ...p, stock: (p.stock || 0) + item.qty };
+            }
+            return p;
+          });
+        });
+      }
+
       const updatedQuotes = (quotations || []).map(q => 
-        q.id === quoteId ? { ...q, status: 'cancelled' } : q
+        q.id === quoteId ? { ...q, status: 'cancelled', stockDeducted: false } : q
       );
       if (onUpdateDb) {
-        onUpdateDb({ ...db, quotations: updatedQuotes });
+        onUpdateDb({ ...db, products: updatedProducts, quotations: updatedQuotes });
       }
-      showToast(`Quotation ${quoteId} cancelled & reserved stock released.`);
+      showToast(`Quotation ${quoteId} cancelled & stock released back to inventory!`);
     }
   };
 
