@@ -51,18 +51,19 @@ if (dbUrl) {
   }
 }
 
-// Helper to sanitize database products (fix corrupt MRPs where product code digits were saved as MRP)
+// Helper to sanitize database products (only fix exact corruptions where product code digits were saved as MRP)
 function sanitizeDatabase(data) {
   if (!data || !data.products) return { db: data, modified: false };
   let modified = false;
 
   const cleanedProducts = data.products.map(p => {
-    const specialP = p.specialPrice || p.mrp || 0;
+    const specialP = p.specialPrice || 0;
     let mrpP = p.mrp || 0;
     const idDigits = (p.id || '').replace(/\D/g, '');
 
-    if ((idDigits.length >= 4 && String(mrpP) === idDigits) || mrpP > (specialP * 3.5) || mrpP <= specialP) {
-      mrpP = Math.round(specialP / (1 - 0.40));
+    // Only fix if product code digits (e.g. 41560 from SA41560) were mistakenly saved as MRP
+    if (idDigits.length >= 4 && String(mrpP) === idDigits && specialP > 0 && mrpP > specialP * 4) {
+      mrpP = Math.round(specialP * 1.5);
       modified = true;
       return { ...p, mrp: mrpP };
     }

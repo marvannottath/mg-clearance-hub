@@ -857,35 +857,32 @@ function AdminPanel({
 
         extractedBrand = extractedBrand.toUpperCase();
 
+        // 1. Extract exact numerical rates directly from CSV columns
         let mrpValue = safeParseInt(row[mrpIdx], 0);
         let specValue = safeParseInt(row[specIdx], 0);
         let landingValue = safeParseInt(row[landingIdx], 0);
 
-        // Filter valid prices from line (ignore SL numbers <= 10 or product ID digits)
-        const lineWithoutIds = line.replace(/[A-Z]{2,}\d+/gi, '');
-        const linePrices = (lineWithoutIds.match(/\d+(?:\.\d+)?/g) || [])
-          .map(n => Math.round(parseFloat(n)))
-          .filter(n => n > 25);
+        // 2. Fallback only if values are completely missing in CSV row
+        if (specValue <= 0 || mrpValue <= 0) {
+          const lineWithoutIds = line.replace(/[A-Z]{2,}\d+/gi, '');
+          const linePrices = (lineWithoutIds.match(/\d+(?:\.\d+)?/g) || [])
+            .map(n => Math.round(parseFloat(n)))
+            .filter(n => n > 25);
 
-        if (specValue <= 0 && linePrices.length > 0) {
-          specValue = linePrices[linePrices.length - 1]; // Last monetary number is clearance rate
-        }
-
-        if (mrpValue <= 0 && linePrices.length >= 2) {
-          const sorted = [...linePrices].sort((a, b) => b - a);
-          mrpValue = sorted[0];
-          if (specValue === mrpValue) {
-            specValue = sorted[1];
+          if (specValue <= 0 && linePrices.length > 0) {
+            specValue = linePrices[linePrices.length - 1];
+          }
+          if (mrpValue <= 0 && linePrices.length >= 2) {
+            const sorted = [...linePrices].sort((a, b) => b - a);
+            mrpValue = sorted[0];
           }
         }
 
-        // Standard clearance pricing rule: MRP is ~40% above clearance special price
-        if (specValue > 0 && (mrpValue <= specValue || mrpValue > (specValue * 4))) {
-          mrpValue = Math.round(specValue / (1 - 0.40));
+        // Fallbacks for missing columns
+        if (mrpValue <= 0 && specValue > 0) {
+          mrpValue = Math.round(specValue * 1.5);
         }
-
-        // Realistic landing cost is ~20% below clearance price
-        if (!landingValue || landingValue >= specValue || landingValue < (specValue * 0.5)) {
+        if (landingValue <= 0 && specValue > 0) {
           landingValue = Math.round(specValue * 0.8);
         }
 
