@@ -794,7 +794,7 @@ function AdminPanel({
   };
 
   // Parse CSV file upload supporting dynamic headers and smart upsert
-  const handleCSVUpload = (e) => {
+  const handleCSVImport = (e) => {
     const file = e.target.files[0];
     if (!file) return;
 
