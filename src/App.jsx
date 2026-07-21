@@ -690,7 +690,7 @@ function App() {
                 style={{ 
                   display: 'flex', 
                   alignItems: 'center', 
-                  gap: '0.65rem', 
+                  gap: '0.75rem', 
                   background: 'rgba(255,255,255,0.03)', 
                   padding: '0.85rem 1rem', 
                   borderRadius: '10px', 
@@ -698,8 +698,8 @@ function App() {
                   cursor: 'pointer'
                 }}
               >
-                <KeyRound size={18} color="var(--accent-amber)" />
-                <div style={{ flex: 1 }}>
+                <KeyRound size={18} color="var(--accent-amber)" style={{ flexShrink: 0 }} />
+                <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ fontSize: '0.85rem', fontWeight: 600 }}>Password Assistance</div>
                   <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>Submit password reset request directly</div>
                 </div>
@@ -712,6 +712,7 @@ function App() {
                   display: 'flex', 
                   justify: 'space-between', 
                   alignItems: 'center', 
+                  gap: '0.75rem',
                   background: 'rgba(16, 185, 129, 0.08)', 
                   padding: '0.85rem 1rem', 
                   borderRadius: '10px', 
@@ -719,17 +720,17 @@ function App() {
                   cursor: 'pointer'
                 }}
               >
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
-                  <Smartphone size={18} color="var(--accent-emerald)" />
-                  <div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flex: 1, minWidth: 0 }}>
+                  <Smartphone size={18} color="var(--accent-emerald)" style={{ flexShrink: 0 }} />
+                  <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{ fontSize: '0.85rem', fontWeight: 700, color: 'var(--accent-emerald)' }}>Install MG App</div>
-                    <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>Add to Home Screen for mobile access</div>
+                    <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>Add to Home Screen for mobile access</div>
                   </div>
                 </div>
                 <div 
                   className="btn-icon btn-emerald" 
                   title="Install MG App to Home Screen"
-                  style={{ width: '32px', height: '32px', borderRadius: '8px', padding: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}
+                  style={{ width: '32px', height: '32px', borderRadius: '8px', padding: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, marginLeft: '0.5rem' }}
                 >
                   <Download size={16} color="#ffffff" />
                 </div>
