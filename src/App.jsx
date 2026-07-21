@@ -3,6 +3,7 @@ import { loadDatabase, saveDatabase, calculateStockValue, syncProductsFromSAP } 
 import MDDashboard from './components/MDDashboard';
 import ExecutiveWorkspace from './components/ExecutiveWorkspace';
 import AdminPanel from './components/AdminPanel';
+import CheckerWorkspace from './components/CheckerWorkspace';
 import { Layers, Sun, Moon, LogOut, ShieldAlert, KeyRound, User } from 'lucide-react';
 
 function App() {
@@ -71,7 +72,7 @@ function App() {
       return;
     }
 
-    const protectedRoutes = ['#/md', '#/admin', '#/executive'];
+    const protectedRoutes = ['#/md', '#/admin', '#/executive', '#/checker'];
     if (protectedRoutes.includes(hash) && !currentUser) {
       window.location.hash = '#/login';
       return;
@@ -84,6 +85,8 @@ function App() {
       } else if (hash === '#/admin' && currentUser.role !== 'admin') {
         window.location.hash = `#/${currentUser.role}`;
       } else if (hash === '#/executive' && currentUser.role !== 'executive') {
+        window.location.hash = `#/${currentUser.role}`;
+      } else if (hash === '#/checker' && currentUser.role !== 'checker') {
         window.location.hash = `#/${currentUser.role}`;
       } else if (hash === '#/login' || hash === '#/') {
         // Logged in user hitting login or root -> redirect to dashboard
@@ -124,7 +127,16 @@ function App() {
       return { success: true };
     }
 
-    // 3. Check Admin Credentials (supports dynamic custom admin password)
+    // 3. Check Checker Credentials
+    if ((user === 'checker' || user === 'billing') && (pass === 'checker123' || pass === 'checker')) {
+      const checkerSession = { name: "Salesforce Billing Checker", role: "checker", username: "checker", email: "checker@marblegallery.com" };
+      setCurrentUser(checkerSession);
+      localStorage.setItem('mg_clearance_session', JSON.stringify(checkerSession));
+      window.location.hash = '#/checker';
+      return { success: true };
+    }
+
+    // 4. Check Admin Credentials (supports dynamic custom admin password)
     const storedAdminPass = localStorage.getItem('mg_admin_password') || 'admin123';
     if (user === 'admin' && pass === storedAdminPass) {
       const adminSession = { name: "System Admin", role: "admin", username: "admin", email: "admin@marblegallery.com" };
@@ -430,6 +442,14 @@ function App() {
               <ExecutiveWorkspace 
                 products={db.products}
                 activeExecutive={db.executives.find(e => e.id === currentUser.execId) || db.executives[0]}
+                db={db}
+                onUpdateDb={updateDb}
+              />
+            )}
+
+            {hash === '#/checker' && currentUser.role === 'checker' && (
+              <CheckerWorkspace 
+                currentUser={currentUser}
                 db={db}
                 onUpdateDb={updateDb}
               />
