@@ -229,9 +229,45 @@ export const INITIAL_EXECUTIVES = [
   { id: "exec-004", name: "Sandeep Pillai", email: "sandeep.p@marblegallery.com", target: 6000000, cleared: 0, salesCount: 0, username: "sandeep", password: "sandeep123" }
 ];
 
-export const INITIAL_QUOTATIONS = [];
-
-export const INITIAL_SALES_LEDGER = [];
+export const INITIAL_NOTIFICATIONS = [
+  {
+    id: "notif-001",
+    targetRole: "executive",
+    targetUserId: "exec-001",
+    title: "Incentive Credited",
+    message: "Invoice #MG-INV-8831 verified by Checker. ₹1,250 credited to your wallet.",
+    timestamp: new Date(Date.now() - 15 * 60000).toISOString(),
+    read: false,
+    type: "success"
+  },
+  {
+    id: "notif-002",
+    targetRole: "manager",
+    title: "New Quotation Generated",
+    message: "Rajesh Kumar generated Quotation MG-QT-752780 for Walk-in Showroom Client (₹11,115).",
+    timestamp: new Date(Date.now() - 45 * 60000).toISOString(),
+    read: false,
+    type: "info"
+  },
+  {
+    id: "notif-003",
+    targetRole: "md",
+    title: "Campaign Target Milestone",
+    message: "Cleared stock sales revenue crossed ₹15,00,000 milestone for Bathing Division!",
+    timestamp: new Date(Date.now() - 120 * 60000).toISOString(),
+    read: false,
+    type: "warning"
+  },
+  {
+    id: "notif-004",
+    targetRole: "checker",
+    title: "Invoice Verification Pending",
+    message: "New invoice #MG-INV-9921 submitted by Rajesh Kumar for clearance audit.",
+    timestamp: new Date(Date.now() - 180 * 60000).toISOString(),
+    read: false,
+    type: "info"
+  }
+];
 
 const LOCAL_STORAGE_KEY = "mg_clearance_db_v7";
 
@@ -251,6 +287,7 @@ export function loadDatabase() {
       products: INITIAL_PRODUCTS,
       executives: INITIAL_EXECUTIVES,
       salesLedger: INITIAL_SALES_LEDGER,
+      notifications: INITIAL_NOTIFICATIONS,
       initialTargetValue: calculateStockValue(INITIAL_PRODUCTS)
     };
   }
@@ -269,6 +306,10 @@ export function loadDatabase() {
   }
   if (!db.salesLedger) {
     db.salesLedger = INITIAL_SALES_LEDGER;
+    migrated = true;
+  }
+  if (!db.notifications) {
+    db.notifications = INITIAL_NOTIFICATIONS;
     migrated = true;
   }
 

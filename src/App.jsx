@@ -4,7 +4,7 @@ import MDDashboard from './components/MDDashboard';
 import ExecutiveWorkspace from './components/ExecutiveWorkspace';
 import AdminPanel from './components/AdminPanel';
 import CheckerWorkspace from './components/CheckerWorkspace';
-import { Layers, Sun, Moon, LogOut, ShieldAlert, KeyRound, User } from 'lucide-react';
+import { Layers, Sun, Moon, LogOut, ShieldAlert, KeyRound, User, Bell, CheckCheck, Info, AlertTriangle, CheckCircle2 } from 'lucide-react';
 
 function App() {
   const [db, setDb] = useState(() => loadDatabase());
@@ -49,6 +49,35 @@ function App() {
   const [isForgotModalOpen, setIsForgotModalOpen] = useState(false);
   const [forgotUser, setForgotUser] = useState('');
   const [forgotSuccess, setForgotSuccess] = useState(false);
+
+  const [isNotifDrawerOpen, setIsNotifDrawerOpen] = useState(false);
+
+  const getUserNotifications = () => {
+    if (!currentUser || !db.notifications) return [];
+    return db.notifications.filter(n => {
+      if (n.targetRole === 'all') return true;
+      if (n.targetRole === currentUser.role) {
+        if (currentUser.role === 'executive' && n.targetUserId) {
+          return n.targetUserId === currentUser.execId || n.targetUserId === 'exec-001';
+        }
+        return true;
+      }
+      return false;
+    });
+  };
+
+  const userNotifications = getUserNotifications();
+  const unreadCount = userNotifications.filter(n => !n.read).length;
+
+  const markAllAsRead = () => {
+    const updatedNotifs = (db.notifications || []).map(n => {
+      if (n.targetRole === currentUser.role || n.targetRole === 'all') {
+        return { ...n, read: true };
+      }
+      return n;
+    });
+    updateDb({ ...db, notifications: updatedNotifs });
+  };
 
   // Apply theme changes
   useEffect(() => {
@@ -470,13 +499,124 @@ function App() {
             </div>
           </div>
 
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-            {/* Quick Theme Toggle Icon Button */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', position: 'relative' }}>
+            
+            {/* Role-Based Notification Bell Icon */}
+            {currentUser && (
+              <div style={{ position: 'relative' }}>
+                <button 
+                  onClick={() => setIsNotifDrawerOpen(!isNotifDrawerOpen)}
+                  style={{ 
+                    width: '38px', 
+                    height: '38px', 
+                    borderRadius: '50%', 
+                    padding: 0, 
+                    display: 'flex', 
+                    alignItems: 'center', 
+                    justifyContent: 'center',
+                    background: 'rgba(255, 255, 255, 0.05)',
+                    border: '1px solid var(--border-color)',
+                    cursor: 'pointer',
+                    color: 'var(--text-primary)',
+                    position: 'relative'
+                  }}
+                  title="System Notifications & Alerts"
+                >
+                  <Bell size={18} color={unreadCount > 0 ? "var(--accent-amber)" : "var(--text-secondary)"} />
+                  {unreadCount > 0 && (
+                    <span style={{ 
+                      position: 'absolute', 
+                      top: '-2px', 
+                      right: '-2px', 
+                      background: 'var(--accent-rose)', 
+                      color: '#fff', 
+                      fontSize: '0.62rem', 
+                      fontWeight: 800, 
+                      borderRadius: '10px', 
+                      padding: '0.1rem 0.35rem', 
+                      minWidth: '16px', 
+                      textAlign: 'center',
+                      boxShadow: '0 2px 6px rgba(239, 68, 68, 0.5)'
+                    }}>
+                      {unreadCount}
+                    </span>
+                  )}
+                </button>
+
+                {/* Floating Notification Drawer */}
+                {isNotifDrawerOpen && (
+                  <div 
+                    className="glass-panel" 
+                    style={{ 
+                      position: 'absolute', 
+                      top: '46px', 
+                      right: 0, 
+                      width: '340px', 
+                      maxHeight: '420px', 
+                      overflowY: 'auto', 
+                      zIndex: 99999, 
+                      borderRadius: '14px', 
+                      padding: '1rem', 
+                      boxShadow: '0 12px 36px rgba(0,0,0,0.5)',
+                      border: '1px solid var(--accent-cyan)'
+                    }}
+                  >
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid var(--border-color)', paddingBottom: '0.5rem', marginBottom: '0.75rem' }}>
+                      <div style={{ fontWeight: 800, fontSize: '0.88rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                        <Bell size={16} color="var(--accent-cyan)" />
+                        Notifications ({userNotifications.length})
+                      </div>
+                      {unreadCount > 0 && (
+                        <button 
+                          onClick={markAllAsRead} 
+                          style={{ background: 'none', border: 'none', color: 'var(--accent-emerald)', fontSize: '0.72rem', fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.2rem' }}
+                        >
+                          <CheckCheck size={14} /> Mark all read
+                        </button>
+                      )}
+                    </div>
+
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.6rem' }}>
+                      {userNotifications.length === 0 ? (
+                        <div style={{ textAlign: 'center', padding: '1.5rem 0', color: 'var(--text-muted)', fontSize: '0.8rem' }}>
+                          No recent notifications for your account.
+                        </div>
+                      ) : (
+                        userNotifications.map(n => (
+                          <div 
+                            key={n.id} 
+                            style={{ 
+                              padding: '0.65rem', 
+                              borderRadius: '8px', 
+                              background: n.read ? 'rgba(255,255,255,0.02)' : 'rgba(14, 165, 233, 0.08)',
+                              borderLeft: `3px solid ${n.type === 'success' ? 'var(--accent-emerald)' : n.type === 'warning' ? 'var(--accent-amber)' : 'var(--accent-cyan)'}`,
+                              fontSize: '0.78rem'
+                            }}
+                          >
+                            <div style={{ display: 'flex', justifyContent: 'space-between', fontWeight: 700, color: 'var(--text-primary)', marginBottom: '0.15rem' }}>
+                              <span>{n.title}</span>
+                              <span style={{ fontSize: '0.65rem', color: 'var(--text-muted)', fontWeight: 400 }}>
+                                {new Date(n.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                              </span>
+                            </div>
+                            <div style={{ color: 'var(--text-secondary)', fontSize: '0.73rem', lineHeight: '1.4' }}>
+                              {n.message}
+                            </div>
+                          </div>
+                        ))
+                      )}
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Quick Theme Toggle Icon Button (ALWAYS Visible) */}
             <button 
               className="theme-toggle-btn"
               onClick={toggleTheme}
               title={theme === 'dark' ? "Switch to Light Mode" : "Switch to Dark Mode"}
-              style={{ width: '36px', height: '36px', borderRadius: '50%', padding: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+              style={{ width: '38px', height: '38px', borderRadius: '50%', padding: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
             >
               {theme === 'dark' ? <Sun size={18} color="var(--accent-amber)" /> : <Moon size={18} color="var(--accent-cyan)" />}
             </button>
@@ -528,7 +668,7 @@ function App() {
         <div className="modal-overlay" onClick={() => setIsProfileMenuOpen(false)} style={{ zIndex: 99999 }}>
           <div className="glass-panel modal-content" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '420px', width: '92%', padding: '1.5rem', borderRadius: '16px' }}>
             
-            {/* Greeting Header */}
+            {/* Greeting Header (NO EMOJIS) */}
             <div style={{ textAlign: 'center', borderBottom: '1px solid var(--border-color)', paddingBottom: '1.25rem', marginBottom: '1.25rem' }}>
               <div style={{ 
                 width: '60px', 
@@ -577,11 +717,11 @@ function App() {
                 <KeyRound size={18} color="var(--accent-amber)" />
                 <div style={{ flex: 1 }}>
                   <div style={{ fontSize: '0.85rem', fontWeight: 600 }}>Password Assistance</div>
-                  <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>Contact projects@mggroupin.com</div>
+                  <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>Submit password reset request directly</div>
                 </div>
               </div>
 
-              {/* Install PWA App Button at Bottom */}
+              {/* Install PWA App Button */}
               <div 
                 onClick={handleInstallPWA}
                 style={{ 
@@ -596,7 +736,7 @@ function App() {
                 }}
               >
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
-                  <span style={{ fontSize: '1.1rem' }}>📲</span>
+                  <User size={18} color="var(--accent-emerald)" />
                   <div>
                     <div style={{ fontSize: '0.85rem', fontWeight: 700, color: 'var(--accent-emerald)' }}>Install MG App</div>
                     <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>Add to Home Screen for mobile access</div>
