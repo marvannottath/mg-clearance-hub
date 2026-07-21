@@ -85,26 +85,10 @@ function App() {
     localStorage.setItem('mg_clearance_theme', theme);
   }, [theme]);
 
-  // Fetch live database state from server if backend is running (real-time polling every 4s)
-  useEffect(() => {
-    const syncDb = () => {
-      fetch('/api/db')
-        .then(res => res.json())
-        .then(result => {
-          if (result && result.success && result.data) {
-            setDb(result.data);
-            saveDatabase(result.data);
-          }
-        })
-        .catch(() => {});
-    };
-
-    syncDb();
-    const interval = setInterval(syncDb, 4000);
-    return () => clearInterval(interval);
-  }, []);
+  const lastLocalUpdateRef = React.useRef(0);
 
   const updateDb = (newDb) => {
+    lastLocalUpdateRef.current = Date.now();
     setDb(newDb);
     saveDatabase(newDb);
     // Sync with server-side persistent database
@@ -114,6 +98,28 @@ function App() {
       body: JSON.stringify(newDb)
     }).catch(() => {});
   };
+
+  // Fetch live database state from server if backend is running (real-time polling every 5s)
+  useEffect(() => {
+    const syncDb = () => {
+      // Don't overwrite client state if a local edit/update occurred in the last 8 seconds
+      if (Date.now() - lastLocalUpdateRef.current < 8000) return;
+
+      fetch('/api/db')
+        .then(res => res.json())
+        .then(result => {
+          if (result && result.success && result.data && (Date.now() - lastLocalUpdateRef.current >= 8000)) {
+            setDb(result.data);
+            saveDatabase(result.data);
+          }
+        })
+        .catch(() => {});
+    };
+
+    syncDb();
+    const interval = setInterval(syncDb, 5000);
+    return () => clearInterval(interval);
+  }, []);
 
   // Route security guard: Redirect to login if unauthenticated or locked role route
   useEffect(() => {
