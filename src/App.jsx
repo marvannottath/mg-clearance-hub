@@ -392,73 +392,250 @@ function App() {
 
   // LoginView sub-component is defined statically outside the App component
 
+  // Time-aware greeting helper
+  const getGreeting = () => {
+    const hour = new Date().getHours();
+    if (hour >= 5 && hour < 12) return '🌅 Good Morning';
+    if (hour >= 12 && hour < 17) return '☀️ Good Afternoon';
+    return '🌆 Good Evening';
+  };
+
+  const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
+  const [deferredPrompt, setDeferredPrompt] = useState(null);
+
+  // Listen for PWA beforeinstallprompt event
+  useEffect(() => {
+    const handleBeforeInstallPrompt = (e) => {
+      e.preventDefault();
+      setDeferredPrompt(e);
+    };
+    window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+    return () => window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+  }, []);
+
+  const handleInstallPWA = () => {
+    if (deferredPrompt) {
+      deferredPrompt.prompt();
+      deferredPrompt.userChoice.then((choiceResult) => {
+        if (choiceResult.outcome === 'accepted') {
+          console.log('User installed the PWA app');
+        }
+        setDeferredPrompt(null);
+      });
+    } else {
+      alert("📲 To Install MG Clearance App on your Phone:\n\n• Android Chrome: Tap 3 dots (⋮) menu at top right -> Tap 'Install app' or 'Add to Home Screen'.\n• iPhone Safari: Tap Share button (bottom bar) -> Scroll down and tap 'Add to Home Screen'.");
+    }
+  };
+
+  const getUserInitials = (name) => {
+    if (!name) return 'MG';
+    const parts = name.trim().split(' ');
+    if (parts.length >= 2) return (parts[0][0] + parts[1][0]).toUpperCase();
+    return name.slice(0, 2).toUpperCase();
+  };
+
   const isShareRoute = routePath.startsWith('/share/') || routePath.startsWith('#/share/');
 
   return (
     <div className="app-container">
       {!isShareRoute && (
-        <header className="app-header">
-          <div className="logo-container">
+        <header className="app-header" style={{ padding: '0.85rem 1.25rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <div className="logo-container" style={{ cursor: 'pointer' }} onClick={() => navigateTo(currentUser ? `/${currentUser.role}` : '/login')}>
             <div style={{ 
-              width: '36px', 
-              height: '36px', 
-              borderRadius: '8px', 
+              width: '38px', 
+              height: '38px', 
+              borderRadius: '10px', 
               background: 'linear-gradient(135deg, #0284c7 0%, #0d9488 100%)', 
               display: 'flex', 
               alignItems: 'center', 
               justifyContent: 'center', 
               fontWeight: 900, 
               color: '#ffffff', 
-              fontSize: '1.05rem', 
+              fontSize: '1.1rem', 
               letterSpacing: '-0.05em',
-              boxShadow: '0 4px 12px rgba(2, 132, 199, 0.35)',
-              border: '1px solid rgba(255, 255, 255, 0.2)'
+              boxShadow: '0 4px 14px rgba(2, 132, 199, 0.4)',
+              border: '1px solid rgba(255, 255, 255, 0.25)'
             }}>
               MG
             </div>
             <div>
-              <h1 className="logo-text">MG CLEARANCE</h1>
-              <span style={{ fontSize: '0.65rem', color: 'var(--text-muted)', fontWeight: 600, letterSpacing: '0.1em' }}>
+              <h1 className="logo-text" style={{ fontSize: '1.1rem', margin: 0, letterSpacing: '0.02em' }}>MG CLEARANCE</h1>
+              <span style={{ fontSize: '0.62rem', color: 'var(--text-muted)', fontWeight: 600, letterSpacing: '0.12em', textTransform: 'uppercase', display: 'block' }}>
                 BATH & TILE DIVISION
               </span>
             </div>
           </div>
 
-          <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-            {/* Theme Toggler */}
-            <button 
-              className="theme-toggle-btn"
-              onClick={toggleTheme}
-              title={theme === 'dark' ? "Switch to Light Mode" : "Switch to Dark Mode"}
-            >
-              {theme === 'dark' ? <Sun size={18} /> : <Moon size={18} />}
-            </button>
-
-            {/* Authenticated user session display */}
-            {currentUser && (
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                <div className="user-profile-tag">
-                  <User size={14} color="var(--accent-cyan)" />
-                  <span style={{ color: 'var(--text-secondary)' }}>Logged in:</span>
-                  <strong>{currentUser.name}</strong>
-                  <span className="badge badge-success" style={{ marginLeft: '0.25rem', fontSize: '0.65rem', padding: '0.15rem 0.35rem' }}>
-                    {currentUser.role.toUpperCase()}
-                  </span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+            {/* Authenticated User Profile Pill Button */}
+            {currentUser ? (
+              <button 
+                onClick={() => setIsProfileMenuOpen(true)}
+                style={{ 
+                  background: 'rgba(255, 255, 255, 0.05)', 
+                  border: '1px solid var(--border-color)', 
+                  borderRadius: '30px', 
+                  padding: '0.35rem 0.75rem 0.35rem 0.35rem', 
+                  display: 'flex', 
+                  alignItems: 'center', 
+                  gap: '0.5rem', 
+                  cursor: 'pointer',
+                  transition: 'all 0.2s ease',
+                  color: 'var(--text-primary)'
+                }}
+                title="Account Settings & Profile"
+              >
+                <div style={{ 
+                  width: '28px', 
+                  height: '28px', 
+                  borderRadius: '50%', 
+                  background: 'linear-gradient(135deg, #0284c7, #10b981)', 
+                  color: '#fff', 
+                  fontWeight: 800, 
+                  fontSize: '0.75rem', 
+                  display: 'flex', 
+                  alignItems: 'center', 
+                  justifyContent: 'center' 
+                }}>
+                  {getUserInitials(currentUser.name)}
                 </div>
-
-                <button 
-                  className="btn btn-secondary" 
-                  onClick={handleLogout}
-                  style={{ padding: '0.45rem 0.75rem', display: 'flex', alignItems: 'center', gap: '0.25rem' }}
-                  title="Log Out Session"
-                >
-                  <LogOut size={14} />
-                  Logout
-                </button>
-              </div>
+                <span style={{ fontSize: '0.8rem', fontWeight: 700 }}>{currentUser.name.split(' ')[0]}</span>
+                <span className="badge badge-cyan" style={{ fontSize: '0.6rem', padding: '0.1rem 0.35rem', textTransform: 'uppercase' }}>
+                  {currentUser.role}
+                </span>
+              </button>
+            ) : (
+              <button 
+                className="theme-toggle-btn"
+                onClick={toggleTheme}
+                title={theme === 'dark' ? "Switch to Light Mode" : "Switch to Dark Mode"}
+              >
+                {theme === 'dark' ? <Sun size={18} /> : <Moon size={18} />}
+              </button>
             )}
           </div>
         </header>
+      )}
+
+      {/* User Profile & Account Settings Modal */}
+      {isProfileMenuOpen && currentUser && (
+        <div className="modal-overlay" onClick={() => setIsProfileMenuOpen(false)} style={{ zIndex: 99999 }}>
+          <div className="glass-panel modal-content" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '420px', width: '92%', padding: '1.5rem', borderRadius: '16px' }}>
+            
+            {/* Greeting Header */}
+            <div style={{ textAlign: 'center', borderBottom: '1px solid var(--border-color)', paddingBottom: '1.25rem', marginBottom: '1.25rem' }}>
+              <div style={{ 
+                width: '60px', 
+                height: '60px', 
+                borderRadius: '50%', 
+                background: 'linear-gradient(135deg, #0284c7, #10b981)', 
+                color: '#fff', 
+                fontWeight: 900, 
+                fontSize: '1.4rem', 
+                display: 'flex', 
+                alignItems: 'center', 
+                justifyContent: 'center',
+                margin: '0 auto 0.75rem',
+                boxShadow: '0 4px 15px rgba(2, 132, 199, 0.4)'
+              }}>
+                {getUserInitials(currentUser.name)}
+              </div>
+              <h3 style={{ fontSize: '1.15rem', fontWeight: 800, color: 'var(--text-primary)', margin: 0 }}>
+                {getGreeting()}, {currentUser.name.split(' ')[0]}!
+              </h3>
+              <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', marginTop: '0.2rem' }}>
+                {currentUser.email || `${currentUser.username}@marblegallery.com`}
+              </div>
+              <span className="badge badge-success" style={{ marginTop: '0.5rem', display: 'inline-block', fontSize: '0.7rem', padding: '0.2rem 0.6rem', textTransform: 'uppercase' }}>
+                Role: {currentUser.role}
+              </span>
+            </div>
+
+            {/* Quick Actions List */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.85rem', marginBottom: '1.5rem' }}>
+              
+              {/* Theme Toggle */}
+              <div 
+                onClick={toggleTheme}
+                style={{ 
+                  display: 'flex', 
+                  justify: 'space-between', 
+                  alignItems: 'center', 
+                  background: 'rgba(255,255,255,0.03)', 
+                  padding: '0.85rem 1rem', 
+                  borderRadius: '10px', 
+                  border: '1px solid var(--border-color)',
+                  cursor: 'pointer'
+                }}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
+                  {theme === 'dark' ? <Sun size={18} color="var(--accent-amber)" /> : <Moon size={18} color="var(--accent-cyan)" />}
+                  <span style={{ fontSize: '0.85rem', fontWeight: 600 }}>App Theme Appearance</span>
+                </div>
+                <span style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--accent-cyan)' }}>
+                  {theme === 'dark' ? '🌙 Dark Mode' : '☀️ Light Mode'}
+                </span>
+              </div>
+
+              {/* PWA Install Button */}
+              <div 
+                onClick={handleInstallPWA}
+                style={{ 
+                  display: 'flex', 
+                  justify: 'space-between', 
+                  alignItems: 'center', 
+                  background: 'rgba(16, 185, 129, 0.06)', 
+                  padding: '0.85rem 1rem', 
+                  borderRadius: '10px', 
+                  border: '1px solid rgba(16, 185, 129, 0.25)',
+                  cursor: 'pointer'
+                }}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
+                  <span style={{ fontSize: '1.1rem' }}>📲</span>
+                  <div>
+                    <div style={{ fontSize: '0.85rem', fontWeight: 700, color: 'var(--accent-emerald)' }}>Install MG App on Phone</div>
+                    <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>Add to Home Screen for fast mobile access</div>
+                  </div>
+                </div>
+                <span style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--accent-emerald)' }}>Install ➔</span>
+              </div>
+
+              {/* Password Assistance Notice */}
+              <div 
+                onClick={() => { setIsProfileMenuOpen(false); setIsForgotModalOpen(true); }}
+                style={{ 
+                  display: 'flex', 
+                  alignItems: 'center', 
+                  gap: '0.65rem', 
+                  background: 'rgba(255,255,255,0.03)', 
+                  padding: '0.85rem 1rem', 
+                  borderRadius: '10px', 
+                  border: '1px solid var(--border-color)',
+                  cursor: 'pointer'
+                }}
+              >
+                <KeyRound size={18} color="var(--accent-amber)" />
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontSize: '0.85rem', fontWeight: 600 }}>Password Assistance</div>
+                  <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>Contact projects@mggroupin.com</div>
+                </div>
+              </div>
+
+            </div>
+
+            {/* Logout Action Button */}
+            <button 
+              className="btn btn-danger" 
+              onClick={() => { setIsProfileMenuOpen(false); handleLogout(); }}
+              style={{ width: '100%', padding: '0.75rem', fontSize: '0.9rem', fontWeight: 800, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', borderRadius: '10px', border: 'none' }}
+            >
+              <LogOut size={18} />
+              Log Out Session
+            </button>
+
+          </div>
+        </div>
       )}
 
       <main className={isShareRoute ? "fade-in" : "main-content fade-in"}>

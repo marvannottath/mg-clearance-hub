@@ -756,7 +756,14 @@ function ExecutiveWorkspace({ products, activeExecutive, db, onUpdateDb }) {
         
         {/* Profile / Greeting Card */}
         <div className="glass-panel" style={{ padding: '1.25rem', background: 'var(--bg-card)' }}>
-          <h2 style={{ fontSize: '1.3rem', fontWeight: 700 }}>Good day, {activeExecutive.name.split(' ')[0]}!</h2>
+          <h2 style={{ fontSize: '1.3rem', fontWeight: 700 }}>
+            {(() => {
+              const hour = new Date().getHours();
+              if (hour >= 5 && hour < 12) return '🌅 Good Morning';
+              if (hour >= 12 && hour < 17) return '☀️ Good Afternoon';
+              return '🌆 Good Evening';
+            })()}, {activeExecutive.name.split(' ')[0]}!
+          </h2>
           <p style={{ color: 'var(--text-secondary)', fontSize: '0.8rem', marginTop: '0.25rem' }}>
             Showroom floor clearance helper. Select products and generate quick customer quotes.
           </p>
