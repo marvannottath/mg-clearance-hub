@@ -857,28 +857,35 @@ function AdminPanel({
 
         extractedBrand = extractedBrand.toUpperCase();
 
-        // Smart Price Parsing across line string (stripping product codes like SA41560)
-        const lineWithoutIds = line.replace(/[A-Z]{2,}\d+/gi, '');
-        const allNumbersInLine = (lineWithoutIds.match(/\d+(?:\.\d+)?/g) || []).map(n => Math.round(parseFloat(n))).filter(n => n > 20);
-        
         let mrpValue = safeParseInt(row[mrpIdx], 0);
         let specValue = safeParseInt(row[specIdx], 0);
         let landingValue = safeParseInt(row[landingIdx], 0);
 
-        if (allNumbersInLine.length >= 2) {
-          const sortedNums = [...allNumbersInLine].sort((a, b) => b - a);
-          // Highest number is MRP e.g. ₹9,890 or ₹1,192
-          mrpValue = mrpValue > sortedNums[0] ? mrpValue : sortedNums[0];
-          specValue = specValue > 0 && specValue < mrpValue ? specValue : (sortedNums[1] || Math.round(mrpValue * 0.6));
-          landingValue = landingValue > 0 && landingValue < specValue ? landingValue : Math.round(specValue * 0.8);
+        // Filter valid prices from line (ignore SL numbers <= 10 or product ID digits)
+        const lineWithoutIds = line.replace(/[A-Z]{2,}\d+/gi, '');
+        const linePrices = (lineWithoutIds.match(/\d+(?:\.\d+)?/g) || [])
+          .map(n => Math.round(parseFloat(n)))
+          .filter(n => n > 25);
+
+        if (specValue <= 0 && linePrices.length > 0) {
+          specValue = linePrices[linePrices.length - 1]; // Last monetary number is clearance rate
         }
 
-        // If MRP is equal to or lower than Clearance Price, calculate realistic MRP using 40% margin
-        if (mrpValue <= specValue && specValue > 0) {
+        if (mrpValue <= 0 && linePrices.length >= 2) {
+          const sorted = [...linePrices].sort((a, b) => b - a);
+          mrpValue = sorted[0];
+          if (specValue === mrpValue) {
+            specValue = sorted[1];
+          }
+        }
+
+        // Standard clearance pricing rule: MRP is ~40% above clearance special price
+        if (specValue > 0 && (mrpValue <= specValue || mrpValue > (specValue * 4))) {
           mrpValue = Math.round(specValue / (1 - 0.40));
         }
 
-        if (!landingValue || landingValue >= specValue) {
+        // Realistic landing cost is ~20% below clearance price
+        if (!landingValue || landingValue >= specValue || landingValue < (specValue * 0.5)) {
           landingValue = Math.round(specValue * 0.8);
         }
 
