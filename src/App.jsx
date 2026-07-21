@@ -526,6 +526,7 @@ function LoginView({ onLoginSubmit }) {
   const [loginUser, setLoginUser] = useState('');
   const [loginPass, setLoginPass] = useState('');
   const [errorMsg, setErrorMsg] = useState('');
+  const [isForgotModalOpen, setIsForgotModalOpen] = useState(false);
 
   const handleLogin = (e) => {
     e.preventDefault();
@@ -609,7 +610,53 @@ function LoginView({ onLoginSubmit }) {
             Login
           </button>
         </form>
+
+        <div style={{ textAlign: 'center', marginTop: '1.25rem' }}>
+          <button 
+            type="button" 
+            className="btn btn-ghost" 
+            style={{ fontSize: '0.78rem', color: 'var(--text-muted)', textDecoration: 'underline' }}
+            onClick={() => setIsForgotModalOpen(true)}
+          >
+            🔑 Forgot Password / Reset Assistance?
+          </button>
+        </div>
       </div>
+
+      {/* Password Recovery Assistance Modal */}
+      {isForgotModalOpen && (
+        <div className="modal-backdrop" style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.75)', zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem' }}>
+          <div className="glass-panel" style={{ maxWidth: '480px', width: '100%', padding: '2rem', borderRadius: '16px', background: 'var(--bg-card)' }}>
+            <h3 style={{ fontSize: '1.2rem', fontWeight: 800, color: 'var(--accent-cyan)', marginBottom: '0.85rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <ShieldAlert size={22} color="var(--accent-amber)" />
+              System Account Password Recovery Notice
+            </h3>
+            
+            <div style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', lineHeight: '1.6', marginBottom: '1.25rem' }}>
+              <p style={{ marginBottom: '0.75rem' }}>
+                For enterprise security and audit compliance, account passwords can <strong>only be reset or updated via System Admin authorization</strong> in the System Admin Control Panel.
+              </p>
+              <div style={{ background: 'rgba(14, 165, 233, 0.08)', border: '1px solid rgba(14, 165, 233, 0.25)', padding: '0.85rem', borderRadius: '10px', color: 'var(--text-primary)', marginBottom: '0.85rem' }}>
+                <div style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--accent-cyan)', textTransform: 'uppercase', marginBottom: '0.2rem' }}>
+                  📩 Password Assistance Contact Email:
+                </div>
+                <div style={{ fontSize: '1.05rem', fontWeight: 800, fontFamily: 'monospace', color: 'var(--accent-emerald)' }}>
+                  projects@mggroupin.com
+                </div>
+              </div>
+              <p style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>
+                Please send an email to <strong>projects@mggroupin.com</strong> with your Username / Staff ID and reason for password reset. The System Admin will verify your request and issue a new password.
+              </p>
+            </div>
+
+            <div style={{ textAlign: 'right' }}>
+              <button className="btn btn-primary" onClick={() => setIsForgotModalOpen(false)}>
+                Understood / Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
