@@ -233,7 +233,7 @@ export const INITIAL_QUOTATIONS = [];
 
 export const INITIAL_SALES_LEDGER = [];
 
-const LOCAL_STORAGE_KEY = "mg_clearance_db_v6";
+const LOCAL_STORAGE_KEY = "mg_clearance_db_v7";
 
 export function loadDatabase() {
   const data = localStorage.getItem(LOCAL_STORAGE_KEY);
@@ -413,9 +413,8 @@ export function loadDatabase() {
     migrated = true;
   }
 
-  if (migrated) {
-    saveDatabase(db);
-  }
+  // Always save sanitized database to browser storage
+  saveDatabase(db);
 
   return db;
 }

@@ -51,13 +51,41 @@ if (dbUrl) {
   }
 }
 
+// Helper to sanitize database products (fix corrupt MRPs where product code digits were saved as MRP)
+function sanitizeDatabase(data) {
+  if (!data || !data.products) return { db: data, modified: false };
+  let modified = false;
+
+  const cleanedProducts = data.products.map(p => {
+    const specialP = p.specialPrice || p.mrp || 0;
+    let mrpP = p.mrp || 0;
+    const idDigits = (p.id || '').replace(/\D/g, '');
+
+    if ((idDigits.length >= 4 && String(mrpP) === idDigits) || mrpP > (specialP * 3.5) || mrpP <= specialP) {
+      mrpP = Math.round(specialP / (1 - 0.40));
+      modified = true;
+      return { ...p, mrp: mrpP };
+    }
+    return p;
+  });
+
+  if (modified) {
+    data.products = cleanedProducts;
+  }
+  return { db: data, modified };
+}
+
 // Helper to read database
 async function readDb() {
   if (pgPool) {
     try {
       const res = await pgPool.query("SELECT data FROM system_store WHERE id = 'mg_clearance_master'");
       if (res.rows.length > 0) {
-        return res.rows[0].data;
+        const { db: cleanDb, modified } = sanitizeDatabase(res.rows[0].data);
+        if (modified) {
+          saveDb(cleanDb).catch(() => {});
+        }
+        return cleanDb;
       }
     } catch (err) {
       console.error("PostgreSQL Read Error, falling back to disk:", err.message);
@@ -67,7 +95,12 @@ async function readDb() {
   try {
     if (fs.existsSync(DB_FILE)) {
       const raw = fs.readFileSync(DB_FILE, 'utf8');
-      return JSON.parse(raw);
+      let parsed = JSON.parse(raw);
+      const { db: cleanDb, modified } = sanitizeDatabase(parsed);
+      if (modified) {
+        fs.writeFileSync(DB_FILE, JSON.stringify(cleanDb, null, 2), 'utf8');
+      }
+      return cleanDb;
     }
   } catch (err) {
     console.error("Error reading database file:", err);
