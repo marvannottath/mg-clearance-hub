@@ -553,6 +553,16 @@ function AdminPanel({
   const [quoteSearch, setQuoteSearch] = useState('');
   const [specSearchQuery, setSpecSearchQuery] = useState('');
 
+  // Auto-select matching product when typing search in Weekly Specials
+  useEffect(() => {
+    if (specSearchQuery.trim()) {
+      const matching = products.filter(p => !isWeeklySpecialActive(p) && (p.id + p.name + p.brand).toLowerCase().includes(specSearchQuery.trim().toLowerCase()));
+      if (matching.length > 0) {
+        setSpecSelectedId(matching[0].id);
+      }
+    }
+  }, [specSearchQuery, products]);
+
   const filteredAuditQuotations = (quotations || []).filter(q => {
     const matchesExec = quoteExecFilter === 'ALL' || (q.executiveName || '').toLowerCase().includes(quoteExecFilter.toLowerCase()) || q.executiveId === quoteExecFilter;
     const matchesStatus = quoteStatusFilter === 'ALL' || q.status === quoteStatusFilter;
@@ -1934,7 +1944,7 @@ function AdminPanel({
                         <span>MARBLE GALLERY</span>
                         {isNew && <span style={{ fontSize: '8px', background: 'var(--accent-emerald)', color: '#fff', padding: '1px 4px', borderRadius: '3px' }}>NEW TAG</span>}
                       </div>
-                      <div className="qr-sticker-desc">CONCEPT BATHROOM</div>
+                      <div className="qr-sticker-desc">LUXE BATHROOM</div>
                       
                       <img src={qrUrl} alt={`QR Code for ${p.id}`} className="qr-code-placeholder" />
 
@@ -1943,7 +1953,7 @@ function AdminPanel({
                       
                       <div className="qr-sticker-prices">
                         <div className="qr-sticker-price">MRP: <span style={{ textDecoration: 'line-through' }}>{formatRupee(p.mrp)}</span></div>
-                        <div className="qr-sticker-price special">CLEARANCE: {formatRupee(p.specialPrice)}</div>
+                        <div className="qr-sticker-price special" style={{ color: '#0284c7', fontWeight: 800 }}>OFFER PRICE: {formatRupee(p.specialPrice)}</div>
                       </div>
                     </div>
                   );

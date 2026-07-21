@@ -1427,4 +1427,86 @@ h1, h2, h3, h4, h5, h6 {
   letter-spacing: 0.04em;
 }
 
+/* Modal Table Zero Horizontal Scrollbar Fix */
+.modal-content table {
+  width: 100% !important;
+  min-width: 100% !important;
+  table-layout: auto !important;
+}
+
+.modal-content th, .modal-content td {
+  padding: 0.45rem 0.5rem !important;
+  font-size: 0.78rem !important;
+  white-space: normal !important;
+  word-break: break-word !important;
+}
+
+/* Printable QR Code Sticker Label Sheet Layout for Label Printers */
+@media print {
+  body {
+    background: #ffffff !important;
+    color: #000000 !important;
+  }
+
+  .app-header, 
+  .admin-sidebar, 
+  .sticker-print-controls, 
+  .no-print, 
+  .theme-toggle-btn, 
+  .user-profile-pill,
+  .toast-notification,
+  header, 
+  aside, 
+  nav, 
+  footer, 
+  button {
+    display: none !important;
+  }
+
+  .app-container, 
+  .main-content, 
+  .dashboard-panel, 
+  .print-area,
+  .admin-panel-layout {
+    margin: 0 !important;
+    padding: 0 !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    background: #ffffff !important;
+    box-shadow: none !important;
+    border: none !important;
+    display: block !important;
+  }
+
+  .sticker-sheet-grid {
+    display: grid !important;
+    grid-template-columns: repeat(3, 1fr) !important;
+    gap: 12px !important;
+    padding: 10px !important;
+    background: #ffffff !important;
+    width: 100% !important;
+  }
+
+  .qr-sticker {
+    break-inside: avoid !important;
+    page-break-inside: avoid !important;
+    border: 1.5px solid #000000 !important;
+    box-shadow: none !important;
+    background: #ffffff !important;
+    color: #000000 !important;
+    padding: 10px !important;
+    text-align: center !important;
+  }
+
+  .qr-sticker-logo {
+    color: #000000 !important;
+    font-weight: 800 !important;
+  }
+
+  .qr-sticker-price.special {
+    color: #000000 !important;
+    font-weight: 800 !important;
+  }
+}
+
 
