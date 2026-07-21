@@ -551,6 +551,7 @@ function AdminPanel({
   const [quoteExecFilter, setQuoteExecFilter] = useState('ALL');
   const [quoteStatusFilter, setQuoteStatusFilter] = useState('ALL');
   const [quoteSearch, setQuoteSearch] = useState('');
+  const [specSearchQuery, setSpecSearchQuery] = useState('');
 
   const filteredAuditQuotations = (quotations || []).filter(q => {
     const matchesExec = quoteExecFilter === 'ALL' || (q.executiveName || '').toLowerCase().includes(quoteExecFilter.toLowerCase()) || q.executiveId === quoteExecFilter;
@@ -1017,15 +1018,6 @@ function AdminPanel({
                   <option value="OUTOFSTOCK">Out of Stock</option>
                 </select>
 
-                <button 
-                  className="btn btn-emerald" 
-                  onClick={handleSyncSAPStock} 
-                  disabled={isSyncing}
-                  style={{ display: 'flex', alignItems: 'center', gap: '0.35rem' }}
-                >
-                  <RefreshCw size={14} className={isSyncing ? "animate-spin" : ""} />
-                  {isSyncing ? "Syncing..." : "Sync SAP"}
-                </button>
                 <button className="btn btn-primary" onClick={openAddProductModal}>
                   <Plus size={16} />
                   Add Product
@@ -1244,7 +1236,7 @@ function AdminPanel({
                     <th>Date Filed</th>
                     <th>Sales Executive</th>
                     <th>Client Details</th>
-                    <th>Salesforce Invoice No</th>
+                    <th>Showroom Invoice No</th>
                     <th>Quoted Value</th>
                     <th>Calculated Incentive</th>
                     <th>Receipt File</th>
@@ -1419,22 +1411,13 @@ function AdminPanel({
                           </td>
                           <td>
                             {isPending ? (
-                              <div style={{ display: 'flex', gap: '0.4rem' }}>
-                                <button 
-                                  className="btn btn-secondary" 
-                                  style={{ padding: '0.25rem 0.5rem', fontSize: '0.7rem' }}
-                                  onClick={() => alert(`Followup Note: Contact Executive ${quote.executiveName} regarding Quote ${quote.id} for ${quote.customerName} (${quote.customerMobile})`)}
-                                >
-                                  📞 Audit Note
-                                </button>
-                                <button 
-                                  className="btn btn-danger" 
-                                  style={{ padding: '0.25rem 0.5rem', fontSize: '0.7rem', border: 'none' }}
-                                  onClick={() => handleCancelAuditQuotation(quote.id)}
-                                >
-                                  🚫 Cancel & Release
-                                </button>
-                              </div>
+                              <button 
+                                className="btn btn-danger" 
+                                style={{ padding: '0.25rem 0.6rem', fontSize: '0.75rem', border: 'none' }}
+                                onClick={() => handleCancelAuditQuotation(quote.id)}
+                              >
+                                🚫 Cancel & Release
+                              </button>
                             ) : (
                               <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Completed</span>
                             )}
@@ -1470,14 +1453,22 @@ function AdminPanel({
               <form onSubmit={handleAddWeeklySpecial} style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '1.25rem', alignItems: 'flex-end' }}>
                 <div className="form-group" style={{ marginBottom: 0 }}>
                   <label className="form-label">Select Clearance Product</label>
+                  <input 
+                    type="text" 
+                    className="form-input" 
+                    placeholder="🔍 Search code, name or brand..." 
+                    value={specSearchQuery}
+                    onChange={(e) => setSpecSearchQuery(e.target.value)}
+                    style={{ marginBottom: '0.35rem', fontSize: '0.75rem', padding: '0.25rem 0.5rem' }}
+                  />
                   <select 
                     className="form-input"
                     value={specSelectedId}
                     onChange={(e) => setSpecSelectedId(e.target.value)}
                     required
                   >
-                    <option value="">-- Choose Showroom Item --</option>
-                    {products.filter(p => !isWeeklySpecialActive(p) && p.stock > 0).map(p => (
+                    <option value="">-- Choose Showroom Item ({products.filter(p => !isWeeklySpecialActive(p) && p.stock > 0 && (!specSearchQuery || (p.id + p.name + p.brand).toLowerCase().includes(specSearchQuery.toLowerCase()))).length} items) --</option>
+                    {products.filter(p => !isWeeklySpecialActive(p) && p.stock > 0 && (!specSearchQuery || (p.id + p.name + p.brand).toLowerCase().includes(specSearchQuery.toLowerCase()))).map(p => (
                       <option key={p.id} value={p.id}>{p.id} - {p.name} ({p.brand})</option>
                     ))}
                   </select>

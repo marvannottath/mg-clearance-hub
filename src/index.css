@@ -1393,4 +1393,38 @@ h1, h2, h3, h4, h5, h6 {
   }
 }
 
+/* Flexible Responsive Custom Table Layouts */
+.custom-table-container {
+  width: 100%;
+  max-width: 100%;
+  overflow-x: auto;
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border-color);
+  background: var(--bg-card);
+  -webkit-overflow-scrolling: touch;
+}
+
+.custom-table {
+  width: 100%;
+  min-width: 680px;
+  border-collapse: collapse;
+}
+
+.custom-table th, .custom-table td {
+  padding: 0.65rem 0.75rem;
+  font-size: 0.82rem;
+  text-align: left;
+  vertical-align: middle;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.custom-table th {
+  background: rgba(255, 255, 255, 0.03);
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
 

@@ -223,66 +223,15 @@ export const INITIAL_PRODUCTS = [
 ];
 
 export const INITIAL_EXECUTIVES = [
-  { id: "exec-001", name: "Rajesh Kumar", email: "rajesh.k@marblegallery.com", target: 8000000, cleared: 4800000, salesCount: 14, username: "rajesh", password: "rajesh123" },
-  { id: "exec-002", name: "Anjali Menon", email: "anjali.m@marblegallery.com", target: 8000000, cleared: 3600000, salesCount: 10, username: "anjali", password: "anjali123" },
-  { id: "exec-003", name: "Vikram Sethi", email: "vikram.s@marblegallery.com", target: 8000000, cleared: 2400000, salesCount: 8, username: "vikram", password: "vikram123" },
-  { id: "exec-004", name: "Sandeep Pillai", email: "sandeep.p@marblegallery.com", target: 6000000, cleared: 1200000, salesCount: 4, username: "sandeep", password: "sandeep123" }
+  { id: "exec-001", name: "Rajesh Kumar", email: "rajesh.k@marblegallery.com", target: 8000000, cleared: 0, salesCount: 0, username: "rajesh", password: "rajesh123" },
+  { id: "exec-002", name: "Anjali Menon", email: "anjali.m@marblegallery.com", target: 8000000, cleared: 0, salesCount: 0, username: "anjali", password: "anjali123" },
+  { id: "exec-003", name: "Vikram Sethi", email: "vikram.s@marblegallery.com", target: 8000000, cleared: 0, salesCount: 0, username: "vikram", password: "vikram123" },
+  { id: "exec-004", name: "Sandeep Pillai", email: "sandeep.p@marblegallery.com", target: 6000000, cleared: 0, salesCount: 0, username: "sandeep", password: "sandeep123" }
 ];
 
-export const INITIAL_QUOTATIONS = [
-  {
-    id: "MG-QT-723709",
-    executiveId: "exec-001",
-    executiveName: "Rajesh Kumar",
-    customerName: "Walk-in Showroom Client",
-    customerMobile: "+91 9876543210",
-    date: "2026-07-20T11:00:00.000Z",
-    status: "draft",
-    items: [
-      { id: "SA42322", name: "TOTO Washlet SW Bidet Seat", qty: 1, specialPrice: 175000, mrp: 350000 },
-      { id: "FT55648", name: "Almar Temptation Shower", qty: 1, specialPrice: 145000, mrp: 290000 }
-    ]
-  },
-  {
-    id: "MG-QT-051067",
-    executiveId: "exec-001",
-    executiveName: "Rajesh Kumar",
-    customerName: "Walk-in Showroom Client",
-    customerMobile: "+91 9876543210",
-    date: "2026-07-20T10:30:00.000Z",
-    status: "cancelled",
-    items: [
-      { id: "KAJ-HORIZON-WALL", name: "Kajaria Horizon Grey Wall Tile", qty: 1, specialPrice: 115, mrp: 410 }
-    ]
-  }
-];
+export const INITIAL_QUOTATIONS = [];
 
-export const INITIAL_SALES_LEDGER = [
-  {
-    billNo: "MG-CS-1001",
-    executiveId: "exec-001",
-    executiveName: "Rajesh Kumar",
-    date: "2026-06-15T11:30:00.000Z",
-    customerMobile: "9876543210",
-    items: [
-      { productId: "SA42322", name: "TOTO Washlet SW Bidet Seat", qty: 2, pricePaid: 175000, mrp: 350000 }
-    ],
-    totalPaid: 350000,
-    totalMrp: 700000
-  },
-  {
-    billNo: "MG-CS-1002",
-    executiveId: "exec-002",
-    executiveName: "Anjali Menon",
-    date: "2026-06-18T14:45:00.000Z",
-    customerMobile: "9988776655",
-    items: [
-      { productId: "FT55648", name: "Almar Temptation Velvet 500 Shower", qty: 3, pricePaid: 145000, mrp: 290000 }
-    ],
-    totalPaid: 435000,
-    totalMrp: 870000
-  }
-];
+export const INITIAL_SALES_LEDGER = [];
 
 const LOCAL_STORAGE_KEY = "mg_clearance_db_v6";
 
