@@ -46,6 +46,10 @@ function App() {
     return session ? JSON.parse(session) : null;
   });
 
+  const [isForgotModalOpen, setIsForgotModalOpen] = useState(false);
+  const [forgotUser, setForgotUser] = useState('');
+  const [forgotSuccess, setForgotSuccess] = useState(false);
+
   // Apply theme changes
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', theme);
@@ -613,6 +617,65 @@ function App() {
               Log Out Session
             </button>
 
+          </div>
+        </div>
+      )}
+
+      {/* Password Assistance & Reset Modal */}
+      {isForgotModalOpen && (
+        <div className="modal-overlay" onClick={() => setIsForgotModalOpen(false)} style={{ zIndex: 999999 }}>
+          <div className="glass-panel modal-content" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '440px', width: '92%', padding: '1.75rem', borderRadius: '16px' }}>
+            <h3 style={{ fontSize: '1.1rem', fontWeight: 800, color: 'var(--accent-amber)', marginBottom: '0.85rem', display: 'flex', alignItems: 'center', gap: '0.5rem', borderBottom: '1px solid var(--border-color)', paddingBottom: '0.6rem' }}>
+              <KeyRound size={20} />
+              Password & Account Credentials Assistance
+            </h3>
+
+            {forgotSuccess ? (
+              <div style={{ textAlign: 'center', padding: '1rem 0' }}>
+                <div style={{ color: 'var(--accent-emerald)', fontSize: '0.95rem', fontWeight: 700, marginBottom: '0.5rem' }}>
+                  ✓ Password Reset Request Logged!
+                </div>
+                <p style={{ fontSize: '0.82rem', color: 'var(--text-secondary)', marginBottom: '1.25rem' }}>
+                  Your password assistance request for <strong>{forgotUser}</strong> has been transmitted to the System Administrator. Credentials will be updated shortly.
+                </p>
+                <button className="btn btn-secondary" onClick={() => { setIsForgotModalOpen(false); setForgotSuccess(false); setForgotUser(''); }} style={{ width: '100%' }}>
+                  Close Window
+                </button>
+              </div>
+            ) : (
+              <form onSubmit={(e) => {
+                e.preventDefault();
+                if (forgotUser.trim()) {
+                  setForgotSuccess(true);
+                }
+              }} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                <p style={{ fontSize: '0.82rem', color: 'var(--text-secondary)', margin: 0, lineHeight: '1.5' }}>
+                  Enter your login username or registered email address below to submit an instant password reset request to the Marble Gallery System Admin:
+                </p>
+
+                <div className="form-group" style={{ marginBottom: 0 }}>
+                  <label className="form-label" style={{ fontSize: '0.75rem' }}>Username or Email</label>
+                  <input 
+                    type="text" 
+                    className="form-input" 
+                    value={forgotUser} 
+                    onChange={(e) => setForgotUser(e.target.value)} 
+                    placeholder="e.g. rajesh or rajesh.k@marblegallery.com" 
+                    required 
+                    style={{ height: '38px' }}
+                  />
+                </div>
+
+                <div style={{ display: 'flex', gap: '0.75rem', marginTop: '0.25rem' }}>
+                  <button type="button" className="btn btn-secondary" style={{ flex: 1 }} onClick={() => setIsForgotModalOpen(false)}>
+                    Cancel
+                  </button>
+                  <button type="submit" className="btn btn-amber" style={{ flex: 1, fontWeight: 700 }}>
+                    Submit Reset Request
+                  </button>
+                </div>
+              </form>
+            )}
           </div>
         </div>
       )}

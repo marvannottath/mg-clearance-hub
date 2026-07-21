@@ -309,6 +309,14 @@ export function loadDatabase() {
       const specialP = p.specialPrice || p.mrp || 0;
       let mrpP = p.mrp || 0;
 
+      // Fix corrupt MRPs where product code digits (e.g. 41560 from SA41560) were saved as MRP
+      const idDigits = (p.id || '').replace(/\D/g, '');
+      if ((idDigits.length >= 4 && String(mrpP) === idDigits) || mrpP > (specialP * 3.5)) {
+        mrpP = Math.round(specialP / (1 - 0.40)); // Standard 40% margin calculation for MRP
+        updated.mrp = mrpP;
+        updatedStatus = true;
+      }
+
       // Auto-correct identical or inverted MRP and Clearance prices
       if (mrpP <= specialP && specialP > 0) {
         mrpP = Math.round(specialP / (1 - 0.40)); // Standard 40% margin calculation for MRP

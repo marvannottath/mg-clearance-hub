@@ -842,8 +842,9 @@ function AdminPanel({
 
         extractedBrand = extractedBrand.toUpperCase();
 
-        // Smart Price Parsing across line string
-        const allNumbersInLine = (line.match(/\d+(?:\.\d+)?/g) || []).map(n => Math.round(parseFloat(n))).filter(n => n > 20);
+        // Smart Price Parsing across line string (stripping product codes like SA41560)
+        const lineWithoutIds = line.replace(/[A-Z]{2,}\d+/gi, '');
+        const allNumbersInLine = (lineWithoutIds.match(/\d+(?:\.\d+)?/g) || []).map(n => Math.round(parseFloat(n))).filter(n => n > 20);
         
         let mrpValue = safeParseInt(row[mrpIdx], 0);
         let specValue = safeParseInt(row[specIdx], 0);
@@ -1578,18 +1579,18 @@ function AdminPanel({
                     <input 
                       type="text" 
                       className="form-input" 
-                      placeholder="🔍 Type code or name (e.g. SA41495, WATERO)..." 
+                      placeholder="Type code or name (e.g. SA41495, WATERO)..." 
                       value={specSearchQuery}
                       onChange={(e) => {
                         setSpecSearchQuery(e.target.value);
                         setIsSpecDropdownOpen(true);
                       }}
                       onFocus={() => setIsSpecDropdownOpen(true)}
-                      style={{ fontSize: '0.85rem', fontWeight: 600 }}
+                      style={{ fontSize: '0.85rem', fontWeight: 600, paddingRight: specSelectedId ? '110px' : '12px' }}
                     />
                     {specSelectedId && (
-                      <span style={{ position: 'absolute', right: '10px', top: '10px', fontSize: '0.7rem', color: 'var(--accent-emerald)', background: 'rgba(16, 185, 129, 0.1)', padding: '0.1rem 0.4rem', borderRadius: '4px', fontWeight: 700 }}>
-                        ✓ Selected ({specSelectedId})
+                      <span style={{ position: 'absolute', right: '8px', top: '50%', transform: 'translateY(-50%)', fontSize: '0.68rem', color: 'var(--accent-emerald)', background: 'rgba(16, 185, 129, 0.12)', padding: '0.15rem 0.45rem', borderRadius: '4px', fontWeight: 700, pointerEvents: 'none' }}>
+                        Selected
                       </span>
                     )}
                   </div>
@@ -2084,7 +2085,7 @@ function AdminPanel({
             </h3>
             
             <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: '1.5rem', background: 'rgba(16, 185, 129, 0.05)', border: '1px solid rgba(16, 185, 129, 0.2)', padding: '0.85rem 1.25rem', borderRadius: '10px' }}>
-              🔑 As System Admin, you hold full root authority to manage credentials and reset passwords for all roles across Marble Gallery (MD, Showroom Manager, Salesforce Checker, System Admin, and Sales Executives). Password reset requests submitted via <strong>projects@mggroupin.com</strong> are managed here.
+              As System Admin, you hold full root authority to manage credentials and reset passwords for all roles across Marble Gallery (MD, Showroom Manager, Salesforce Checker, System Admin, and Sales Executives).
             </p>
 
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem', marginBottom: '2rem' }}>
@@ -2099,7 +2100,7 @@ function AdminPanel({
                 {/* Manager Password Reset */}
                 <div style={{ marginBottom: '1.25rem', background: 'rgba(255,255,255,0.01)', padding: '0.85rem', borderRadius: '8px', border: '1px solid var(--border-color)' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
-                    <span style={{ fontWeight: 700, fontSize: '0.85rem' }}>👨‍💼 Showroom Manager Account (`manager`)</span>
+                    <span style={{ fontWeight: 700, fontSize: '0.85rem' }}>Showroom Manager Account (`manager`)</span>
                     <span style={{ fontSize: '0.7rem', color: 'var(--accent-emerald)', background: 'rgba(16, 185, 129, 0.1)', padding: '0.1rem 0.4rem', borderRadius: '4px' }}>Role: manager</span>
                   </div>
                   <form onSubmit={(e) => {
@@ -2119,7 +2120,7 @@ function AdminPanel({
                 {/* Checker Password Reset */}
                 <div style={{ marginBottom: '1.25rem', background: 'rgba(255,255,255,0.01)', padding: '0.85rem', borderRadius: '8px', border: '1px solid var(--border-color)' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
-                    <span style={{ fontWeight: 700, fontSize: '0.85rem' }}>🧾 Salesforce Billing Checker (`checker`)</span>
+                    <span style={{ fontWeight: 700, fontSize: '0.85rem' }}>Salesforce Billing Checker (`checker`)</span>
                     <span style={{ fontSize: '0.7rem', color: 'var(--accent-cyan)', background: 'rgba(14, 165, 233, 0.1)', padding: '0.1rem 0.4rem', borderRadius: '4px' }}>Role: checker</span>
                   </div>
                   <form onSubmit={(e) => {
@@ -2139,7 +2140,7 @@ function AdminPanel({
                 {/* MD Password Reset */}
                 <div style={{ marginBottom: '1.25rem', background: 'rgba(255,255,255,0.01)', padding: '0.85rem', borderRadius: '8px', border: '1px solid var(--border-color)' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
-                    <span style={{ fontWeight: 700, fontSize: '0.85rem' }}>👑 Managing Director Account (`md`)</span>
+                    <span style={{ fontWeight: 700, fontSize: '0.85rem' }}>Managing Director Account (`md`)</span>
                     <span style={{ fontSize: '0.7rem', color: 'var(--accent-amber)', background: 'rgba(245, 158, 11, 0.1)', padding: '0.1rem 0.4rem', borderRadius: '4px' }}>Role: md</span>
                   </div>
                   <form onSubmit={(e) => {
