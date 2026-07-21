@@ -577,29 +577,88 @@ function App() {
                 </span>
               </div>
 
-              {/* PWA Install Button */}
-              <div 
-                onClick={handleInstallPWA}
-                style={{ 
-                  display: 'flex', 
-                  justify: 'space-between', 
-                  alignItems: 'center', 
-                  background: 'rgba(16, 185, 129, 0.06)', 
-                  padding: '0.85rem 1rem', 
-                  borderRadius: '10px', 
-                  border: '1px solid rgba(16, 185, 129, 0.25)',
-                  cursor: 'pointer'
-                }}
-              >
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
-                  <span style={{ fontSize: '1.1rem' }}>📲</span>
-                  <div>
-                    <div style={{ fontSize: '0.85rem', fontWeight: 700, color: 'var(--accent-emerald)' }}>Install MG App on Phone</div>
-                    <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>Add to Home Screen for fast mobile access</div>
+              {/* Dynamic PWA / Device Mode Card */}
+              {(() => {
+                const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+                const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+
+                if (isStandalone) {
+                  return (
+                    <div 
+                      style={{ 
+                        display: 'flex', 
+                        justify: 'space-between', 
+                        alignItems: 'center', 
+                        background: 'rgba(16, 185, 129, 0.08)', 
+                        padding: '0.85rem 1rem', 
+                        borderRadius: '10px', 
+                        border: '1px solid rgba(16, 185, 129, 0.3)'
+                      }}
+                    >
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
+                        <span style={{ fontSize: '1.1rem' }}>📱</span>
+                        <div>
+                          <div style={{ fontSize: '0.85rem', fontWeight: 700, color: 'var(--accent-emerald)' }}>MG Clearance Mobile App</div>
+                          <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>Status: Running as Installed Standalone App</div>
+                        </div>
+                      </div>
+                      <span style={{ fontSize: '0.7rem', fontWeight: 700, color: '#fff', background: 'var(--accent-emerald)', padding: '0.15rem 0.45rem', borderRadius: '4px' }}>Installed ✓</span>
+                    </div>
+                  );
+                }
+
+                if (isMobile) {
+                  return (
+                    <div 
+                      onClick={handleInstallPWA}
+                      style={{ 
+                        display: 'flex', 
+                        justify: 'space-between', 
+                        alignItems: 'center', 
+                        background: 'rgba(16, 185, 129, 0.06)', 
+                        padding: '0.85rem 1rem', 
+                        borderRadius: '10px', 
+                        border: '1px solid rgba(16, 185, 129, 0.25)',
+                        cursor: 'pointer'
+                      }}
+                    >
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
+                        <span style={{ fontSize: '1.1rem' }}>📲</span>
+                        <div>
+                          <div style={{ fontSize: '0.85rem', fontWeight: 700, color: 'var(--accent-emerald)' }}>Install MG App on Phone</div>
+                          <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>Add to Home Screen for fast mobile access</div>
+                        </div>
+                      </div>
+                      <span style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--accent-emerald)' }}>Install ➔</span>
+                    </div>
+                  );
+                }
+
+                return (
+                  <div 
+                    onClick={handleInstallPWA}
+                    style={{ 
+                      display: 'flex', 
+                      justify: 'space-between', 
+                      alignItems: 'center', 
+                      background: 'rgba(14, 165, 233, 0.06)', 
+                      padding: '0.85rem 1rem', 
+                      borderRadius: '10px', 
+                      border: '1px solid rgba(14, 165, 233, 0.2)',
+                      cursor: 'pointer'
+                    }}
+                  >
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
+                      <span style={{ fontSize: '1.1rem' }}>💻</span>
+                      <div>
+                        <div style={{ fontSize: '0.85rem', fontWeight: 700, color: 'var(--accent-cyan)' }}>Desktop Web App Mode</div>
+                        <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>Running in Web Browser (clearance.mggroupin.com)</div>
+                      </div>
+                    </div>
+                    <span style={{ fontSize: '0.7rem', fontWeight: 700, color: 'var(--accent-cyan)', background: 'rgba(14, 165, 233, 0.15)', padding: '0.15rem 0.45rem', borderRadius: '4px' }}>PWA Active</span>
                   </div>
-                </div>
-                <span style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--accent-emerald)' }}>Install ➔</span>
-              </div>
+                );
+              })()}
 
               {/* Password Assistance Notice */}
               <div 
