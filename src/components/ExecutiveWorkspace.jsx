@@ -69,6 +69,7 @@ function ExecutiveWorkspace({ products = [], activeExecutive = {}, db = {}, onUp
   const [activePortalTab, setActivePortalTab] = useState('dashboard');
   const [selectedCatalogBrand, setSelectedCatalogBrand] = useState('ALL');
   const [selectedCatalogDivision, setSelectedCatalogDivision] = useState('ALL');
+  const [catalogViewMode, setCatalogViewMode] = useState('list'); // 'list' | 'grid'
   
   // Salesforce Invoice Upload Modal States
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
@@ -2361,7 +2362,28 @@ function ExecutiveWorkspace({ products = [], activeExecutive = {}, db = {}, onUp
               {/* Scrollable Visual Product Catalog */}
               <div className="glass-panel" style={{ padding: '1.25rem', marginBottom: '1.5rem' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem', flexWrap: 'wrap', gap: '0.5rem' }}>
-                  <h3 style={{ fontSize: '0.95rem', fontWeight: 600, margin: 0 }}>Showroom Catalog (Click to Add)</h3>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                    <h3 style={{ fontSize: '0.95rem', fontWeight: 600, margin: 0 }}>Showroom Catalog (Click to Add)</h3>
+                    {/* View Mode Switcher: List vs Grid */}
+                    <div style={{ display: 'flex', gap: '0.2rem', border: '1px solid var(--border-color)', borderRadius: '6px', padding: '2px', background: 'rgba(0,0,0,0.2)' }}>
+                      <button
+                        type="button"
+                        className={`btn ${catalogViewMode === 'list' ? 'btn-cyan' : ''}`}
+                        style={{ padding: '0.2rem 0.6rem', fontSize: '0.7rem', fontWeight: catalogViewMode === 'list' ? 700 : 500 }}
+                        onClick={() => setCatalogViewMode('list')}
+                      >
+                        ☰ List Model
+                      </button>
+                      <button
+                        type="button"
+                        className={`btn ${catalogViewMode === 'grid' ? 'btn-cyan' : ''}`}
+                        style={{ padding: '0.2rem 0.6rem', fontSize: '0.7rem', fontWeight: catalogViewMode === 'grid' ? 700 : 500 }}
+                        onClick={() => setCatalogViewMode('grid')}
+                      >
+                        ⊞ Grid Tiles
+                      </button>
+                    </div>
+                  </div>
                   
                   <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', flexWrap: 'wrap' }}>
                     {/* Division tabs */}
@@ -2412,102 +2434,192 @@ function ExecutiveWorkspace({ products = [], activeExecutive = {}, db = {}, onUp
                   </div>
                 </div>
 
-                <div className="executive-catalog-scroll">
-                  {filteredProducts.map(p => {
-                    const isOutOfStock = p.stock === 0;
-                    const finalPrice = getProductFinalPrice(p);
-                    const isWeeklySpecial = isWeeklySpecialActive(p);
+                {catalogViewMode === 'list' ? (
+                  <div style={{ overflowX: 'auto', maxHeight: '520px' }}>
+                    <table className="table" style={{ width: '100%', fontSize: '0.8rem', borderCollapse: 'collapse' }}>
+                      <thead>
+                        <tr style={{ background: 'rgba(255,255,255,0.03)', borderBottom: '1px solid var(--border-color)', color: 'var(--text-muted)', fontSize: '0.75rem', textAlign: 'left' }}>
+                          <th style={{ padding: '0.6rem' }}>Product & Code</th>
+                          <th style={{ padding: '0.6rem' }}>Brand / Specs</th>
+                          <th style={{ padding: '0.6rem', textAlign: 'center' }}>Stock</th>
+                          <th style={{ padding: '0.6rem', textAlign: 'right' }}>MRP</th>
+                          <th style={{ padding: '0.6rem', textAlign: 'right' }}>Clearance Price</th>
+                          <th style={{ padding: '0.6rem', textAlign: 'center' }}>Incentive</th>
+                          <th style={{ padding: '0.6rem', textAlign: 'center' }}>Action</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {filteredProducts.length === 0 ? (
+                          <tr>
+                            <td colSpan="7" style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-muted)' }}>
+                              No clearance products matching criteria.
+                            </td>
+                          </tr>
+                        ) : (
+                          filteredProducts.map(p => {
+                            const isOutOfStock = p.stock === 0;
+                            const finalPrice = getProductFinalPrice(p);
+                            const singleIncentive = getProductIncentiveAmount(p, 1, db.brands || []);
+                            const isWeeklySpecial = isWeeklySpecialActive(p);
 
-                    return (
-                      <div 
-                        key={p.id} 
-                        className={`glass-panel executive-catalog-card ${isWeeklySpecial ? 'weekly-special-card' : ''}`}
-                        style={{ 
-                          opacity: isOutOfStock ? 0.5 : 1,
-                          border: isWeeklySpecial ? '1.5px solid rgba(245,158,11,0.3)' : '1px solid var(--border-color)',
-                          background: isWeeklySpecial ? 'rgba(245,158,11,0.01)' : 'rgba(255,255,255,0.01)',
-                          cursor: isOutOfStock ? 'not-allowed' : 'pointer',
-                          padding: '0.75rem'
-                        }}
-                        onClick={() => !isOutOfStock && addProductToCartDirect(p)}
-                      >
-                        <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
-                          {p.image ? (
-                            <img 
-                              src={p.image} 
-                              alt={p.name} 
-                              className="catalog-card-img"
-                              style={{ width: '55px', height: '55px', objectFit: 'cover', borderRadius: '6px', border: '1px solid var(--border-color)', flexShrink: 0 }} 
-                            />
-                          ) : (
-                            <div className="catalog-card-placeholder" style={{ width: '55px', height: '55px', background: 'var(--bg-secondary)', borderRadius: '6px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.65rem', fontWeight: 700, color: 'var(--text-muted)', border: '1px solid var(--border-color)', flexShrink: 0 }}>
-                              {p.brand}
-                            </div>
-                          )}
-                          <div style={{ flex: 1, minWidth: 0 }}>
-                            {isWeeklySpecial && (
-                              <span className="badge badge-warning" style={{ fontSize: '0.6rem', padding: '0.1rem 0.35rem', marginBottom: '0.25rem', display: 'inline-block' }}>
-                                ⚡ Weekly Offer
-                              </span>
-                            )}
-                            <div style={{ fontSize: '0.8rem', fontWeight: 700, textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap' }} title={p.name}>
-                              {p.name}
-                            </div>
-                            {p.division === 'Tiles' && (
-                              <div style={{ fontSize: '0.7rem', color: 'var(--text-secondary)', marginTop: '0.15rem', display: 'flex', flexDirection: 'column', gap: '0.1rem' }}>
-                                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                                  <span>📏 {p.size || 'N/A'}</span>
-                                  <span>✨ {p.finishing || 'N/A'}</span>
-                                </div>
-                                <div style={{ color: 'var(--accent-cyan)', fontWeight: 600 }}>
-                                  📍 Loc: {p.location || 'N/A'}
-                                </div>
-                              </div>
-                            )}
-                            <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '0.25rem', alignItems: 'center' }}>
-                              <span className={`brand-pill ${p.brand.toLowerCase()}`} style={{ fontSize: '0.65rem', padding: '0.1rem 0.4rem' }}>{p.brand}</span>
-                              <span style={{ fontSize: '0.65rem', color: p.stock > 0 ? 'var(--accent-emerald)' : 'var(--accent-rose)', fontWeight: 500 }}>
-                                {p.stock > 0 ? `${p.stock} units` : 'Out of Stock'}
-                              </span>
-                            </div>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', marginTop: '0.25rem', flexWrap: 'wrap', width: '100%' }}>
-                              <span style={{ fontSize: '0.85rem', fontWeight: 700, color: 'var(--accent-rose)' }}>{formatRupee(finalPrice)}</span>
-                              {isWeeklySpecial && p.extraCustomerDiscount > 0 && (
-                                <span style={{ fontSize: '0.65rem', color: 'var(--text-muted)', textDecoration: 'line-through' }}>{formatRupee(p.specialPrice)}</span>
-                              )}
-                              <span style={{ fontSize: '0.65rem', color: 'var(--text-muted)', textDecoration: 'line-through' }}>{formatRupee(p.mrp)}</span>
-                              
-                              {/* Private Salesperson Incentive - Hidden from Client Invoice */}
-                              {(() => {
-                                const singleIncentive = getProductIncentiveAmount(p, 1, db.brands || []);
-                                return (
-                                  <span 
-                                    style={{ 
-                                      fontSize: '0.65rem', 
-                                      color: 'var(--accent-cyan)', 
-                                      fontWeight: 'bold', 
-                                      background: 'rgba(6, 182, 212, 0.08)', 
-                                      padding: '0.15rem 0.4rem', 
-                                      borderRadius: '4px', 
-                                      marginLeft: 'auto',
-                                      display: 'inline-flex',
-                                      alignItems: 'center',
-                                      gap: '0.15rem',
-                                      border: '1px solid rgba(6, 182, 212, 0.15)'
-                                    }} 
-                                    title="Your personal sales commission (never shown on customer quotation)"
-                                  >
+                            return (
+                              <tr key={p.id} style={{ borderBottom: '1px solid rgba(255,255,255,0.05)', opacity: isOutOfStock ? 0.5 : 1, background: isWeeklySpecial ? 'rgba(245,158,11,0.02)' : 'transparent' }}>
+                                <td style={{ padding: '0.6rem' }}>
+                                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+                                    {p.image ? (
+                                      <img src={p.image} alt={p.name} style={{ width: '42px', height: '42px', objectFit: 'cover', borderRadius: '6px', border: '1px solid var(--border-color)', flexShrink: 0 }} />
+                                    ) : (
+                                      <div style={{ width: '42px', height: '42px', background: 'var(--bg-secondary)', borderRadius: '6px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.55rem', fontWeight: 700, color: 'var(--text-muted)', border: '1px solid var(--border-color)', flexShrink: 0 }}>
+                                        {p.brand}
+                                      </div>
+                                    )}
+                                    <div>
+                                      <div style={{ fontWeight: 700, color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                                        {p.name}
+                                        {isWeeklySpecial && <span className="badge badge-warning" style={{ fontSize: '0.55rem', padding: '0.05rem 0.3rem' }}>⚡ Offer</span>}
+                                      </div>
+                                      <div style={{ fontSize: '0.68rem', color: 'var(--text-muted)' }}>Code: <strong style={{ color: 'var(--accent-cyan)' }}>{p.id}</strong></div>
+                                    </div>
+                                  </div>
+                                </td>
+                                <td style={{ padding: '0.6rem' }}>
+                                  <span className={`brand-pill ${p.brand.toLowerCase()}`} style={{ fontSize: '0.6rem', padding: '0.1rem 0.4rem' }}>{p.brand}</span>
+                                  {p.division === 'Tiles' && (
+                                    <div style={{ fontSize: '0.68rem', color: 'var(--text-secondary)', marginTop: '0.2rem' }}>
+                                      <span>📏 {p.size || 'N/A'}</span> • <span>✨ {p.finishing || 'N/A'}</span> • <span style={{ color: 'var(--accent-cyan)' }}>📍 {p.location || 'N/A'}</span>
+                                    </div>
+                                  )}
+                                </td>
+                                <td style={{ padding: '0.6rem', textAlign: 'center', fontWeight: 700, color: p.stock > 0 ? 'var(--accent-emerald)' : 'var(--accent-rose)' }}>
+                                  {p.stock > 0 ? `${p.stock} units` : 'Out of Stock'}
+                                </td>
+                                <td style={{ padding: '0.6rem', textAlign: 'right', textDecoration: 'line-through', color: 'var(--text-muted)' }}>
+                                  {formatRupee(p.mrp)}
+                                </td>
+                                <td style={{ padding: '0.6rem', textAlign: 'right', fontWeight: 800, color: 'var(--accent-rose)', fontSize: '0.92rem' }}>
+                                  {formatRupee(finalPrice)}
+                                </td>
+                                <td style={{ padding: '0.6rem', textAlign: 'center' }}>
+                                  <span style={{ fontSize: '0.68rem', color: 'var(--accent-cyan)', fontWeight: 700, background: 'rgba(6, 182, 212, 0.1)', padding: '0.2rem 0.45rem', borderRadius: '4px', border: '1px solid rgba(6, 182, 212, 0.2)' }}>
                                     💰 Earn ₹{singleIncentive}
                                   </span>
-                                );
-                              })()}
+                                </td>
+                                <td style={{ padding: '0.6rem', textAlign: 'center' }}>
+                                  <button 
+                                    type="button" 
+                                    className="btn btn-cyan" 
+                                    style={{ padding: '0.35rem 0.85rem', fontSize: '0.72rem', fontWeight: 700 }}
+                                    disabled={isOutOfStock}
+                                    onClick={() => addProductToCartDirect(p)}
+                                  >
+                                    + Add to Quote
+                                  </button>
+                                </td>
+                              </tr>
+                            );
+                          })
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
+                ) : (
+                  <div className="executive-catalog-scroll">
+                    {filteredProducts.map(p => {
+                      const isOutOfStock = p.stock === 0;
+                      const finalPrice = getProductFinalPrice(p);
+                      const isWeeklySpecial = isWeeklySpecialActive(p);
+
+                      return (
+                        <div 
+                          key={p.id} 
+                          className={`glass-panel executive-catalog-card ${isWeeklySpecial ? 'weekly-special-card' : ''}`}
+                          style={{ 
+                            opacity: isOutOfStock ? 0.5 : 1,
+                            border: isWeeklySpecial ? '1.5px solid rgba(245,158,11,0.3)' : '1px solid var(--border-color)',
+                            background: isWeeklySpecial ? 'rgba(245,158,11,0.01)' : 'rgba(255,255,255,0.01)',
+                            cursor: isOutOfStock ? 'not-allowed' : 'pointer',
+                            padding: '0.75rem'
+                          }}
+                          onClick={() => !isOutOfStock && addProductToCartDirect(p)}
+                        >
+                          <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
+                            {p.image ? (
+                              <img 
+                                src={p.image} 
+                                alt={p.name} 
+                                className="catalog-card-img"
+                                style={{ width: '55px', height: '55px', objectFit: 'cover', borderRadius: '6px', border: '1px solid var(--border-color)', flexShrink: 0 }} 
+                              />
+                            ) : (
+                              <div className="catalog-card-placeholder" style={{ width: '55px', height: '55px', background: 'var(--bg-secondary)', borderRadius: '6px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.65rem', fontWeight: 700, color: 'var(--text-muted)', border: '1px solid var(--border-color)', flexShrink: 0 }}>
+                                {p.brand}
+                              </div>
+                            )}
+                            <div style={{ flex: 1, minWidth: 0 }}>
+                              {isWeeklySpecial && (
+                                <span className="badge badge-warning" style={{ fontSize: '0.6rem', padding: '0.1rem 0.35rem', marginBottom: '0.25rem', display: 'inline-block' }}>
+                                  ⚡ Weekly Offer
+                                </span>
+                              )}
+                              <div style={{ fontSize: '0.8rem', fontWeight: 700, textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap' }} title={p.name}>
+                                {p.name}
+                              </div>
+                              {p.division === 'Tiles' && (
+                                <div style={{ fontSize: '0.7rem', color: 'var(--text-secondary)', marginTop: '0.15rem', display: 'flex', flexDirection: 'column', gap: '0.1rem' }}>
+                                  <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                                    <span>📏 {p.size || 'N/A'}</span>
+                                    <span>✨ {p.finishing || 'N/A'}</span>
+                                  </div>
+                                  <div style={{ color: 'var(--accent-cyan)', fontWeight: 600 }}>
+                                    📍 Loc: {p.location || 'N/A'}
+                                  </div>
+                                </div>
+                              )}
+                              <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '0.25rem', alignItems: 'center' }}>
+                                <span className={`brand-pill ${p.brand.toLowerCase()}`} style={{ fontSize: '0.65rem', padding: '0.1rem 0.4rem' }}>{p.brand}</span>
+                                <span style={{ fontSize: '0.65rem', color: p.stock > 0 ? 'var(--accent-emerald)' : 'var(--accent-rose)', fontWeight: 500 }}>
+                                  {p.stock > 0 ? `${p.stock} units` : 'Out of Stock'}
+                                </span>
+                              </div>
+                              <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', marginTop: '0.25rem', flexWrap: 'wrap', width: '100%' }}>
+                                <span style={{ fontSize: '0.85rem', fontWeight: 700, color: 'var(--accent-rose)' }}>{formatRupee(finalPrice)}</span>
+                                {isWeeklySpecial && p.extraCustomerDiscount > 0 && (
+                                  <span style={{ fontSize: '0.65rem', color: 'var(--text-muted)', textDecoration: 'line-through' }}>{formatRupee(p.specialPrice)}</span>
+                                )}
+                                <span style={{ fontSize: '0.65rem', color: 'var(--text-muted)', textDecoration: 'line-through' }}>{formatRupee(p.mrp)}</span>
+                                
+                                {/* Private Salesperson Incentive - Hidden from Client Invoice */}
+                                {(() => {
+                                  const singleIncentive = getProductIncentiveAmount(p, 1, db.brands || []);
+                                  return (
+                                    <span 
+                                      style={{ 
+                                        fontSize: '0.65rem', 
+                                        color: 'var(--accent-cyan)', 
+                                        fontWeight: 'bold', 
+                                        background: 'rgba(6, 182, 212, 0.08)', 
+                                        padding: '0.15rem 0.4rem', 
+                                        borderRadius: '4px', 
+                                        marginLeft: 'auto',
+                                        display: 'inline-flex',
+                                        alignItems: 'center',
+                                        gap: '0.15rem',
+                                        border: '1px solid rgba(6, 182, 212, 0.15)'
+                                      }} 
+                                      title="Your personal sales commission (never shown on customer quotation)"
+                                    >
+                                      💰 Earn ₹{singleIncentive}
+                                    </span>
+                                  );
+                                })()}
+                              </div>
                             </div>
                           </div>
                         </div>
-                      </div>
-                    );
-                  })}
-                </div>
+                      );
+                    })}
+                  </div>
+                )}
               </div>
 
 
