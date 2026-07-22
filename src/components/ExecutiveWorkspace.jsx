@@ -2458,23 +2458,22 @@ function ExecutiveWorkspace({ products = [], activeExecutive = {}, db = {}, onUp
                 </div>
 
                 {catalogViewMode === 'list' ? (
-                  <div style={{ overflowX: 'auto', maxHeight: '520px' }}>
+                  <div style={{ overflowX: 'auto', maxHeight: '560px' }}>
                     <table className="table" style={{ width: '100%', fontSize: '0.8rem', borderCollapse: 'collapse' }}>
                       <thead>
                         <tr style={{ background: 'rgba(255,255,255,0.03)', borderBottom: '1px solid var(--border-color)', color: 'var(--text-muted)', fontSize: '0.75rem', textAlign: 'left' }}>
-                          <th style={{ padding: '0.6rem' }}>Product & Code</th>
-                          <th style={{ padding: '0.6rem' }}>Brand / Specs</th>
-                          <th style={{ padding: '0.6rem', textAlign: 'center' }}>Stock</th>
-                          <th style={{ padding: '0.6rem', textAlign: 'right' }}>MRP</th>
-                          <th style={{ padding: '0.6rem', textAlign: 'right' }}>Clearance Price</th>
-                          <th style={{ padding: '0.6rem', textAlign: 'center' }}>Incentive</th>
-                          <th style={{ padding: '0.6rem', textAlign: 'center' }}>Cart Action</th>
+                          <th style={{ padding: '0.65rem 0.8rem' }}>Product & Code</th>
+                          <th style={{ padding: '0.65rem 0.8rem' }}>Brand / Specs</th>
+                          <th style={{ padding: '0.65rem 0.8rem', textAlign: 'center' }}>Stock</th>
+                          <th style={{ padding: '0.65rem 0.8rem', textAlign: 'right' }}>MRP</th>
+                          <th style={{ padding: '0.65rem 0.8rem', textAlign: 'right' }}>Clearance Price</th>
+                          <th style={{ padding: '0.65rem 0.8rem', textAlign: 'center' }}>Cart Action</th>
                         </tr>
                       </thead>
                       <tbody>
                         {filteredProducts.length === 0 ? (
                           <tr>
-                            <td colSpan="7" style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-muted)' }}>
+                            <td colSpan="6" style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-muted)' }}>
                               No clearance products matching criteria.
                             </td>
                           </tr>
@@ -2482,7 +2481,6 @@ function ExecutiveWorkspace({ products = [], activeExecutive = {}, db = {}, onUp
                           filteredProducts.map(p => {
                             const isOutOfStock = p.stock === 0;
                             const finalPrice = getProductFinalPrice(p);
-                            const singleIncentive = getProductIncentiveAmount(p, 1, db.brands || []);
                             const isWeeklySpecial = isWeeklySpecialActive(p);
                             const cartItem = cart.find(i => i.id === p.id);
 
@@ -2502,50 +2500,45 @@ function ExecutiveWorkspace({ products = [], activeExecutive = {}, db = {}, onUp
                                   }
                                 }}
                               >
-                                <td style={{ padding: '0.65rem 0.6rem' }}>
-                                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
+                                <td style={{ padding: '0.75rem 0.8rem' }}>
+                                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
                                     {p.image ? (
-                                      <img src={p.image} alt={p.name} style={{ width: '44px', height: '44px', objectFit: 'cover', borderRadius: '6px', border: '1px solid var(--border-color)', flexShrink: 0 }} />
+                                      <img src={p.image} alt={p.name} style={{ width: '48px', height: '48px', objectFit: 'cover', borderRadius: '8px', border: '1px solid var(--border-color)', flexShrink: 0 }} />
                                     ) : (
-                                      <div style={{ width: '44px', height: '44px', background: 'var(--bg-secondary)', borderRadius: '6px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.55rem', fontWeight: 700, color: 'var(--text-muted)', border: '1px solid var(--border-color)', flexShrink: 0 }}>
+                                      <div style={{ width: '48px', height: '48px', background: 'var(--bg-secondary)', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.6rem', fontWeight: 700, color: 'var(--text-muted)', border: '1px solid var(--border-color)', flexShrink: 0 }}>
                                         {p.brand}
                                       </div>
                                     )}
                                     <div>
-                                      <div style={{ fontWeight: 700, color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                                      <div style={{ fontWeight: 700, color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '0.4rem', fontSize: '0.85rem' }}>
                                         {p.name}
                                         {isWeeklySpecial && <span className="badge badge-warning" style={{ fontSize: '0.55rem', padding: '0.05rem 0.3rem' }}>⚡ Offer</span>}
                                         {cartItem && <span className="badge badge-success" style={{ fontSize: '0.55rem', padding: '0.05rem 0.35rem' }}>In Cart ({cartItem.qty})</span>}
                                       </div>
-                                      <div style={{ fontSize: '0.68rem', color: 'var(--text-muted)' }}>Code: <strong style={{ color: 'var(--accent-cyan)' }}>{p.id}</strong></div>
+                                      <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', marginTop: '0.1rem' }}>Code: <strong style={{ color: 'var(--accent-cyan)' }}>{p.id}</strong></div>
                                     </div>
                                   </div>
                                 </td>
-                                <td style={{ padding: '0.6rem' }}>
-                                  <span className={`brand-pill ${p.brand.toLowerCase()}`} style={{ fontSize: '0.6rem', padding: '0.1rem 0.4rem' }}>{p.brand}</span>
+                                <td style={{ padding: '0.75rem 0.8rem' }}>
+                                  <span className={`brand-pill ${p.brand.toLowerCase()}`} style={{ fontSize: '0.62rem', padding: '0.15rem 0.5rem' }}>{p.brand}</span>
                                   {p.division === 'Tiles' && (
-                                    <div style={{ fontSize: '0.68rem', color: 'var(--text-secondary)', marginTop: '0.2rem' }}>
+                                    <div style={{ fontSize: '0.7rem', color: 'var(--text-secondary)', marginTop: '0.25rem' }}>
                                       <span>📏 {p.size || 'N/A'}</span> • <span>✨ {p.finishing || 'N/A'}</span> • <span style={{ color: 'var(--accent-cyan)' }}>📍 {p.location || 'N/A'}</span>
                                     </div>
                                   )}
                                 </td>
-                                <td style={{ padding: '0.6rem', textAlign: 'center', fontWeight: 700, color: p.stock > 0 ? 'var(--accent-emerald)' : 'var(--accent-rose)' }}>
+                                <td style={{ padding: '0.75rem 0.8rem', textAlign: 'center', fontWeight: 700, color: p.stock > 0 ? 'var(--accent-emerald)' : 'var(--accent-rose)' }}>
                                   {p.stock > 0 ? `${p.stock} units` : 'Out of Stock'}
                                 </td>
-                                <td style={{ padding: '0.6rem', textAlign: 'right', textDecoration: 'line-through', color: 'var(--text-muted)' }}>
+                                <td style={{ padding: '0.75rem 0.8rem', textAlign: 'right', textDecoration: 'line-through', color: 'var(--text-muted)' }}>
                                   {formatRupee(p.mrp)}
                                 </td>
-                                <td style={{ padding: '0.6rem', textAlign: 'right', fontWeight: 800, color: 'var(--accent-rose)', fontSize: '0.92rem' }}>
+                                <td style={{ padding: '0.75rem 0.8rem', textAlign: 'right', fontWeight: 800, color: 'var(--accent-rose)', fontSize: '0.95rem' }}>
                                   {formatRupee(finalPrice)}
                                 </td>
-                                <td style={{ padding: '0.6rem', textAlign: 'center' }}>
-                                  <span style={{ fontSize: '0.68rem', color: 'var(--accent-cyan)', fontWeight: 700, background: 'rgba(6, 182, 212, 0.1)', padding: '0.2rem 0.45rem', borderRadius: '4px', border: '1px solid rgba(6, 182, 212, 0.2)' }}>
-                                    💰 Earn ₹{singleIncentive}
-                                  </span>
-                                </td>
-                                <td style={{ padding: '0.6rem', textAlign: 'center' }} onClick={(e) => e.stopPropagation()}>
+                                <td style={{ padding: '0.75rem 0.8rem', textAlign: 'center' }} onClick={(e) => e.stopPropagation()}>
                                   {cartItem ? (
-                                    <div style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem', background: 'rgba(16,185,129,0.12)', padding: '0.25rem 0.6rem', borderRadius: '20px', border: '1px solid var(--accent-emerald)' }}>
+                                    <div style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem', background: 'rgba(16,185,129,0.12)', padding: '0.3rem 0.75rem', borderRadius: '20px', border: '1px solid var(--accent-emerald)' }}>
                                       <button type="button" style={{ background: 'transparent', border: 'none', color: 'var(--text-primary)', cursor: 'pointer', padding: '2px' }} onClick={() => updateCartQty(p.id, cartItem.qty - 1, p.stock)}>
                                         <Minus size={13} />
                                       </button>
@@ -2558,7 +2551,7 @@ function ExecutiveWorkspace({ products = [], activeExecutive = {}, db = {}, onUp
                                     <button 
                                       type="button" 
                                       className="btn btn-cyan" 
-                                      style={{ padding: '0.35rem 0.85rem', fontSize: '0.72rem', fontWeight: 700 }}
+                                      style={{ padding: '0.4rem 0.95rem', fontSize: '0.75rem', fontWeight: 700 }}
                                       disabled={isOutOfStock}
                                       onClick={() => addProductToCartDirect(p)}
                                     >
@@ -2588,9 +2581,13 @@ function ExecutiveWorkspace({ products = [], activeExecutive = {}, db = {}, onUp
                           style={{ 
                             opacity: isOutOfStock ? 0.5 : 1,
                             border: cartItem ? '2px solid var(--accent-emerald)' : (isWeeklySpecial ? '1.5px solid rgba(245,158,11,0.4)' : '1px solid var(--border-color)'),
-                            background: cartItem ? 'rgba(16, 185, 129, 0.04)' : (isWeeklySpecial ? 'rgba(245,158,11,0.01)' : 'rgba(255,255,255,0.01)'),
+                            background: cartItem ? 'rgba(16, 185, 129, 0.04)' : (isWeeklySpecial ? 'rgba(245,158,11,0.01)' : 'var(--bg-card)'),
                             cursor: isOutOfStock ? 'not-allowed' : 'pointer',
-                            padding: '0.85rem'
+                            padding: '1rem',
+                            borderRadius: '14px',
+                            display: 'flex',
+                            flexDirection: 'column',
+                            justify: 'space-between'
                           }}
                           onClick={() => {
                             if (!isOutOfStock && !cartItem) {
@@ -2598,85 +2595,77 @@ function ExecutiveWorkspace({ products = [], activeExecutive = {}, db = {}, onUp
                             }
                           }}
                         >
-                          <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
+                          <div style={{ display: 'flex', gap: '0.85rem', alignItems: 'center' }}>
                             {p.image ? (
                               <img 
                                 src={p.image} 
                                 alt={p.name} 
                                 className="catalog-card-img"
-                                style={{ width: '60px', height: '60px', objectFit: 'cover', borderRadius: '8px', border: '1px solid var(--border-color)', flexShrink: 0 }} 
+                                style={{ width: '72px', height: '72px', objectFit: 'cover', borderRadius: '10px', border: '1px solid var(--border-color)', flexShrink: 0 }} 
                               />
                             ) : (
-                              <div className="catalog-card-placeholder" style={{ width: '60px', height: '60px', background: 'var(--bg-secondary)', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.65rem', fontWeight: 700, color: 'var(--text-muted)', border: '1px solid var(--border-color)', flexShrink: 0 }}>
+                              <div className="catalog-card-placeholder" style={{ width: '72px', height: '72px', background: 'var(--bg-secondary)', borderRadius: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.7rem', fontWeight: 700, color: 'var(--text-muted)', border: '1px solid var(--border-color)', flexShrink: 0 }}>
                                 {p.brand}
                               </div>
                             )}
                             <div style={{ flex: 1, minWidth: 0 }}>
-                              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.2rem' }}>
-                                <span className={`brand-pill ${p.brand.toLowerCase()}`} style={{ fontSize: '0.6rem', padding: '0.1rem 0.4rem' }}>{p.brand}</span>
+                              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.25rem' }}>
+                                <span className={`brand-pill ${p.brand.toLowerCase()}`} style={{ fontSize: '0.62rem', padding: '0.12rem 0.45rem' }}>{p.brand}</span>
                                 {cartItem ? (
-                                  <span className="badge badge-success" style={{ fontSize: '0.6rem', padding: '0.1rem 0.4rem' }}>In Cart ({cartItem.qty})</span>
+                                  <span className="badge badge-success" style={{ fontSize: '0.62rem', padding: '0.12rem 0.45rem' }}>In Cart ({cartItem.qty})</span>
                                 ) : (
-                                  isWeeklySpecial && <span className="badge badge-warning" style={{ fontSize: '0.55rem', padding: '0.05rem 0.35rem' }}>⚡ Offer</span>
+                                  isWeeklySpecial && <span className="badge badge-warning" style={{ fontSize: '0.58rem', padding: '0.08rem 0.38rem' }}>⚡ Offer</span>
                                 )}
                               </div>
 
-                              <div style={{ fontSize: '0.82rem', fontWeight: 700, textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap' }} title={p.name}>
+                              <div style={{ fontSize: '0.88rem', fontWeight: 700, textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap' }} title={p.name}>
                                 {p.name}
                               </div>
-                              <div style={{ fontSize: '0.68rem', color: 'var(--text-muted)' }}>Code: <strong style={{ color: 'var(--accent-cyan)' }}>{p.id}</strong></div>
+                              <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginTop: '0.1rem' }}>Code: <strong style={{ color: 'var(--accent-cyan)' }}>{p.id}</strong></div>
 
                               {p.division === 'Tiles' && (
-                                <div style={{ fontSize: '0.68rem', color: 'var(--text-secondary)', marginTop: '0.15rem', display: 'flex', flexDirection: 'column', gap: '0.1rem' }}>
-                                  <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                                    <span>📏 {p.size || 'N/A'}</span>
-                                    <span>✨ {p.finishing || 'N/A'}</span>
-                                  </div>
-                                  <div style={{ color: 'var(--accent-cyan)', fontWeight: 600 }}>
-                                    📍 Loc: {p.location || 'N/A'}
-                                  </div>
+                                <div style={{ fontSize: '0.7rem', color: 'var(--text-secondary)', marginTop: '0.25rem', display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+                                  <span>📏 {p.size || 'N/A'}</span>
+                                  <span>✨ {p.finishing || 'N/A'}</span>
+                                  <span style={{ color: 'var(--accent-cyan)', fontWeight: 600 }}>📍 {p.location || 'N/A'}</span>
                                 </div>
                               )}
 
-                              <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '0.35rem', alignItems: 'center' }}>
+                              <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '0.5rem', alignItems: 'center' }}>
                                 <div>
-                                  <span style={{ fontSize: '0.88rem', fontWeight: 800, color: 'var(--accent-rose)' }}>{formatRupee(finalPrice)}</span>
-                                  <span style={{ fontSize: '0.65rem', color: 'var(--text-muted)', textDecoration: 'line-through', marginLeft: '0.35rem' }}>{formatRupee(p.mrp)}</span>
+                                  <span style={{ fontSize: '0.95rem', fontWeight: 800, color: 'var(--accent-rose)' }}>{formatRupee(finalPrice)}</span>
+                                  <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)', textDecoration: 'line-through', marginLeft: '0.4rem' }}>{formatRupee(p.mrp)}</span>
                                 </div>
                                 
-                                <span style={{ fontSize: '0.65rem', color: p.stock > 0 ? 'var(--accent-emerald)' : 'var(--accent-rose)', fontWeight: 600 }}>
+                                <span style={{ fontSize: '0.7rem', color: p.stock > 0 ? 'var(--accent-emerald)' : 'var(--accent-rose)', fontWeight: 600 }}>
                                   {p.stock > 0 ? `${p.stock} in stock` : 'Out of Stock'}
                                 </span>
                               </div>
-
-                              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: '0.4rem' }} onClick={(e) => e.stopPropagation()}>
-                                <span style={{ fontSize: '0.65rem', color: 'var(--accent-cyan)', fontWeight: 700, background: 'rgba(6, 182, 212, 0.08)', padding: '0.15rem 0.4rem', borderRadius: '4px', border: '1px solid rgba(6, 182, 212, 0.15)' }}>
-                                  💰 Earn ₹{getProductIncentiveAmount(p, 1, db.brands || [])}
-                                </span>
-
-                                {cartItem ? (
-                                  <div style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem', background: 'rgba(16,185,129,0.12)', padding: '0.2rem 0.5rem', borderRadius: '20px', border: '1px solid var(--accent-emerald)' }}>
-                                    <button type="button" style={{ background: 'transparent', border: 'none', color: 'var(--text-primary)', cursor: 'pointer', padding: '2px' }} onClick={() => updateCartQty(p.id, cartItem.qty - 1, p.stock)}>
-                                      <Minus size={13} />
-                                    </button>
-                                    <span style={{ fontWeight: 800, fontSize: '0.8rem', color: 'var(--accent-emerald)', minWidth: '16px', textAlign: 'center' }}>{cartItem.qty}</span>
-                                    <button type="button" style={{ background: 'transparent', border: 'none', color: 'var(--text-primary)', cursor: 'pointer', padding: '2px' }} onClick={() => updateCartQty(p.id, cartItem.qty + 1, p.stock)}>
-                                      <Plus size={13} />
-                                    </button>
-                                  </div>
-                                ) : (
-                                  <button 
-                                    type="button" 
-                                    className="btn btn-cyan" 
-                                    style={{ padding: '0.25rem 0.65rem', fontSize: '0.68rem', fontWeight: 700 }}
-                                    disabled={isOutOfStock}
-                                    onClick={() => addProductToCartDirect(p)}
-                                  >
-                                    + Add to Cart
-                                  </button>
-                                )}
-                              </div>
                             </div>
+                          </div>
+
+                          <div style={{ marginTop: '0.75rem', paddingTop: '0.5rem', borderTop: '1px dashed var(--border-color)', display: 'flex', justifyContent: 'flex-end' }} onClick={(e) => e.stopPropagation()}>
+                            {cartItem ? (
+                              <div style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem', background: 'rgba(16,185,129,0.12)', padding: '0.25rem 0.75rem', borderRadius: '20px', border: '1px solid var(--accent-emerald)' }}>
+                                <button type="button" style={{ background: 'transparent', border: 'none', color: 'var(--text-primary)', cursor: 'pointer', padding: '2px' }} onClick={() => updateCartQty(p.id, cartItem.qty - 1, p.stock)}>
+                                  <Minus size={13} />
+                                </button>
+                                <span style={{ fontWeight: 800, fontSize: '0.85rem', color: 'var(--accent-emerald)', minWidth: '18px', textAlign: 'center' }}>{cartItem.qty}</span>
+                                <button type="button" style={{ background: 'transparent', border: 'none', color: 'var(--text-primary)', cursor: 'pointer', padding: '2px' }} onClick={() => updateCartQty(p.id, cartItem.qty + 1, p.stock)}>
+                                  <Plus size={13} />
+                                </button>
+                              </div>
+                            ) : (
+                              <button 
+                                type="button" 
+                                className="btn btn-cyan" 
+                                style={{ width: '100%', padding: '0.4rem 0.85rem', fontSize: '0.75rem', fontWeight: 700 }}
+                                disabled={isOutOfStock}
+                                onClick={() => addProductToCartDirect(p)}
+                              >
+                                + Add to Selection List
+                              </button>
+                            )}
                           </div>
                         </div>
                       );
@@ -2684,9 +2673,6 @@ function ExecutiveWorkspace({ products = [], activeExecutive = {}, db = {}, onUp
                   </div>
                 )}
               </div>
-
-
-
             </div>
 
             {/* Column 2: Active Customer Cart & Checkout */}
