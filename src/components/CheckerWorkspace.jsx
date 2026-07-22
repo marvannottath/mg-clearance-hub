@@ -17,6 +17,9 @@ function CheckerWorkspace({ currentUser, db, onUpdateDb }) {
   // Preview Receipt Modal
   const [previewQuote, setPreviewQuote] = useState(null);
 
+  // Quote Inspection Modal State
+  const [selectedQuoteDetail, setSelectedQuoteDetail] = useState(null);
+
   const showToast = (msg) => {
     setToastMsg(msg);
     setTimeout(() => setToastMsg(''), 4000);
@@ -235,8 +238,16 @@ function CheckerWorkspace({ currentUser, db, onUpdateDb }) {
 
                 return (
                   <tr key={quote.id}>
-                    <td style={{ fontWeight: 700, fontFamily: 'monospace', color: 'var(--accent-cyan)' }}>
-                      {quote.id}
+                    <td>
+                      <button 
+                        className="btn btn-secondary" 
+                        onClick={() => setSelectedQuoteDetail(quote)}
+                        style={{ padding: '0.25rem 0.6rem', fontSize: '0.75rem', fontWeight: 700, fontFamily: 'monospace', color: 'var(--accent-cyan)', display: 'inline-flex', alignItems: 'center', gap: '0.35rem' }}
+                        title="Click to view full quotation items & rates"
+                      >
+                        <Eye size={12} />
+                        {quote.id}
+                      </button>
                     </td>
                     <td>{new Date(quote.date).toLocaleDateString('en-IN')}</td>
                     <td><strong>{quote.executiveName}</strong></td>
@@ -401,6 +412,139 @@ function CheckerWorkspace({ currentUser, db, onUpdateDb }) {
             ) : (
               <p style={{ color: 'var(--text-muted)' }}>No receipt image uploaded.</p>
             )}
+          </div>
+        </div>
+      )}
+
+      {/* Full Quotation & Items Inspection Modal */}
+      {selectedQuoteDetail && (
+        <div className="modal-backdrop" style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.8)', backdropFilter: 'blur(8px)', zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem' }}>
+          <div className="glass-panel fade-in" style={{ maxWidth: '820px', width: '100%', padding: '1.75rem', borderRadius: '16px', background: 'var(--bg-card)', border: '1px solid var(--border-color)', maxHeight: '90vh', overflowY: 'auto' }}>
+            
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem', borderBottom: '1px solid var(--border-color)', paddingBottom: '0.75rem' }}>
+              <div>
+                <h3 style={{ margin: 0, fontSize: '1.2rem', fontWeight: 800, color: 'var(--accent-cyan)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                  <FileText size={20} />
+                  Quotation Inspection — {selectedQuoteDetail.id}
+                </h3>
+                <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', marginTop: '0.2rem' }}>
+                  Created on {new Date(selectedQuoteDetail.date).toLocaleString('en-IN')} by <strong>{selectedQuoteDetail.executiveName}</strong>
+                </div>
+              </div>
+              <button className="btn btn-secondary" onClick={() => setSelectedQuoteDetail(null)} style={{ padding: '0.3rem 0.75rem', fontSize: '0.8rem' }}>Close</button>
+            </div>
+
+            {/* Client Info Banner */}
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem', background: 'rgba(255,255,255,0.02)', padding: '1rem', borderRadius: '10px', marginBottom: '1.25rem', border: '1px solid rgba(255,255,255,0.05)', fontSize: '0.85rem' }}>
+              <div>
+                <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', fontWeight: 700 }}>CLIENT NAME</div>
+                <div style={{ fontWeight: 700, color: 'var(--text-primary)' }}>{selectedQuoteDetail.customerName || 'Walk-in Client'}</div>
+              </div>
+              <div>
+                <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', fontWeight: 700 }}>WHATSAPP MOBILE</div>
+                <div style={{ fontWeight: 700, color: 'var(--text-primary)' }}>{selectedQuoteDetail.customerMobile || 'N/A'}</div>
+              </div>
+              <div>
+                <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', fontWeight: 700 }}>LOCATION / ADDRESS</div>
+                <div style={{ fontWeight: 700, color: 'var(--accent-cyan)' }}>{selectedQuoteDetail.customerLocation || selectedQuoteDetail.customerAddress || 'Showroom Walk-in'}</div>
+              </div>
+              <div>
+                <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', fontWeight: 700 }}>SALESFORCE STATUS</div>
+                <div>
+                  {selectedQuoteDetail.invoiceNo ? (
+                    <span className="badge badge-emerald" style={{ fontSize: '0.75rem' }}>Invoice #{selectedQuoteDetail.invoiceNo}</span>
+                  ) : (
+                    <span className="badge badge-amber" style={{ fontSize: '0.75rem' }}>Pending Billing Entry</span>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {/* Quoted Line Items Table */}
+            <h4 style={{ fontSize: '0.9rem', fontWeight: 700, marginBottom: '0.75rem', color: 'var(--text-secondary)' }}>Itemized Clearance Products ({selectedQuoteDetail.items.reduce((sum, i) => sum + i.qty, 0)} Items)</h4>
+            <div className="custom-table-container" style={{ marginBottom: '1.25rem' }}>
+              <table className="custom-table" style={{ fontSize: '0.8rem' }}>
+                <thead>
+                  <tr>
+                    <th>#</th>
+                    <th>Product Code</th>
+                    <th>Product Details</th>
+                    <th>Brand</th>
+                    <th style={{ textAlign: 'center' }}>Qty</th>
+                    <th style={{ textAlign: 'right' }}>MRP</th>
+                    <th style={{ textAlign: 'right' }}>Clearance Price</th>
+                    <th style={{ textAlign: 'right' }}>Subtotal</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {selectedQuoteDetail.items.map((item, idx) => (
+                    <tr key={idx}>
+                      <td>{idx + 1}</td>
+                      <td style={{ fontWeight: 700, fontFamily: 'monospace', color: 'var(--accent-cyan)' }}>{item.productId || item.id}</td>
+                      <td>
+                        <div style={{ fontWeight: 600 }}>{item.name}</div>
+                        <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>
+                          {item.division || 'Bathing'} {item.size ? `• ${item.size}` : ''} {item.location ? `• Loc: ${item.location}` : ''}
+                        </div>
+                      </td>
+                      <td><span className="badge" style={{ background: 'rgba(255,255,255,0.05)', fontSize: '0.7rem' }}>{item.brand}</span></td>
+                      <td style={{ textAlign: 'center', fontWeight: 700 }}>{item.qty}</td>
+                      <td style={{ textAlign: 'right', textDecoration: 'line-through', color: 'var(--text-muted)' }}>{formatRupee(item.mrp)}</td>
+                      <td style={{ textAlign: 'right', fontWeight: 700, color: 'var(--accent-rose)' }}>{formatRupee(item.specialPrice)}</td>
+                      <td style={{ textAlign: 'right', fontWeight: 800, color: 'var(--accent-emerald)' }}>{formatRupee(item.specialPrice * item.qty)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            {/* Total Summary Footer */}
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'rgba(56, 189, 248, 0.05)', padding: '1rem', borderRadius: '10px', border: '1px solid rgba(56, 189, 248, 0.2)', marginBottom: '1.5rem' }}>
+              <div>
+                <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>
+                  Total MRP Value: <span style={{ textDecoration: 'line-through' }}>{formatRupee(selectedQuoteDetail.items.reduce((sum, i) => sum + (i.mrp * i.qty), 0))}</span>
+                </div>
+                <div style={{ fontSize: '0.85rem', color: 'var(--accent-emerald)', fontWeight: 700 }}>
+                  Client Clearance Savings: {formatRupee(selectedQuoteDetail.items.reduce((sum, i) => sum + ((i.mrp - i.specialPrice) * i.qty), 0))}
+                </div>
+              </div>
+              <div style={{ textAlign: 'right' }}>
+                <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: 700 }}>TOTAL BILLABLE AMOUNT</div>
+                <div style={{ fontSize: '1.4rem', fontWeight: 800, color: 'var(--accent-emerald)' }}>
+                  {formatRupee(selectedQuoteDetail.items.reduce((sum, i) => sum + (i.specialPrice * i.qty), 0))}
+                </div>
+              </div>
+            </div>
+
+            {/* Modal Actions */}
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.75rem' }}>
+              <button 
+                className="btn btn-secondary" 
+                onClick={() => window.open(`#/share/${selectedQuoteDetail.id}`, '_blank')}
+                style={{ fontSize: '0.8rem', padding: '0.5rem 1rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}
+              >
+                <FileText size={14} /> Open Printable PDF Quote Sheet
+              </button>
+
+              <div style={{ display: 'flex', gap: '0.75rem' }}>
+                <button className="btn btn-secondary" onClick={() => setSelectedQuoteDetail(null)}>
+                  Close
+                </button>
+                {!selectedQuoteDetail.invoiceNo && (
+                  <button 
+                    className="btn btn-emerald"
+                    style={{ fontWeight: 700 }}
+                    onClick={() => {
+                      setSelectedQuote(selectedQuoteDetail);
+                      setSelectedQuoteDetail(null);
+                    }}
+                  >
+                    Enter Salesforce Invoice & Upload
+                  </button>
+                )}
+              </div>
+            </div>
+
           </div>
         </div>
       )}
