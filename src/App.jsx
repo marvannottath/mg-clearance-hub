@@ -314,20 +314,31 @@ function App() {
               const currentProducts = (prevDb && prevDb.products) ? prevDb.products : [];
               const serverProducts = (result.data && result.data.products) ? result.data.products : [];
 
-              const mergedProducts = serverProducts.map(sp => {
-                const lp = currentProducts.find(p => p.id === sp.id);
-                return {
-                  ...sp,
-                  // PRESERVE UPLOADED PRODUCT IMAGE ON RELOAD & SYNC!
-                  image: (lp && lp.image && lp.image.trim() !== '') ? lp.image : (sp.image || '')
-                };
-              });
+              // Track which product IDs were intentionally deleted locally
+              const deletedIds = new Set(prevDb && prevDb.deletedProductIds ? prevDb.deletedProductIds : []);
 
-              const localOnly = currentProducts.filter(lp => !serverProducts.some(sp => sp.id === lp.id));
+              // Merge server products, preserving local images, but SKIP any locally deleted products
+              const mergedProducts = serverProducts
+                .filter(sp => !deletedIds.has(sp.id)) // ← Don't restore deleted products
+                .map(sp => {
+                  const lp = currentProducts.find(p => p.id === sp.id);
+                  return {
+                    ...sp,
+                    // PRESERVE UPLOADED PRODUCT IMAGE ON RELOAD & SYNC!
+                    image: (lp && lp.image && lp.image.trim() !== '') ? lp.image : (sp.image || '')
+                  };
+                });
+
+              // Products that exist only on client (new local additions)
+              const localOnly = currentProducts.filter(lp =>
+                !serverProducts.some(sp => sp.id === lp.id) && !deletedIds.has(lp.id)
+              );
 
               const mergedDb = {
                 ...result.data,
-                products: [...localOnly, ...mergedProducts]
+                products: [...localOnly, ...mergedProducts],
+                deletedProductIds: [...deletedIds], // Preserve deleted list
+                productsInitialized: prevDb.productsInitialized || result.data.productsInitialized || false
               };
               saveDatabase(mergedDb);
               return mergedDb;
@@ -543,7 +554,8 @@ function App() {
 
   const handleDeleteProduct = (productId) => {
     const updatedProducts = db.products.filter(p => p.id !== productId);
-    updateDb({ ...db, products: updatedProducts });
+    const deletedProductIds = [...new Set([...(db.deletedProductIds || []), productId])];
+    updateDb({ ...db, products: updatedProducts, deletedProductIds });
   };
 
   const handleBulkUpdateStock = (updatedList, replaceMode = true) => {

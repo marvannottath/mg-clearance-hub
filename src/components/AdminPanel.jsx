@@ -745,6 +745,7 @@ function AdminPanel({
         ...db, 
         products: [],
         productsInitialized: true,  // Prevent seed data from reloading on next page load
+        deletedProductIds: [],       // Reset tracked deletes - fresh start
         salesLedger: [], 
         quotations: [], 
         notifications: [],

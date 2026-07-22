@@ -959,39 +959,73 @@ function ExecutiveWorkspace({ products = [], activeExecutive = {}, db = {}, onUp
                 
                 return (
                   <div key={p.id} className="glass-panel" style={{ padding: '0.9rem', border: '1px solid rgba(245,158,11,0.2)', background: 'var(--bg-card)' }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.4rem' }}>
+                    {/* Top row: brand + discount badge */}
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.6rem' }}>
                       <span className={`brand-pill ${p.brand.toLowerCase()}`} style={{ fontSize: '0.6rem' }}>{p.brand}</span>
                       <span className="badge badge-warning" style={{ fontSize: '0.55rem', padding: '0.1rem 0.35rem', fontWeight: 700 }}>
                         {p.extraCustomerDiscount > 0 ? `${p.extraCustomerDiscount}% EXTRA OFF` : `${incentivePct}% INCENTIVE`}
                       </span>
                     </div>
-                    <div style={{ fontWeight: 700, fontSize: '0.85rem' }}>{p.name}</div>
-                    <div style={{ fontSize: '0.65rem', color: 'var(--text-muted)' }}>Code: {p.id} | Stock: {p.stock}</div>
-                    
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '0.5rem' }}>
-                      <div style={{ display: 'flex', alignItems: 'baseline', gap: '0.4rem' }}>
-                        <span style={{ fontSize: '0.95rem', fontWeight: 800, color: 'var(--accent-rose)' }}>{formatRupee(finalPrice)}</span>
-                        <span style={{ fontSize: '0.7rem', textDecoration: 'line-through', color: 'var(--text-muted)' }}>{formatRupee(p.mrp)}</span>
-                      </div>
-                      
-                      {isInCart ? (
-                        <span style={{ fontSize: '0.75rem', color: 'var(--accent-emerald)', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '0.2rem' }}>
-                          <CheckCircle size={14} /> Added
-                        </span>
+
+                    {/* Product image + details row */}
+                    <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'flex-start' }}>
+                      {/* Product Image / Placeholder */}
+                      {p.image ? (
+                        <img
+                          src={p.image}
+                          alt={p.name}
+                          style={{ width: '64px', height: '64px', objectFit: 'cover', borderRadius: '8px', border: '1px solid var(--border-color)', flexShrink: 0 }}
+                        />
                       ) : (
-                        <button className="btn btn-emerald" style={{ padding: '0.35rem 0.75rem', fontSize: '0.7rem', fontWeight: 700, borderRadius: '6px' }} onClick={() => {
-                          if (!isSessionActive) {
-                            setIsSessionActive(true);
-                            setCustomerName('Walk-in Client');
-                            setCustomerMobile('N/A');
-                            showToast("Started session for Walk-in Client.");
-                          }
-                          addProductToCartDirect(p);
+                        <div style={{
+                          width: '64px', height: '64px', borderRadius: '8px', flexShrink: 0,
+                          background: 'linear-gradient(135deg, rgba(14,165,233,0.15), rgba(16,185,129,0.15))',
+                          border: '1px dashed rgba(245,158,11,0.4)',
+                          display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+                          fontSize: '0.55rem', color: 'var(--text-muted)', fontWeight: 700, gap: '0.15rem'
                         }}>
-                          + Add to Cart
-                        </button>
+                          <span style={{ fontSize: '1.1rem' }}>📷</span>
+                          <span style={{ fontSize: '0.5rem', textAlign: 'center', lineHeight: 1.2 }}>Add image<br/>in Admin</span>
+                        </div>
                       )}
+
+                      {/* Text details */}
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ fontWeight: 700, fontSize: '0.85rem', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={p.name}>{p.name}</div>
+                        <div style={{ fontSize: '0.65rem', color: 'var(--text-muted)', marginTop: '0.1rem' }}>Code: <strong style={{ color: 'var(--accent-cyan)' }}>{p.id}</strong> | Stock: {p.stock}</div>
+                        
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '0.5rem' }}>
+                          <div style={{ display: 'flex', alignItems: 'baseline', gap: '0.4rem' }}>
+                            <span style={{ fontSize: '0.95rem', fontWeight: 800, color: 'var(--accent-rose)' }}>{formatRupee(finalPrice)}</span>
+                            <span style={{ fontSize: '0.7rem', textDecoration: 'line-through', color: 'var(--text-muted)' }}>{formatRupee(p.mrp)}</span>
+                          </div>
+                          
+                          {isInCart ? (
+                            <span style={{ fontSize: '0.75rem', color: 'var(--accent-emerald)', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '0.2rem' }}>
+                              <CheckCircle size={14} /> Added
+                            </span>
+                          ) : (
+                            <button className="btn btn-emerald" style={{ padding: '0.35rem 0.75rem', fontSize: '0.7rem', fontWeight: 700, borderRadius: '6px' }} onClick={() => {
+                              if (!isSessionActive) {
+                                setIsSessionActive(true);
+                                setCustomerName('Walk-in Client');
+                                setCustomerMobile('N/A');
+                                showToast("Started session for Walk-in Client.");
+                              }
+                              addProductToCartDirect(p);
+                            }}>
+                              + Add to Cart
+                            </button>
+                          )}
+                        </div>
+                      </div>
                     </div>
+
+                    {incentivePct > 0 && (
+                      <div style={{ marginTop: '0.5rem', paddingTop: '0.4rem', borderTop: '1px dashed rgba(245,158,11,0.2)', fontSize: '0.62rem', color: 'var(--accent-amber)', display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
+                        🏆 Executive Incentive: <strong>{incentivePct}% on clearance sale</strong>
+                      </div>
+                    )}
                   </div>
                 );
               })
@@ -1119,66 +1153,105 @@ function ExecutiveWorkspace({ products = [], activeExecutive = {}, db = {}, onUp
                 const finalPrice = getProductFinalPrice(p);
                 const incentivePct = getProductIncentivePct(p, db.brands);
                 const cartItem = cart.find(item => item.id === p.id);
+                const isWeeklyOffer = isWeeklySpecialActive(p);
                 
                 return (
-                  <div key={p.id} className="glass-panel" style={{ padding: '0.85rem', background: 'var(--bg-card)', display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <div key={p.id} className="glass-panel" style={{
+                    padding: '0.85rem',
+                    background: cartItem ? 'rgba(16,185,129,0.06)' : 'var(--bg-card)',
+                    border: cartItem ? '1.5px solid var(--accent-emerald)' : isWeeklyOffer ? '1.5px solid rgba(245,158,11,0.35)' : '1px solid var(--border-color)'
+                  }}>
+                    {/* Top line: brand + stock */}
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.6rem' }}>
                       <span className={`brand-pill ${p.brand.toLowerCase()}`} style={{ fontSize: '0.6rem' }}>{p.brand}</span>
-                      <span style={{ fontSize: '0.65rem', color: 'var(--text-muted)' }}>Stock: <strong>{p.stock}</strong></span>
+                      <div style={{ display: 'flex', gap: '0.35rem', alignItems: 'center' }}>
+                        {isWeeklyOffer && <span className="badge badge-warning" style={{ fontSize: '0.5rem', padding: '0.08rem 0.3rem' }}>⚡ Offer</span>}
+                        {cartItem && <span className="badge badge-success" style={{ fontSize: '0.5rem', padding: '0.08rem 0.3rem' }}>✓ In Cart</span>}
+                        <span style={{ fontSize: '0.65rem', color: p.stock > 0 ? 'var(--accent-emerald)' : 'var(--accent-rose)', fontWeight: 600 }}>
+                          {p.stock > 0 ? `${p.stock} pcs` : 'Out'}
+                        </span>
+                      </div>
                     </div>
                     
-                    <div style={{ fontWeight: 700, fontSize: '0.85rem', color: 'var(--text-primary)' }}>{p.name}</div>
-                    <div style={{ fontSize: '0.65rem', color: 'var(--text-muted)' }}>
-                      Code: {p.id}
-                      {p.division === 'Tiles' && (
-                        <div style={{ fontSize: '0.7rem', color: 'var(--text-secondary)', display: 'flex', flexWrap: 'wrap', gap: '0.4rem', background: 'rgba(255,255,255,0.02)', padding: '0.35rem 0.5rem', borderRadius: '4px', marginTop: '0.25rem' }}>
-                          <span>📏 Size: <strong>{p.size || 'N/A'}</strong></span>
-                          <span>✨ Finish: <strong>{p.finishing || 'N/A'}</strong></span>
-                          <span style={{ color: 'var(--accent-cyan)' }}>📍 Loc: <strong>{p.location || 'N/A'}</strong></span>
+                    {/* Image + Product Info Row */}
+                    <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'flex-start' }}>
+                      {/* Product Image */}
+                      {p.image ? (
+                        <img
+                          src={p.image}
+                          alt={p.name}
+                          style={{ width: '80px', height: '80px', objectFit: 'cover', borderRadius: '10px', border: '1px solid var(--border-color)', flexShrink: 0 }}
+                        />
+                      ) : (
+                        <div style={{
+                          width: '80px', height: '80px', borderRadius: '10px', flexShrink: 0,
+                          background: 'linear-gradient(135deg, rgba(14,165,233,0.12), rgba(16,185,129,0.12))',
+                          border: '1px dashed var(--border-color)',
+                          display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+                          gap: '0.2rem'
+                        }}>
+                          <span style={{ fontSize: '1.5rem' }}>📷</span>
+                          <span style={{ fontSize: '0.45rem', color: 'var(--text-muted)', fontWeight: 600, textAlign: 'center', lineHeight: 1.3 }}>
+                            {p.brand}<br/>
+                            <span style={{ color: 'var(--text-muted)', opacity: 0.6 }}>No image</span>
+                          </span>
                         </div>
                       )}
-                    </div>
-                    
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '0.25rem' }}>
-                      <div>
-                        <div style={{ display: 'flex', alignItems: 'baseline', gap: '0.4rem' }}>
-                          <span style={{ fontSize: '0.95rem', fontWeight: 800, color: 'var(--accent-rose)' }}>{formatRupee(finalPrice)}</span>
-                          <span style={{ fontSize: '0.7rem', textDecoration: 'line-through', color: 'var(--text-muted)' }}>{formatRupee(p.mrp)}</span>
+
+                      {/* Product Details */}
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ fontWeight: 700, fontSize: '0.85rem', color: 'var(--text-primary)', lineHeight: 1.3, marginBottom: '0.2rem' }}>{p.name}</div>
+                        <div style={{ fontSize: '0.65rem', color: 'var(--text-muted)' }}>
+                          Code: <strong style={{ color: 'var(--accent-cyan)' }}>{p.id}</strong>
                         </div>
-                        <div style={{ fontSize: '0.6rem', color: 'var(--accent-cyan)', marginTop: '0.1rem' }}>
-                          Incentive: {incentivePct}% ({formatRupee(getProductIncentiveAmount(p, 1, db.brands))}/unit)
+                        {p.division === 'Tiles' && (
+                          <div style={{ fontSize: '0.62rem', color: 'var(--text-secondary)', display: 'flex', flexWrap: 'wrap', gap: '0.3rem', marginTop: '0.2rem' }}>
+                            <span>📏 {p.size || 'N/A'}</span>
+                            <span>✨ {p.finishing || 'N/A'}</span>
+                            <span style={{ color: 'var(--accent-cyan)' }}>📍 {p.location || 'N/A'}</span>
+                          </div>
+                        )}
+
+                        {/* Price Row */}
+                        <div style={{ display: 'flex', alignItems: 'baseline', gap: '0.4rem', marginTop: '0.4rem' }}>
+                          <span style={{ fontSize: '1rem', fontWeight: 800, color: 'var(--accent-rose)' }}>{formatRupee(finalPrice)}</span>
+                          <span style={{ fontSize: '0.68rem', textDecoration: 'line-through', color: 'var(--text-muted)' }}>{formatRupee(p.mrp)}</span>
+                        </div>
+                        <div style={{ fontSize: '0.6rem', color: 'var(--accent-amber)', marginTop: '0.1rem' }}>
+                          🏆 {incentivePct}% incentive · {formatRupee(getProductIncentiveAmount(p, 1, db.brands))}/unit
                         </div>
                       </div>
+                    </div>
 
+                    {/* Cart Action */}
+                    <div style={{ marginTop: '0.65rem', display: 'flex', justifyContent: 'flex-end' }} onClick={e => e.stopPropagation()}>
                       {cartItem ? (
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', background: 'rgba(255,255,255,0.03)', padding: '0.25rem 0.5rem', borderRadius: '20px', border: '1px solid var(--border-color)' }}>
-                          <button 
-                            style={{ background: 'transparent', border: 'none', color: 'var(--text-primary)', cursor: 'pointer', padding: '0.2rem' }}
-                            onClick={() => updateCartQty(p.id, cartItem.qty - 1, p.stock)}
-                          >
+                        <div style={{ display: 'inline-flex', alignItems: 'center', gap: '0.65rem', background: 'rgba(16,185,129,0.12)', padding: '0.3rem 0.85rem', borderRadius: '20px', border: '1px solid var(--accent-emerald)' }}>
+                          <button style={{ background: 'transparent', border: 'none', color: 'var(--text-primary)', cursor: 'pointer', padding: '0.2rem' }}
+                            onClick={() => updateCartQty(p.id, cartItem.qty - 1, p.stock)}>
                             <Minus size={14} />
                           </button>
-                          <span style={{ fontWeight: 700, fontSize: '0.85rem', minWidth: '16px', textAlign: 'center' }}>
-                            {cartItem.qty}
-                          </span>
-                          <button 
-                            style={{ background: 'transparent', border: 'none', color: 'var(--text-primary)', cursor: 'pointer', padding: '0.2rem' }}
-                            onClick={() => updateCartQty(p.id, cartItem.qty + 1, p.stock)}
-                          >
+                          <span style={{ fontWeight: 800, fontSize: '0.9rem', color: 'var(--accent-emerald)', minWidth: '18px', textAlign: 'center' }}>{cartItem.qty}</span>
+                          <button style={{ background: 'transparent', border: 'none', color: 'var(--text-primary)', cursor: 'pointer', padding: '0.2rem' }}
+                            onClick={() => updateCartQty(p.id, cartItem.qty + 1, p.stock)}>
                             <Plus size={14} />
                           </button>
                         </div>
                       ) : (
-                        <button className="btn btn-cyan" style={{ padding: '0.4rem 0.8rem', fontSize: '0.75rem', fontWeight: 700, borderRadius: '6px' }} onClick={() => {
-                          if (!isSessionActive) {
-                            setIsSessionActive(true);
-                            setCustomerName('Walk-in Client');
-                            setCustomerMobile('N/A');
-                            showToast("Started session for Walk-in Client.");
-                          }
-                          addProductToCartDirect(p);
-                        }}>
-                          + Add
+                        <button
+                          className="btn btn-cyan"
+                          style={{ padding: '0.4rem 1.1rem', fontSize: '0.78rem', fontWeight: 700, borderRadius: '8px', width: '100%' }}
+                          disabled={p.stock === 0}
+                          onClick={() => {
+                            if (!isSessionActive) {
+                              setIsSessionActive(true);
+                              setCustomerName('Walk-in Client');
+                              setCustomerMobile('N/A');
+                              showToast("Started session for Walk-in Client.");
+                            }
+                            addProductToCartDirect(p);
+                          }}>
+                          {p.stock === 0 ? 'Out of Stock' : '+ Add to Selection List'}
                         </button>
                       )}
                     </div>
