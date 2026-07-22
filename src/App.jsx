@@ -63,16 +63,31 @@ function App() {
     } catch (e) {}
   };
 
-  // Track location changes
+  const [isOffline, setIsOffline] = useState(!navigator.onLine);
+
+  // Track location and network status changes
   useEffect(() => {
     const handleLocationChange = () => {
       setRoutePath(getNormalizedRoute());
     };
+    const goOnline = () => {
+      setIsOffline(false);
+      showToast("🌐 Network connection restored!");
+    };
+    const goOffline = () => {
+      setIsOffline(true);
+    };
+
     window.addEventListener('popstate', handleLocationChange);
     window.addEventListener('hashchange', handleLocationChange);
+    window.addEventListener('online', goOnline);
+    window.addEventListener('offline', goOffline);
+
     return () => {
       window.removeEventListener('popstate', handleLocationChange);
       window.removeEventListener('hashchange', handleLocationChange);
+      window.removeEventListener('online', goOnline);
+      window.removeEventListener('offline', goOffline);
     };
   }, []);
 
@@ -853,70 +868,83 @@ function App() {
 
       <main className={isShareRoute ? "fade-in" : "main-content fade-in"} style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
         {/* Render routes based on current path */}
-        {isShareRoute ? (
-          <QuotationShareView db={db} />
-        ) : !currentUser ? (
-          <LoginView onLoginSubmit={handleLoginSubmit} />
-        ) : (
-          <>
-            {currentUser.role === 'md' && (
-              <MDDashboard 
-                products={db.products} 
-                executives={db.executives} 
-                salesLedger={db.salesLedger}
-                brands={db.brands}
-                quotations={db.quotations}
-                remainingLandingCost={remainingValue}
-                totalClearedLandingCost={totalClearedLandingCost}
-                dynamicTargetLandingCost={dynamicTargetValue}
-                totalClearedRevenue={totalClearedValue}
-                onUpdateDb={updateDb}
-                db={db}
-              />
-            )}
+        {(() => {
+          const cleanPath = routePath.replace(/^#?\/?/, '').replace(/\/$/, '').toLowerCase();
+          const is404 = !isShareRoute && cleanPath !== '' && cleanPath !== 'login' && !cleanPath.startsWith('scan/') && !['md', 'admin', 'executive', 'checker', 'manager'].includes(cleanPath);
 
-            {currentUser.role === 'executive' && (
-              <ExecutiveWorkspace 
-                products={db.products}
-                activeExecutive={db.executives.find(e => e.id === currentUser.execId) || db.executives[0]}
-                db={db}
-                onUpdateDb={updateDb}
-              />
-            )}
+          if (is404) {
+            return <NotFoundView currentUser={currentUser} navigateTo={navigateTo} />;
+          }
 
-            {currentUser.role === 'checker' && (
-              <CheckerWorkspace 
-                currentUser={currentUser}
-                db={db}
-                onUpdateDb={updateDb}
-              />
-            )}
+          if (isShareRoute) {
+            return <QuotationShareView db={db} />;
+          }
 
-            {['admin', 'manager'].includes(currentUser.role) && (
-              <AdminPanel 
-                currentUser={currentUser}
-                products={db.products}
-                executives={db.executives}
-                salesLedger={db.salesLedger}
-                brands={db.brands}
-                quotations={db.quotations}
-                remainingLandingCost={remainingValue}
-                totalClearedLandingCost={totalClearedLandingCost}
-                dynamicTargetLandingCost={dynamicTargetValue}
-                totalClearedRevenue={totalClearedValue}
-                onUpdateStock={handleUpdateStock}
-                onAddProduct={handleAddProduct}
-                onEditProduct={handleEditProduct}
-                onDeleteProduct={handleDeleteProduct}
-                onBulkUpdateStock={handleBulkUpdateStock}
-                onAddExecutive={handleAddExecutive}
-                onDeleteExecutive={handleDeleteExecutive}
-                onUpdateDb={updateDb}
-                db={db}
-              />
-            )}
-          </>
-        )}
+          if (!currentUser) {
+            return <LoginView onLoginSubmit={handleLoginSubmit} />;
+          }
+
+          return (
+            <>
+              {currentUser.role === 'md' && (
+                <MDDashboard 
+                  products={db.products} 
+                  executives={db.executives} 
+                  salesLedger={db.salesLedger}
+                  brands={db.brands}
+                  quotations={db.quotations}
+                  remainingLandingCost={remainingValue}
+                  totalClearedLandingCost={totalClearedLandingCost}
+                  dynamicTargetLandingCost={dynamicTargetValue}
+                  totalClearedRevenue={totalClearedValue}
+                  onUpdateDb={updateDb}
+                  db={db}
+                />
+              )}
+
+              {currentUser.role === 'executive' && (
+                <ExecutiveWorkspace 
+                  products={db.products}
+                  activeExecutive={db.executives.find(e => e.id === currentUser.execId) || db.executives[0]}
+                  db={db}
+                  onUpdateDb={updateDb}
+                />
+              )}
+
+              {currentUser.role === 'checker' && (
+                <CheckerWorkspace 
+                  currentUser={currentUser}
+                  db={db}
+                  onUpdateDb={updateDb}
+                />
+              )}
+
+              {['admin', 'manager'].includes(currentUser.role) && (
+                <AdminPanel 
+                  currentUser={currentUser}
+                  products={db.products}
+                  executives={db.executives}
+                  salesLedger={db.salesLedger}
+                  brands={db.brands}
+                  quotations={db.quotations}
+                  remainingLandingCost={remainingValue}
+                  totalClearedLandingCost={totalClearedLandingCost}
+                  dynamicTargetLandingCost={dynamicTargetValue}
+                  totalClearedRevenue={totalClearedValue}
+                  onUpdateStock={handleUpdateStock}
+                  onAddProduct={handleAddProduct}
+                  onEditProduct={handleEditProduct}
+                  onDeleteProduct={handleDeleteProduct}
+                  onBulkUpdateStock={handleBulkUpdateStock}
+                  onAddExecutive={handleAddExecutive}
+                  onDeleteExecutive={handleDeleteExecutive}
+                  onUpdateDb={updateDb}
+                  db={db}
+                />
+              )}
+            </>
+          );
+        })()}
       </main>
 
       {!isShareRoute && (
@@ -931,6 +959,33 @@ function App() {
         }}>
           © 2026 Marble Gallery (MG) Group. All rights reserved. • Clearance Liquidation Dashboard (MG Luxe Bath & Tile)
         </footer>
+      )}
+
+      {/* Offline Network Banner */}
+      {isOffline && (
+        <div style={{
+          position: 'fixed',
+          bottom: '24px',
+          left: '50%',
+          transform: 'translateX(-50%)',
+          zIndex: 999999,
+          background: 'rgba(239, 68, 68, 0.95)',
+          color: '#fff',
+          padding: '0.85rem 1.5rem',
+          borderRadius: '30px',
+          boxShadow: '0 10px 30px rgba(239, 68, 68, 0.4)',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '0.75rem',
+          border: '1px solid rgba(255,255,255,0.2)',
+          fontSize: '0.88rem',
+          fontWeight: 700,
+          backdropFilter: 'blur(8px)',
+          animation: 'slideUp 0.3s ease'
+        }}>
+          <AlertTriangle size={18} className="animate-pulse" />
+          <span>You are offline. Clearance Portal is running in local offline mode...</span>
+        </div>
       )}
     </div>
   );
@@ -1241,6 +1296,66 @@ function QuotationShareView({ db }) {
           <strong style={{ display: 'block', marginBottom: '0.2rem', color: '#475569' }}>Terms & Conditions:</strong>
           Thank you for choosing Marble Gallery Group. We value your business.
         </div>
+      </div>
+    </div>
+  );
+}
+
+// Customized 404 View
+function NotFoundView({ currentUser, navigateTo }) {
+  return (
+    <div style={{
+      display: 'flex',
+      flexDirection: 'column',
+      alignItems: 'center',
+      justifyContent: 'center',
+      minHeight: '70vh',
+      textAlign: 'center',
+      padding: '2rem'
+    }}>
+      <div className="glass-panel" style={{
+        maxWidth: '480px',
+        width: '100%',
+        padding: '3rem 2rem',
+        borderRadius: '24px',
+        border: '1px solid rgba(244, 63, 94, 0.3)',
+        background: 'rgba(15, 23, 42, 0.45)',
+        boxShadow: '0 20px 50px rgba(0,0,0,0.3)',
+        backdropFilter: 'blur(20px)'
+      }}>
+        <div style={{
+          width: '80px',
+          height: '80px',
+          borderRadius: '50%',
+          background: 'rgba(244, 63, 94, 0.1)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          margin: '0 auto 1.5rem',
+          border: '1px solid rgba(244, 63, 94, 0.3)'
+        }}>
+          <ShieldAlert size={40} color="#f43f5e" />
+        </div>
+        
+        <h1 style={{ fontSize: '3rem', fontWeight: 900, color: '#f43f5e', margin: '0 0 0.5rem' }}>404</h1>
+        <h2 style={{ fontSize: '1.25rem', fontWeight: 800, color: 'var(--text-primary)', marginBottom: '0.75rem' }}>Page Not Found</h2>
+        <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', lineHeight: '1.5', marginBottom: '2rem' }}>
+          The clearance portal path you are trying to access does not exist or has been moved.
+        </p>
+
+        <button 
+          onClick={() => {
+            if (currentUser) {
+              navigateTo(`/${currentUser.role}`);
+            } else {
+              navigateTo('/login');
+            }
+          }}
+          className="btn" 
+          style={{ width: '100%', padding: '0.75rem', fontWeight: 700, borderRadius: '12px', background: '#f43f5e', color: '#fff' }}
+        >
+          Return to Dashboard
+        </button>
       </div>
     </div>
   );
