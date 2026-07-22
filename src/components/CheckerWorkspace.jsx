@@ -232,7 +232,7 @@ function CheckerWorkspace({ currentUser, db, onUpdateDb }) {
               </tr>
             ) : (
               filteredQuotes.map(quote => {
-                const totalValue = quote.items.reduce((s,i) => s + (i.specialPrice * i.qty), 0);
+                const totalValue = (quote.items || []).reduce((s,i) => s + ((i.specialPrice || i.pricePaid || 0) * (i.qty || 1)), 0);
                 const isBilled = Boolean(quote.invoiceNo);
                 const isBilledByExec = quote.invoiceNo && quote.billedBy !== 'checker';
 
@@ -320,7 +320,7 @@ function CheckerWorkspace({ currentUser, db, onUpdateDb }) {
         {filteredQuotes.length > 0 && (
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '1rem' }}>
             {filteredQuotes.map(quote => {
-              const totalValue = quote.items.reduce((s,i) => s + (i.specialPrice * i.qty), 0);
+              const totalValue = (quote.items || []).reduce((s,i) => s + ((i.specialPrice || i.pricePaid || 0) * (i.qty || 1)), 0);
               const isBilled = Boolean(quote.invoiceNo);
               return (
                 <div key={`mob-${quote.id}`} className="glass-panel" style={{ padding: '1rem', borderRadius: '14px', background: 'var(--bg-card)', border: '1px solid var(--border-color)' }}>
@@ -409,7 +409,7 @@ function CheckerWorkspace({ currentUser, db, onUpdateDb }) {
               <div style={{ borderTop: '1px dashed var(--border-color)', marginTop: '0.5rem', paddingTop: '0.5rem', display: 'flex', justifyContent: 'space-between', fontWeight: 800, fontSize: '0.9rem' }}>
                 <span>Total Quoted Amount:</span>
                 <span style={{ color: 'var(--accent-cyan)' }}>
-                  {formatRupee(selectedQuote.items.reduce((s,i)=>s+(i.specialPrice*i.qty),0))}
+                  {formatRupee((selectedQuote.items || []).reduce((s,i)=>s+((i.specialPrice || i.pricePaid || 0)*(i.qty || 1)),0))}
                 </span>
               </div>
             </div>
@@ -531,7 +531,7 @@ function CheckerWorkspace({ currentUser, db, onUpdateDb }) {
             </div>
 
             {/* Quoted Line Items Table */}
-            <h4 style={{ fontSize: '0.9rem', fontWeight: 700, marginBottom: '0.75rem', color: 'var(--text-secondary)' }}>Itemized Clearance Products ({selectedQuoteDetail.items.reduce((sum, i) => sum + i.qty, 0)} Items)</h4>
+            <h4 style={{ fontSize: '0.9rem', fontWeight: 700, marginBottom: '0.75rem', color: 'var(--text-secondary)' }}>Itemized Clearance Products ({(selectedQuoteDetail.items || []).reduce((sum, i) => sum + (i.qty || 1), 0)} Items)</h4>
             <div className="custom-table-container" style={{ marginBottom: '1.25rem' }}>
               <table className="custom-table" style={{ fontSize: '0.8rem' }}>
                 <thead>
@@ -547,7 +547,7 @@ function CheckerWorkspace({ currentUser, db, onUpdateDb }) {
                   </tr>
                 </thead>
                 <tbody>
-                  {selectedQuoteDetail.items.map((item, idx) => (
+                  {(selectedQuoteDetail.items || []).map((item, idx) => (
                     <tr key={idx}>
                       <td>{idx + 1}</td>
                       <td style={{ fontWeight: 700, fontFamily: 'monospace', color: 'var(--accent-cyan)' }}>{item.productId || item.id}</td>
@@ -558,10 +558,10 @@ function CheckerWorkspace({ currentUser, db, onUpdateDb }) {
                         </div>
                       </td>
                       <td><span className="badge" style={{ background: 'rgba(255,255,255,0.05)', fontSize: '0.7rem' }}>{item.brand}</span></td>
-                      <td style={{ textAlign: 'center', fontWeight: 700 }}>{item.qty}</td>
-                      <td style={{ textAlign: 'right', textDecoration: 'line-through', color: 'var(--text-muted)' }}>{formatRupee(item.mrp)}</td>
-                      <td style={{ textAlign: 'right', fontWeight: 700, color: 'var(--accent-rose)' }}>{formatRupee(item.specialPrice)}</td>
-                      <td style={{ textAlign: 'right', fontWeight: 800, color: 'var(--accent-emerald)' }}>{formatRupee(item.specialPrice * item.qty)}</td>
+                      <td style={{ textAlign: 'center', fontWeight: 700 }}>{item.qty || 1}</td>
+                      <td style={{ textAlign: 'right', textDecoration: 'line-through', color: 'var(--text-muted)' }}>{formatRupee(item.mrp || 0)}</td>
+                      <td style={{ textAlign: 'right', fontWeight: 700, color: 'var(--accent-rose)' }}>{formatRupee(item.specialPrice || item.pricePaid || 0)}</td>
+                      <td style={{ textAlign: 'right', fontWeight: 800, color: 'var(--accent-emerald)' }}>{formatRupee((item.specialPrice || item.pricePaid || 0) * (item.qty || 1))}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -572,16 +572,16 @@ function CheckerWorkspace({ currentUser, db, onUpdateDb }) {
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'rgba(56, 189, 248, 0.05)', padding: '1rem', borderRadius: '10px', border: '1px solid rgba(56, 189, 248, 0.2)', marginBottom: '1.5rem' }}>
               <div>
                 <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>
-                  Total MRP Value: <span style={{ textDecoration: 'line-through' }}>{formatRupee(selectedQuoteDetail.items.reduce((sum, i) => sum + (i.mrp * i.qty), 0))}</span>
+                  Total MRP Value: <span style={{ textDecoration: 'line-through' }}>{formatRupee((selectedQuoteDetail.items || []).reduce((sum, i) => sum + ((i.mrp || 0) * (i.qty || 1)), 0))}</span>
                 </div>
                 <div style={{ fontSize: '0.85rem', color: 'var(--accent-emerald)', fontWeight: 700 }}>
-                  Client Clearance Savings: {formatRupee(selectedQuoteDetail.items.reduce((sum, i) => sum + ((i.mrp - i.specialPrice) * i.qty), 0))}
+                  Client Clearance Savings: {formatRupee((selectedQuoteDetail.items || []).reduce((sum, i) => sum + (((i.mrp || 0) - (i.specialPrice || i.pricePaid || 0)) * (i.qty || 1)), 0))}
                 </div>
               </div>
               <div style={{ textAlign: 'right' }}>
                 <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: 700 }}>TOTAL BILLABLE AMOUNT</div>
                 <div style={{ fontSize: '1.4rem', fontWeight: 800, color: 'var(--accent-emerald)' }}>
-                  {formatRupee(selectedQuoteDetail.items.reduce((sum, i) => sum + (i.specialPrice * i.qty), 0))}
+                  {formatRupee((selectedQuoteDetail.items || []).reduce((sum, i) => sum + ((i.specialPrice || i.pricePaid || 0) * (i.qty || 1)), 0))}
                 </div>
               </div>
             </div>

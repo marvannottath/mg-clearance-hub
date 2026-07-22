@@ -41,6 +41,51 @@ export const safeLocalStorage = (() => {
   };
 })();
 
+// Fail-safe Error Boundary to prevent pitch black blank screens on mobile browsers
+export class ErrorBoundary extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = { hasError: false, error: null };
+  }
+
+  static getDerivedStateFromError(error) {
+    return { hasError: true, error };
+  }
+
+  componentDidCatch(error, errorInfo) {
+    console.error("Uncaught application error:", error, errorInfo);
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '100vh', padding: '2rem', textAlign: 'center', background: '#080c14', color: '#f8fafc' }}>
+          <div style={{ width: '64px', height: '64px', borderRadius: '16px', background: 'rgba(239, 68, 68, 0.15)', border: '1px solid rgba(239, 68, 68, 0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '1.25rem' }}>
+            <ShieldAlert size={32} color="#ef4444" />
+          </div>
+          <h2 style={{ fontSize: '1.4rem', fontWeight: 800, marginBottom: '0.5rem', color: '#f8fafc' }}>System Recovery Required</h2>
+          <p style={{ color: '#94a3b8', fontSize: '0.85rem', maxWidth: '400px', marginBottom: '1.5rem', lineHeight: '1.6' }}>
+            An unexpected temporary rendering exception occurred on this device. Click below to reload and restore session.
+          </p>
+          <div style={{ display: 'flex', gap: '0.75rem' }}>
+            <button 
+              className="btn btn-cyan" 
+              onClick={() => {
+                this.setState({ hasError: false });
+                window.location.reload();
+              }}
+              style={{ padding: '0.6rem 1.25rem', fontWeight: 700 }}
+            >
+              🔄 Reload MG Clearance Hub
+            </button>
+          </div>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
+
 function App() {
   const [db, setDb] = useState(() => loadDatabase());
   const [theme, setTheme] = useState(() => safeLocalStorage.getItem('mg_clearance_theme') || 'dark');
