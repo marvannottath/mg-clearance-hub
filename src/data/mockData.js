@@ -229,6 +229,10 @@ export const INITIAL_EXECUTIVES = [
   { id: "exec-004", name: "Sandeep Pillai", email: "sandeep.p@marblegallery.com", target: 6000000, cleared: 0, salesCount: 0, username: "sandeep", password: "sandeep123" }
 ];
 
+export const INITIAL_QUOTATIONS = [];
+
+export const INITIAL_SALES_LEDGER = [];
+
 export const INITIAL_NOTIFICATIONS = [
   {
     id: "notif-001",
