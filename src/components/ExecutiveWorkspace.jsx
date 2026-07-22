@@ -2748,7 +2748,7 @@ function ExecutiveWorkspace({ products = [], activeExecutive = {}, db = {}, onUp
                       />
                     </div>
 
-                    <div className="form-group" style={{ marginBottom: '1rem' }}>
+                    <div className="form-group" style={{ marginBottom: '0.75rem' }}>
                       <label className="form-label">Client WhatsApp Mobile</label>
                       <input 
                         type="tel" 
@@ -2756,6 +2756,18 @@ function ExecutiveWorkspace({ products = [], activeExecutive = {}, db = {}, onUp
                         placeholder="10 digit number" 
                         value={customerMobile}
                         onChange={(e) => setCustomerMobile(e.target.value)}
+                        style={{ height: '36px', fontSize: '0.85rem' }}
+                      />
+                    </div>
+
+                    <div className="form-group" style={{ marginBottom: '1rem' }}>
+                      <label className="form-label">Client Location / Site Address</label>
+                      <input 
+                        type="text" 
+                        className="form-input" 
+                        placeholder="e.g. Kozhikode, Calicut, Kochi" 
+                        value={customerAddress}
+                        onChange={(e) => setCustomerAddress(e.target.value)}
                         style={{ height: '36px', fontSize: '0.85rem' }}
                       />
                     </div>
