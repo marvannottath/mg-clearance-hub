@@ -2267,37 +2267,93 @@ function ExecutiveWorkspace({ products = [], activeExecutive = {}, db = {}, onUp
 
           <div className={`workspace-layout ${activeMobileTab === 'catalog' ? 'show-mobile-catalog' : 'show-mobile-cart'}`}>
             
-            {/* Left side: Discovery (Scan, Manual Add, Search, Catalog) */}
+            {/* Left side: Discovery (Scan, Search, Catalog) */}
             <div className="workspace-discovery">
               
-              {/* Quick Action Panel */}
-              <div className="glass-panel" style={{ padding: '1.25rem', marginBottom: '1.5rem' }}>
-                <h3 style={{ fontSize: '0.95rem', marginBottom: '0.75rem', fontWeight: 600 }}>Quick Add Options</h3>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', flexWrap: 'wrap' }}>
+              {/* Sleek Unified Search & Quick Action Header Bar */}
+              <div className="glass-panel" style={{ padding: '1rem 1.25rem', marginBottom: '1.25rem', background: 'var(--bg-card)', border: '1px solid var(--border-color)', borderRadius: '16px', boxShadow: '0 4px 20px rgba(0,0,0,0.06)' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: 'auto 1fr auto', gap: '1rem', alignItems: 'center' }}>
+                  {/* Scan Button */}
                   <button 
+                    type="button"
                     className="btn btn-emerald" 
                     style={{ 
-                      height: '52px', 
-                      fontSize: '0.95rem', 
-                      fontWeight: 600, 
+                      height: '44px', 
+                      fontSize: '0.88rem', 
+                      fontWeight: 700, 
                       display: 'flex', 
                       alignItems: 'center', 
-                      justifyContent: 'center', 
                       gap: '0.5rem',
-                      borderRadius: '10px'
+                      padding: '0 1.25rem',
+                      borderRadius: '10px',
+                      whiteSpace: 'nowrap'
                     }} 
                     onClick={() => setIsScannerOpen(true)}
                   >
                     <QrCode size={18} />
-                    Scan Sticker
+                    Scan QR / Code
                   </button>
 
+                  {/* Universal Search Input */}
+                  <div style={{ position: 'relative', width: '100%' }}>
+                    <Search size={18} style={{ position: 'absolute', left: '14px', top: '50%', transform: 'translateY(-50%)', color: 'var(--accent-cyan)' }} />
+                    <input 
+                      type="text" 
+                      className="form-input" 
+                      placeholder="Search catalog by code, brand, specs, or product name..."
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      style={{ paddingLeft: '2.75rem', height: '44px', fontSize: '0.9rem', borderRadius: '10px', width: '100%', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)' }}
+                    />
+                    {searchQuery && (
+                      <button 
+                        type="button"
+                        style={{ position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer' }}
+                        onClick={() => setSearchQuery('')}
+                      >
+                        ✕
+                      </button>
+                    )}
+
+                    {searchResults.length > 0 && (
+                      <div className="search-results-list" style={{ position: 'absolute', top: '100%', left: 0, right: 0, marginTop: '6px', zIndex: 99, background: 'var(--bg-card)', border: '1px solid var(--border-color)', borderRadius: '12px', boxShadow: '0 12px 32px rgba(0,0,0,0.3)', maxHeight: '320px', overflowY: 'auto' }}>
+                        {searchResults.map(p => {
+                          const finalPrice = getProductFinalPrice(p);
+                          return (
+                            <div 
+                              key={p.id} 
+                              className="search-result-row"
+                              style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0.75rem 1rem', borderBottom: '1px solid var(--border-color)', cursor: 'pointer' }}
+                              onClick={() => { addProductToCartDirect(p); setSearchQuery(''); }}
+                            >
+                              <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                                {p.image ? (
+                                  <img src={p.image} alt={p.name} style={{ width: '40px', height: '40px', objectFit: 'cover', borderRadius: '6px' }} />
+                                ) : (
+                                  <div className="brand-pill" style={{ width: '40px', height: '40px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.65rem' }}>{p.brand}</div>
+                                )}
+                                <div>
+                                  <div style={{ fontWeight: 700, fontSize: '0.85rem' }}>{p.name}</div>
+                                  <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>Code: <strong style={{ color: 'var(--accent-cyan)' }}>{p.id}</strong></div>
+                                </div>
+                              </div>
+                              <div style={{ textAlign: 'right' }}>
+                                <div style={{ fontWeight: 800, color: 'var(--accent-rose)', fontSize: '0.9rem' }}>{formatRupee(finalPrice)}</div>
+                                <span style={{ fontSize: '0.7rem', color: 'var(--accent-emerald)', fontWeight: 700 }}>+ Click to Add</span>
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Direct Code Input Form */}
                   <form 
                     onSubmit={(e) => {
                       e.preventDefault();
                       const code = e.target.elements.manualCode.value.trim().toUpperCase();
                       if (!code) return;
-                      // V5 Search/Add Fix: evaluate name segments as well
                       const product = products.find(p => 
                         p.id.toUpperCase() === code || 
                         p.name.toUpperCase().includes(code) || 
@@ -2316,13 +2372,13 @@ function ExecutiveWorkspace({ products = [], activeExecutive = {}, db = {}, onUp
                       type="text" 
                       name="manualCode"
                       className="form-input" 
-                      placeholder="Enter code or name (e.g. 12701001)"
-                      style={{ height: '52px', fontSize: '0.875rem', borderRadius: '10px' }}
+                      placeholder="Quick Code..."
+                      style={{ height: '44px', fontSize: '0.85rem', width: '130px', borderRadius: '10px' }}
                     />
                     <button 
                       type="submit" 
-                      className="btn btn-primary" 
-                      style={{ height: '52px', padding: '0 1rem', borderRadius: '10px', fontWeight: 600 }}
+                      className="btn btn-cyan" 
+                      style={{ height: '44px', padding: '0 1rem', borderRadius: '10px', fontWeight: 700 }}
                     >
                       Add
                     </button>
@@ -2330,68 +2386,28 @@ function ExecutiveWorkspace({ products = [], activeExecutive = {}, db = {}, onUp
                 </div>
               </div>
 
-              {/* Autocomplete Search input */}
-              <div className="glass-panel" style={{ padding: '1.25rem', marginBottom: '1.5rem', position: 'relative', zIndex: 10 }}>
-                <h3 style={{ fontSize: '0.95rem', marginBottom: '0.75rem', fontWeight: 600 }}>Search Catalog</h3>
-                <div style={{ position: 'relative' }}>
-                  <Search size={16} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
-                  <input 
-                    type="text" 
-                    className="form-input" 
-                    placeholder="Search by code, brand, name or description..."
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    style={{ paddingLeft: '2.5rem', height: '40px', fontSize: '0.9rem' }}
-                  />
+              {/* Showroom Visual Product Catalog - Elegant Redesign */}
+              <div className="glass-panel" style={{ padding: '1.25rem', background: 'var(--bg-card)', border: '1px solid var(--border-color)', borderRadius: '16px', boxShadow: '0 8px 24px rgba(0,0,0,0.06)' }}>
+                {/* Header Title + View Mode Switcher + Division & Brand Filters */}
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', marginBottom: '1.25rem', borderBottom: '1px solid var(--border-color)', paddingBottom: '1rem' }}>
                   
-                  {searchResults.length > 0 && (
-                    <div className="search-results-list">
-                      {searchResults.map(p => {
-                        const finalPrice = getProductFinalPrice(p);
-                        return (
-                          <div 
-                            key={p.id} 
-                            className="search-result-row"
-                            onClick={() => addProductToCartDirect(p)}
-                          >
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                              {p.image ? (
-                                <img src={p.image} alt={p.name} style={{ width: '35px', height: '35px', objectFit: 'cover', borderRadius: '4px' }} />
-                              ) : (
-                                <span className={`brand-pill ${p.brand.toLowerCase()}`} style={{ minWidth: '60px', textAlign: 'center', fontSize: '0.65rem' }}>
-                                  {p.brand}
-                                </span>
-                              )}
-                              <div>
-                                <div style={{ fontWeight: 600, fontSize: '0.85rem' }}>{p.name}</div>
-                                <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>Code: {p.id}</div>
-                              </div>
-                            </div>
-                            <div style={{ textAlign: 'right' }}>
-                              <div style={{ fontWeight: 700, color: 'var(--accent-rose)', fontSize: '0.85rem' }}>{formatRupee(finalPrice)}</div>
-                              <div style={{ fontSize: '0.65rem', color: p.stock > 0 ? 'var(--accent-emerald)' : 'var(--accent-rose)' }}>
-                                {p.stock > 0 ? `${p.stock} in stock` : 'Out of Stock'}
-                              </div>
-                            </div>
-                          </div>
-                        );
-                      })}
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.75rem' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                      <h3 style={{ fontSize: '1.1rem', fontWeight: 800, margin: 0, color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                        <Sliders size={20} color="var(--accent-cyan)" />
+                        Showroom Clearance Catalog
+                      </h3>
+                      <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', background: 'rgba(255,255,255,0.05)', padding: '0.2rem 0.6rem', borderRadius: '20px', fontWeight: 600 }}>
+                        {filteredProducts.length} Items Available
+                      </span>
                     </div>
-                  )}
-                </div>
-              </div>
 
-              {/* Scrollable Visual Product Catalog */}
-              <div className="glass-panel" style={{ padding: '1.25rem', marginBottom: '1.5rem' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem', flexWrap: 'wrap', gap: '0.5rem' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                    <h3 style={{ fontSize: '0.95rem', fontWeight: 600, margin: 0 }}>Showroom Catalog (Click to Add)</h3>
-                    {/* View Mode Switcher: List vs Grid */}
-                    <div style={{ display: 'flex', gap: '0.2rem', border: '1px solid var(--border-color)', borderRadius: '6px', padding: '2px', background: 'rgba(0,0,0,0.2)' }}>
+                    {/* View Switcher: List vs Grid Tiles */}
+                    <div style={{ display: 'flex', gap: '0.25rem', border: '1px solid var(--border-color)', borderRadius: '10px', padding: '3px', background: 'rgba(0,0,0,0.15)' }}>
                       <button
                         type="button"
                         className={`btn ${catalogViewMode === 'list' ? 'btn-cyan' : ''}`}
-                        style={{ padding: '0.2rem 0.6rem', fontSize: '0.7rem', fontWeight: catalogViewMode === 'list' ? 700 : 500 }}
+                        style={{ padding: '0.35rem 0.85rem', fontSize: '0.78rem', borderRadius: '8px', fontWeight: catalogViewMode === 'list' ? 700 : 500 }}
                         onClick={() => setCatalogViewMode('list')}
                       >
                         ☰ List Model
@@ -2399,44 +2415,22 @@ function ExecutiveWorkspace({ products = [], activeExecutive = {}, db = {}, onUp
                       <button
                         type="button"
                         className={`btn ${catalogViewMode === 'grid' ? 'btn-cyan' : ''}`}
-                        style={{ padding: '0.2rem 0.6rem', fontSize: '0.7rem', fontWeight: catalogViewMode === 'grid' ? 700 : 500 }}
+                        style={{ padding: '0.35rem 0.85rem', fontSize: '0.78rem', borderRadius: '8px', fontWeight: catalogViewMode === 'grid' ? 700 : 500 }}
                         onClick={() => setCatalogViewMode('grid')}
                       >
                         ⊞ Grid Tiles
                       </button>
                     </div>
                   </div>
-                  
-                  <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', flexWrap: 'wrap' }}>
-                    {/* Division tabs */}
-                    <div style={{ display: 'flex', gap: '0.25rem', border: '1px solid var(--border-color)', borderRadius: '6px', padding: '2px', background: 'rgba(0,0,0,0.2)' }}>
-                      {divisionsList.map(divOpt => (
-                        <button
-                          key={divOpt}
-                          type="button"
-                          className={`btn ${selectedCatalogDivision === divOpt ? 'btn-cyan' : ''}`}
-                          style={{ 
-                            padding: '0.2rem 0.5rem', 
-                            fontSize: '0.7rem', 
-                            background: selectedCatalogDivision === divOpt ? 'var(--accent-cyan)' : 'transparent',
-                            color: selectedCatalogDivision === divOpt ? '#000' : 'var(--text-secondary)',
-                            border: 'none',
-                            borderRadius: '4px',
-                            fontWeight: selectedCatalogDivision === divOpt ? 700 : 500
-                          }}
-                          onClick={() => setSelectedCatalogDivision(divOpt)}
-                        >
-                          {divOpt === 'ALL' ? 'All' : divOpt}
-                        </button>
-                      ))}
-                    </div>
 
-                    {/* Brand filters for product selection */}
-                    <div style={{ display: 'flex', gap: '0.35rem', flexWrap: 'wrap' }}>
+                  {/* Filter Pills Bar */}
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.75rem' }}>
+                    {/* Brand Pill Buttons */}
+                    <div style={{ display: 'flex', gap: '0.4rem', flexWrap: 'wrap', alignItems: 'center' }}>
                       <button 
                         type="button" 
                         className={`btn ${selectedCatalogBrand === 'ALL' ? 'btn-cyan' : 'btn-secondary'}`}
-                        style={{ padding: '0.2rem 0.5rem', fontSize: '0.7rem' }}
+                        style={{ padding: '0.25rem 0.65rem', fontSize: '0.75rem', borderRadius: '20px', fontWeight: 600 }}
                         onClick={() => setSelectedCatalogBrand('ALL')}
                       >
                         All Brands
@@ -2446,14 +2440,38 @@ function ExecutiveWorkspace({ products = [], activeExecutive = {}, db = {}, onUp
                           key={b.name}
                           type="button"
                           className={`btn ${selectedCatalogBrand === b.name ? 'btn-cyan' : 'btn-secondary'}`}
-                          style={{ padding: '0.2rem 0.5rem', fontSize: '0.7rem' }}
+                          style={{ padding: '0.25rem 0.65rem', fontSize: '0.75rem', borderRadius: '20px', fontWeight: 600 }}
                           onClick={() => setSelectedCatalogBrand(b.name)}
                         >
                           {b.name}
                         </button>
                       ))}
                     </div>
+
+                    {/* Division Switchers */}
+                    <div style={{ display: 'flex', gap: '0.25rem', border: '1px solid var(--border-color)', borderRadius: '8px', padding: '2px', background: 'rgba(0,0,0,0.1)' }}>
+                      {divisionsList.map(divOpt => (
+                        <button
+                          key={divOpt}
+                          type="button"
+                          className={`btn ${selectedCatalogDivision === divOpt ? 'btn-cyan' : ''}`}
+                          style={{ 
+                            padding: '0.2rem 0.6rem', 
+                            fontSize: '0.75rem', 
+                            background: selectedCatalogDivision === divOpt ? 'var(--accent-cyan)' : 'transparent',
+                            color: selectedCatalogDivision === divOpt ? '#000' : 'var(--text-secondary)',
+                            border: 'none',
+                            borderRadius: '6px',
+                            fontWeight: selectedCatalogDivision === divOpt ? 700 : 500
+                          }}
+                          onClick={() => setSelectedCatalogDivision(divOpt)}
+                        >
+                          {divOpt === 'ALL' ? 'All Divisions' : divOpt}
+                        </button>
+                      ))}
+                    </div>
                   </div>
+
                 </div>
 
                 {catalogViewMode === 'list' ? (
