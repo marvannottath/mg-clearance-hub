@@ -777,9 +777,9 @@ function App() {
                     className="glass-panel" 
                     style={{ 
                       position: 'absolute', 
-                      top: '46px', 
-                      right: 0, 
-                      width: '340px', 
+                      top: '48px', 
+                      right: '0', 
+                      width: 'min(340px, 90vw)', 
                       maxHeight: '420px', 
                       overflowY: 'auto', 
                       zIndex: 99999, 

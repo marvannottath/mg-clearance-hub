@@ -4,7 +4,7 @@ import {
   QrCode, ShoppingCart, Plus, Minus, Search, 
   Send, Printer, CheckCircle, PlayCircle, XCircle, X,
   Award, TrendingUp, IndianRupee, Bell, Volume2, 
-  Wallet, History, FileText, RefreshCw, BarChart2
+  Wallet, History, FileText, RefreshCw, BarChart2, Sliders
 } from 'lucide-react';
 import { 
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell 
@@ -1793,27 +1793,7 @@ function ExecutiveWorkspace({ products = [], activeExecutive = {}, db = {}, onUp
 
       {isMobile ? (
         <div className="mobile-app-layout" style={{ paddingBottom: '80px' }}>
-          <header className="mobile-header" style={{
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-            padding: '0.75rem 1rem',
-            background: 'var(--bg-secondary)',
-            borderBottom: '1px solid var(--border-color)',
-            position: 'sticky',
-            top: 0,
-            zIndex: 1000
-          }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-              <Award size={20} color="var(--accent-cyan)" />
-              <span style={{ fontWeight: 700, fontSize: '0.95rem', letterSpacing: '-0.02em', color: 'var(--text-primary)' }}>MARBLE CLEARANCE</span>
-            </div>
-            <span className="badge badge-cyan" style={{ fontSize: '0.6rem', padding: '0.15rem 0.4rem' }}>
-              {activeExecutive.name.split(' ')[0]}
-            </span>
-          </header>
-
-          <main style={{ padding: '1rem 1rem 2rem 1rem' }}>
+          <main style={{ padding: '0.75rem 0.75rem 2rem 0.75rem' }}>
             {mobileTab === 'overview' && renderMobileOverview()}
             {mobileTab === 'catalog' && renderMobileCatalog()}
             {mobileTab === 'cart' && renderMobileCart()}
