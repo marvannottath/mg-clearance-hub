@@ -66,7 +66,7 @@ function CheckerWorkspace({ currentUser, db, onUpdateDb }) {
     reader.readAsDataURL(file);
   };
 
-  // Submit Salesforce Invoice by Checker
+  // Submit Salesforce Invoice by Checker (Deducts Main Stock immediately)
   const handleSaveSalesforceEntry = (e) => {
     e.preventDefault();
     if (!invoiceNo.trim()) {
@@ -74,23 +74,53 @@ function CheckerWorkspace({ currentUser, db, onUpdateDb }) {
       return;
     }
 
+    // Deduct stock for items in this quotation immediately upon invoice upload
+    let updatedProducts = [...(db.products || [])];
+    selectedQuote.items.forEach(item => {
+      updatedProducts = updatedProducts.map(p => {
+        if (p.id === item.productId || p.id === item.id) {
+          const currentStock = p.stock || 0;
+          return { ...p, stock: Math.max(0, currentStock - item.qty) };
+        }
+        return p;
+      });
+    });
+
     const updatedQuotations = quotations.map(q => {
       if (q.id === selectedQuote.id) {
         return {
           ...q,
           status: 'pending_verification',
-          invoiceNo: invoiceNo.trim(),
+          invoiceNo: invoiceNo.trim().toUpperCase(),
           uploadedBill: uploadedBill || q.uploadedBill || '',
           billedBy: 'checker',
           checkerName: currentUser.name || 'Showroom Checker',
-          billedDate: new Date().toISOString()
+          billedDate: new Date().toISOString(),
+          stockDeducted: true
         };
       }
       return q;
     });
 
-    onUpdateDb({ ...db, quotations: updatedQuotations });
-    showToast(`Quote ${selectedQuote.id} billed as ${invoiceNo.trim()} and submitted to Manager for Audit!`);
+    // Send Notification to Manager
+    const newNotif = {
+      id: `notif-${Date.now()}`,
+      targetRole: 'manager',
+      title: 'Invoice Submitted & Stock Deducted',
+      message: `Checker ${currentUser.name || 'Showroom Checker'} uploaded invoice #${invoiceNo.trim().toUpperCase()} for ${selectedQuote.customerName}. Stock deducted from inventory.`,
+      timestamp: new Date().toISOString(),
+      read: false,
+      type: 'info'
+    };
+
+    onUpdateDb({ 
+      ...db, 
+      products: updatedProducts, 
+      quotations: updatedQuotations,
+      notifications: [newNotif, ...(db.notifications || [])]
+    });
+
+    showToast(`Quote ${selectedQuote.id} billed as ${invoiceNo.trim().toUpperCase()} and stock deducted!`);
     setSelectedQuote(null);
     setInvoiceNo('');
     setUploadedBill('');
