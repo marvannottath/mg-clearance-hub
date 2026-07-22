@@ -7,6 +7,7 @@ import {
 function CheckerWorkspace({ currentUser, db, onUpdateDb }) {
   const [search, setSearch] = useState('');
   const [filter, setFilter] = useState('ALL'); // 'ALL' | 'UNBILLED' | 'BILLED'
+  const [checkerDisplayMode, setCheckerDisplayMode] = useState('table'); // 'table' | 'tiles'
   
   // Salesforce Upload Modal State
   const [selectedQuote, setSelectedQuote] = useState(null);
