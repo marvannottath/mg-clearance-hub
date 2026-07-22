@@ -2425,27 +2425,30 @@ function ExecutiveWorkspace({ products = [], activeExecutive = {}, db = {}, onUp
 
                   {/* Filter Pills Bar */}
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.75rem' }}>
-                    {/* Brand Pill Buttons */}
-                    <div style={{ display: 'flex', gap: '0.4rem', flexWrap: 'wrap', alignItems: 'center' }}>
+                    {/* Brand Pill Buttons with Horizontal Scroll Bar */}
+                    <div style={{ display: 'flex', gap: '0.4rem', overflowX: 'auto', paddingBottom: '0.2rem', maxWidth: '65%', scrollbarWidth: 'none' }}>
                       <button 
                         type="button" 
                         className={`btn ${selectedCatalogBrand === 'ALL' ? 'btn-cyan' : 'btn-secondary'}`}
-                        style={{ padding: '0.25rem 0.65rem', fontSize: '0.75rem', borderRadius: '20px', fontWeight: 600 }}
+                        style={{ padding: '0.25rem 0.75rem', fontSize: '0.75rem', borderRadius: '20px', fontWeight: 600, whiteSpace: 'nowrap', flexShrink: 0 }}
                         onClick={() => setSelectedCatalogBrand('ALL')}
                       >
-                        All Brands
+                        All Brands ({products.length})
                       </button>
-                      {(db.brands || []).map(b => (
-                        <button 
-                          key={b.name}
-                          type="button"
-                          className={`btn ${selectedCatalogBrand === b.name ? 'btn-cyan' : 'btn-secondary'}`}
-                          style={{ padding: '0.25rem 0.65rem', fontSize: '0.75rem', borderRadius: '20px', fontWeight: 600 }}
-                          onClick={() => setSelectedCatalogBrand(b.name)}
-                        >
-                          {b.name}
-                        </button>
-                      ))}
+                      {(db.brands || []).map(b => {
+                        const count = products.filter(p => p.brand === b.name).length;
+                        return (
+                          <button 
+                            key={b.name}
+                            type="button"
+                            className={`btn ${selectedCatalogBrand === b.name ? 'btn-cyan' : 'btn-secondary'}`}
+                            style={{ padding: '0.25rem 0.75rem', fontSize: '0.75rem', borderRadius: '20px', fontWeight: 600, whiteSpace: 'nowrap', flexShrink: 0 }}
+                            onClick={() => setSelectedCatalogBrand(b.name)}
+                          >
+                            {b.name} {count > 0 ? `(${count})` : ''}
+                          </button>
+                        );
+                      })}
                     </div>
 
                     {/* Division Switchers */}

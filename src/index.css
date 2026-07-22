@@ -982,9 +982,15 @@ h1, h2, h3, h4, h5, h6 {
 /* Executive Workspace Active Selection Split Layout */
 .workspace-layout {
   display: grid;
-  grid-template-columns: 1.2fr 0.8fr;
-  gap: 1.5rem;
+  grid-template-columns: 1fr 380px;
+  gap: 1.75rem;
   align-items: start;
+}
+
+.workspace-cart {
+  position: sticky;
+  top: 1.25rem;
+  z-index: 10;
 }
 
 .mobile-tabs-container {
