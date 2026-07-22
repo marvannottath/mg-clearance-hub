@@ -162,6 +162,25 @@ app.post('/api/reset-products', async (req, res) => {
   res.json({ success: true, message: "All products cleared successfully" });
 });
 
+// POST /api/reset-db - Factory reset system database to campaign defaults
+app.post('/api/reset-db', async (req, res) => {
+  if (pgPool) {
+    try {
+      await pgPool.query("DELETE FROM system_store WHERE id = 'mg_clearance_master'");
+    } catch (err) {
+      console.error("PostgreSQL Master Reset Error:", err.message);
+    }
+  }
+  try {
+    if (fs.existsSync(DB_FILE)) {
+      fs.unlinkSync(DB_FILE);
+    }
+  } catch (err) {
+    console.error("Disk DB Delete Error:", err.message);
+  }
+  res.json({ success: true, message: "Server-side database reset to factory defaults successfully" });
+});
+
 // Serve static frontend build in production mode
 const distPath = path.join(__dirname, 'dist');
 if (fs.existsSync(distPath)) {

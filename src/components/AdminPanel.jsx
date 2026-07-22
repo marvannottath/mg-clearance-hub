@@ -52,7 +52,7 @@ function AdminPanel({
   onBulkUpdateStock, onAddExecutive, onDeleteExecutive, onUpdateDb, db
 }) {
   const fileInputRef = useRef(null);
-  const [activeTab, setActiveTab] = useState(() => currentUser.role === 'manager' ? 'inventory' : 'executives'); // 'inventory' | 'verify' | 'quotes_audit' | 'specials' | 'brands_margins' | 'import' | 'stickers' | 'executives' | 'reports'
+  const [activeTab, setActiveTab] = useState(() => currentUser.role === 'manager' ? 'reports' : 'executives'); // 'reports' | 'inventory' | 'verify' | 'quotes_audit' | 'specials' | 'brands_margins' | 'import' | 'stickers' | 'executives'
   const divisionsList = Array.from(new Set(products.map(p => p.division || 'Bathing')));
   const [isSyncing, setIsSyncing] = useState(false);
 
@@ -657,9 +657,14 @@ function AdminPanel({
   };
 
   // Campaign DB Reset helper
-  const handleResetDatabase = () => {
+  const handleResetDatabase = async () => {
     if (confirm("WARNING: This will reset the showroom campaign database to its initial defaults. All verified invoices, quotations, and wallet ledger logs will be wiped. Proceed?")) {
-      localStorage.removeItem('mg_clearance_db');
+      safeLocalStorage.removeItem('mg_clearance_db_v7');
+      try {
+        await fetch('/api/reset-db', { method: 'POST' });
+      } catch (e) {
+        console.error("Failed to reset server database:", e);
+      }
       window.location.reload();
     }
   };
@@ -2574,7 +2579,7 @@ function AdminPanel({
         )}
 
         {/* Tab 9: System Database Backup & Reset Controls */}
-        {activeTab === 'db_tools' && (
+        {activeTab === 'db_tools' && currentUser.role === 'admin' && (
           <div className="fade-in">
             <h3 className="panel-title" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', borderBottom: '1px solid var(--border-color)', paddingBottom: '0.75rem', marginBottom: '1.25rem' }}>
               <Database size={22} color="var(--accent-amber)" />

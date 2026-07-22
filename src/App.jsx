@@ -91,6 +91,51 @@ function App() {
     };
   }, []);
 
+  // Root security wrapper to block devtools / inspect element / copy-paste source sniffing
+  useEffect(() => {
+    // 1. Disable Right-Click Context Menu
+    const preventContextMenu = (e) => e.preventDefault();
+    document.addEventListener('contextmenu', preventContextMenu);
+
+    // 2. Disable F12, Ctrl+Shift+I, Ctrl+Shift+J, Ctrl+Shift+C, Cmd+Opt+I, Cmd+Opt+J, Cmd+Opt+C, Ctrl+U
+    const preventInspectKeys = (e) => {
+      // Check for F12
+      if (e.keyCode === 123) {
+        e.preventDefault();
+        return false;
+      }
+      // Check for Ctrl+Shift+I or Cmd+Opt+I
+      if ((e.ctrlKey || e.metaKey) && e.shiftKey && (e.keyCode === 73 || e.keyCode === 74 || e.keyCode === 67)) {
+        e.preventDefault();
+        return false;
+      }
+      // Check for Ctrl+U (View Source)
+      if ((e.ctrlKey || e.metaKey) && e.keyCode === 85) {
+        e.preventDefault();
+        return false;
+      }
+    };
+    document.addEventListener('keydown', preventInspectKeys);
+
+    // 3. Clear console dynamically if outer height/width differs indicating open DevTools
+    const devtoolsProtection = setInterval(() => {
+      try {
+        const threshold = 160;
+        const widthThreshold = window.outerWidth - window.innerWidth > threshold;
+        const heightThreshold = window.outerHeight - window.innerHeight > threshold;
+        if (widthThreshold || heightThreshold) {
+          console.clear();
+        }
+      } catch (err) {}
+    }, 1000);
+
+    return () => {
+      document.removeEventListener('contextmenu', preventContextMenu);
+      document.removeEventListener('keydown', preventInspectKeys);
+      clearInterval(devtoolsProtection);
+    };
+  }, []);
+
   const [currentUser, setCurrentUser] = useState(() => {
     const session = safeLocalStorage.getItem('mg_clearance_session');
     return session ? JSON.parse(session) : null;
@@ -1082,14 +1127,15 @@ function LoginView({ onLoginSubmit }) {
         </form>
 
         <div style={{ textAlign: 'center', marginTop: '1.25rem' }}>
-          <button 
-            type="button" 
-            className="btn btn-ghost" 
-            style={{ fontSize: '0.78rem', color: 'var(--text-muted)', textDecoration: 'underline' }}
-            onClick={() => setIsForgotModalOpen(true)}
+          <a 
+            href="#"
+            style={{ fontSize: '0.78rem', color: 'var(--text-secondary)', textDecoration: 'none', transition: 'color 0.2s' }}
+            onMouseOver={(e) => e.target.style.color = 'var(--accent-cyan)'}
+            onMouseOut={(e) => e.target.style.color = 'var(--text-secondary)'}
+            onClick={(e) => { e.preventDefault(); setIsForgotModalOpen(true); }}
           >
-            🔑 Forgot Password / Reset Assistance?
-          </button>
+            Forgot Password?
+          </a>
         </div>
       </div>
 
