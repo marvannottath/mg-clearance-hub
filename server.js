@@ -76,6 +76,179 @@ function sanitizeDatabase(data) {
   return { db: data, modified };
 }
 
+const DEFAULT_PRODUCTS = [
+  {
+    id: "SA42322",
+    name: "TOTO Washlet SW Bidet Seat",
+    brand: "TOTO",
+    category: "Intelligent Toilets",
+    description: "Premium bidet toilet seat featuring Actilight UV sanitation, ewater+ misting, heated seat, and auto flush.",
+    stock: 8,
+    mrp: 350000,
+    mgPrice: 280000,
+    specialPrice: 175000,
+    landingCost: 140000,
+    division: "Bathing",
+    inStockSince: "2025-01-15",
+    imageCode: "veil"
+  },
+  {
+    id: "SA42141",
+    name: "TOTO Wall Hung Toilet CW522",
+    brand: "TOTO",
+    category: "Toilets",
+    description: "Minimalist wall-hung toilet suite with CEFIONTECT glaze and Tornado flushing system.",
+    stock: 14,
+    mrp: 95000,
+    mgPrice: 76000,
+    specialPrice: 47500,
+    landingCost: 38000,
+    division: "Bathing",
+    inStockSince: "2025-03-20",
+    imageCode: "neorest"
+  },
+  {
+    id: "FT55648",
+    name: "Almar Temptation Velvet 500 Shower",
+    brand: "ALMAR",
+    category: "Showers",
+    description: "Ceiling shower head with velvet spray, chromotherapy LED lighting, and Italian polished nickel finish.",
+    stock: 5,
+    mrp: 290000,
+    mgPrice: 232000,
+    specialPrice: 145000,
+    landingCost: 116000,
+    division: "Bathing",
+    inStockSince: "2025-02-10",
+    imageCode: "euphoria"
+  },
+  {
+    id: "FT55649",
+    name: "Almar Spa Rain Head Ceiling Flush",
+    brand: "ALMAR",
+    category: "Showers",
+    description: "Italian designed flush mount rain shower with water-saving aerator and anti-scale silicone nozzles.",
+    stock: 7,
+    mrp: 185000,
+    mgPrice: 148000,
+    specialPrice: 92500,
+    landingCost: 74000,
+    division: "Bathing",
+    inStockSince: "2025-05-18",
+    imageCode: "duschpanel"
+  },
+  {
+    id: "KAJ-1200-2400",
+    name: "Kajaria Royal Onyx Polished Slab",
+    brand: "KAJARIA",
+    category: "Tiles Slabs",
+    description: "Premium large format vitrified slab with high-definition onyx marble printing, mirror gloss finish.",
+    stock: 60,
+    mrp: 14000,
+    mgPrice: 9800,
+    specialPrice: 8400,
+    landingCost: 6720,
+    division: "Tiles",
+    size: "1200x2400 mm",
+    finishing: "High Gloss",
+    location: "Slab Gallery Box 3",
+    inStockSince: "2025-06-02",
+    imageCode: "tileslab"
+  },
+  {
+    id: "MONO-MUR-GRI",
+    name: "Monolith Mura Grigio Terrazzo Slab",
+    brand: "MONOLITH",
+    category: "Slabs",
+    description: "Engineered terrazzo porcelain slab for feature walls, matte finish, grey stone aggregate pattern.",
+    stock: 22,
+    mrp: 16500,
+    mgPrice: 11550,
+    specialPrice: 9900,
+    landingCost: 7920,
+    division: "Tiles",
+    size: "800x2400 mm",
+    finishing: "Satin Matte",
+    location: "Rack B-8",
+    inStockSince: "2025-04-10",
+    imageCode: "terrazzoslab"
+  },
+  {
+    id: "COLOR-OCEAN",
+    name: "Colortile Ocean Blue Polish Tiles",
+    brand: "COLORTILE",
+    category: "Floor Tiles",
+    description: "Vibrant ocean blue glazed vitrified tile with deep wave vein details, scratch-resistant nanotechnology coating.",
+    stock: 120,
+    mrp: 280,
+    mgPrice: 196,
+    specialPrice: 168,
+    landingCost: 134,
+    division: "Tiles",
+    size: "600x600 mm",
+    finishing: "Super Gloss",
+    location: "Pallet T-12",
+    inStockSince: "2025-10-05",
+    imageCode: "oceanblue"
+  },
+  {
+    id: "LANGRACE-GLAM",
+    name: "Langrace Glamour Gold Basin Mixer",
+    brand: "LANGRACE",
+    category: "Faucets & Mixers",
+    description: "Luxury deck-mounted brass basin mixer with physical vapor deposition (PVD) gold finish, water-saving aerator.",
+    stock: 18,
+    mrp: 45000,
+    mgPrice: 36000,
+    specialPrice: 22500,
+    landingCost: 18000,
+    division: "Bathing",
+    inStockSince: "2026-01-20",
+    imageCode: "royaloak"
+  }
+];
+
+const DEFAULT_EXECUTIVES = [
+  { id: "exec-001", name: "Rajesh Kumar", email: "rajesh.k@marblegallery.com", target: 8000000, cleared: 0, salesCount: 0, username: "rajesh", password: "rajesh123", walletBalance: 0, walletLedger: [] },
+  { id: "exec-002", name: "Anjali Menon", email: "anjali.m@marblegallery.com", target: 8000000, cleared: 0, salesCount: 0, username: "anjali", password: "anjali123", walletBalance: 0, walletLedger: [] },
+  { id: "exec-003", name: "Vikram Sethi", email: "vikram.s@marblegallery.com", target: 8000000, cleared: 0, salesCount: 0, username: "vikram", password: "vikram123", walletBalance: 0, walletLedger: [] },
+  { id: "exec-004", name: "Sandeep Pillai", email: "sandeep.p@marblegallery.com", target: 6000000, cleared: 0, salesCount: 0, username: "sandeep", password: "sandeep123", walletBalance: 0, walletLedger: [] }
+];
+
+const DEFAULT_BRANDS = [
+  { name: "TOTO", maxMargin: 55, customerDiscount: 50, executiveIncentive: 5 },
+  { name: "ALMAR", maxMargin: 55, customerDiscount: 50, executiveIncentive: 5 },
+  { name: "REGINOX", maxMargin: 50, customerDiscount: 45, executiveIncentive: 4 },
+  { name: "FRANKE", maxMargin: 50, customerDiscount: 45, executiveIncentive: 4 },
+  { name: "KAJARIA", maxMargin: 45, customerDiscount: 40, executiveIncentive: 3 },
+  { name: "MONOLITH", maxMargin: 45, customerDiscount: 40, executiveIncentive: 3 },
+  { name: "COLORTILE", maxMargin: 45, customerDiscount: 40, executiveIncentive: 3 },
+  { name: "LANGRACE", maxMargin: 45, customerDiscount: 40, executiveIncentive: 3 }
+];
+
+const DEFAULT_NOTIFICATIONS = [
+  {
+    id: "notif-001",
+    targetRole: "executive",
+    targetUserId: "exec-001",
+    title: "Incentive Credited",
+    message: "Invoice #MG-INV-8831 verified by Checker. ₹1,250 credited to your wallet.",
+    timestamp: new Date().toISOString(),
+    read: false,
+    type: "success"
+  }
+];
+
+const SEED_DB = {
+  products: DEFAULT_PRODUCTS,
+  executives: DEFAULT_EXECUTIVES,
+  salesLedger: [],
+  quotations: [],
+  brands: DEFAULT_BRANDS,
+  notifications: DEFAULT_NOTIFICATIONS,
+  initialTargetValue: 4627680
+};
+
 // Helper to read database
 async function readDb() {
   if (pgPool) {
@@ -102,11 +275,15 @@ async function readDb() {
         fs.writeFileSync(DB_FILE, JSON.stringify(cleanDb, null, 2), 'utf8');
       }
       return cleanDb;
+    } else {
+      // Seed Database file if missing
+      await saveDb(SEED_DB);
+      return SEED_DB;
     }
   } catch (err) {
     console.error("Error reading database file:", err);
   }
-  return null;
+  return SEED_DB;
 }
 
 // Helper to save database

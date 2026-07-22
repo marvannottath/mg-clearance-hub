@@ -1245,21 +1245,23 @@ function AdminPanel({
                   <Plus size={16} />
                   Add Product
                 </button>
-                <button 
-                  className="btn btn-danger" 
-                  onClick={async () => {
-                    if (confirm("⚠️ ARE YOU SURE YOU WANT TO CLEAR ALL SAMPLE PRODUCTS?\nThis will erase all demo items so you can upload your real showroom CSV inventory sheet from scratch.")) {
-                      const updatedDb = { ...db, products: [] };
-                      if (onUpdateDb) onUpdateDb(updatedDb);
-                      try { await fetch('/api/reset-products', { method: 'POST' }); } catch(e){}
-                      showToast("All sample products erased! Ready for real CSV import.");
-                    }
-                  }}
-                  style={{ border: 'none', background: 'rgba(239,68,68,0.15)', color: 'var(--accent-rose)' }}
-                >
-                  <Trash2 size={14} />
-                  Clear All Products
-                </button>
+                {currentUser.role === 'admin' && (
+                  <button 
+                    className="btn btn-danger" 
+                    onClick={async () => {
+                      if (confirm("⚠️ ARE YOU SURE YOU WANT TO CLEAR ALL SAMPLE PRODUCTS?\nThis will erase all demo items so you can upload your real showroom CSV inventory sheet from scratch.")) {
+                        const updatedDb = { ...db, products: [] };
+                        if (onUpdateDb) onUpdateDb(updatedDb);
+                        try { await fetch('/api/reset-products', { method: 'POST' }); } catch(e){}
+                        showToast("All sample products erased! Ready for real CSV import.");
+                      }
+                    }}
+                    style={{ border: 'none', background: 'rgba(239,68,68,0.15)', color: 'var(--accent-rose)' }}
+                  >
+                    <Trash2 size={14} />
+                    Clear All Products
+                  </button>
+                )}
               </div>
             </div>
             {/* Bulk Liquidation Action for Filtered Aging Stock */}
