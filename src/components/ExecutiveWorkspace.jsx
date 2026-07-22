@@ -11,6 +11,41 @@ import {
 } from 'recharts';
 import { isWeeklySpecialActive } from '../data/mockData';
 
+// Fail-safe wrapper to prevent security exceptions in Brave, Safari Private, and chrome Incognito mode
+const safeLocalStorage = (() => {
+  const memoryStore = {};
+  return {
+    getItem: (key) => {
+      try {
+        return localStorage.getItem(key);
+      } catch (e) {
+        return memoryStore[key] || null;
+      }
+    },
+    setItem: (key, value) => {
+      try {
+        localStorage.setItem(key, value);
+      } catch (e) {
+        memoryStore[key] = String(value);
+      }
+    },
+    removeItem: (key) => {
+      try {
+        localStorage.removeItem(key);
+      } catch (e) {
+        delete memoryStore[key];
+      }
+    },
+    clear: () => {
+      try {
+        localStorage.clear();
+      } catch (e) {
+        for (const k in memoryStore) delete memoryStore[k];
+      }
+    }
+  };
+})();
+
 function ExecutiveWorkspace({ products, activeExecutive, db, onUpdateDb }) {
   const divisionsList = ['ALL', ...Array.from(new Set(products.map(p => p.division || 'Bathing')))];
   const [isSessionActive, setIsSessionActive] = useState(false);
@@ -66,9 +101,9 @@ function ExecutiveWorkspace({ products, activeExecutive, db, onUpdateDb }) {
 
   // Handle redirect scanned product ID auto-selection
   useEffect(() => {
-    const scanId = localStorage.getItem('mg_redirect_scan_id');
+    const scanId = safeLocalStorage.getItem('mg_redirect_scan_id');
     if (scanId && products.length > 0) {
-      localStorage.removeItem('mg_redirect_scan_id');
+      safeLocalStorage.removeItem('mg_redirect_scan_id');
       const targetProduct = products.find(p => p.id === scanId);
       if (targetProduct) {
         if (targetProduct.stock > 0) {
@@ -215,7 +250,7 @@ function ExecutiveWorkspace({ products, activeExecutive, db, onUpdateDb }) {
       
       let sent = {};
       try {
-        sent = JSON.parse(localStorage.getItem('mg_sent_notifications') || '{}');
+        sent = JSON.parse(safeLocalStorage.getItem('mg_sent_notifications') || '{}');
       } catch (e) {
         sent = {};
       }
@@ -237,7 +272,7 @@ function ExecutiveWorkspace({ products, activeExecutive, db, onUpdateDb }) {
       if (triggeredType) {
         triggerNotification(triggeredType);
         sent[triggeredType] = todayStr;
-        localStorage.setItem('mg_sent_notifications', JSON.stringify(sent));
+        safeLocalStorage.setItem('mg_sent_notifications', JSON.stringify(sent));
       }
     };
 

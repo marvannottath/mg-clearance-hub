@@ -271,8 +271,43 @@ export const INITIAL_NOTIFICATIONS = [
 
 const LOCAL_STORAGE_KEY = "mg_clearance_db_v7";
 
+// Fail-safe wrapper to prevent security exceptions in Brave, Safari Private, and chrome Incognito mode
+export const safeLocalStorage = (() => {
+  const memoryStore = {};
+  return {
+    getItem: (key) => {
+      try {
+        return localStorage.getItem(key);
+      } catch (e) {
+        return memoryStore[key] || null;
+      }
+    },
+    setItem: (key, value) => {
+      try {
+        localStorage.setItem(key, value);
+      } catch (e) {
+        memoryStore[key] = String(value);
+      }
+    },
+    removeItem: (key) => {
+      try {
+        localStorage.removeItem(key);
+      } catch (e) {
+        delete memoryStore[key];
+      }
+    },
+    clear: () => {
+      try {
+        localStorage.clear();
+      } catch (e) {
+        for (const k in memoryStore) delete memoryStore[k];
+      }
+    }
+  };
+})();
+
 export function loadDatabase() {
-  const data = localStorage.getItem(LOCAL_STORAGE_KEY);
+  const data = safeLocalStorage.getItem(LOCAL_STORAGE_KEY);
   let db = null;
   if (data) {
     try {
@@ -461,7 +496,7 @@ export function loadDatabase() {
 }
 
 export function saveDatabase(db) {
-  localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(db));
+  safeLocalStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(db));
 }
 
 export function calculateStockValue(products) {
@@ -485,24 +520,24 @@ export function isWeeklySpecialActive(product) {
 
 // Default URL points to your public Salesforce Sandbox guest Site endpoint containing live SAP data
 export function getSapApiUrl() {
-  return localStorage.getItem('mg_sap_api_url') || "https://momentum-computing-8775--sbox5.sandbox.my.salesforce-sites.com/services/apexrest/ClearanceStockAPI";
+  return safeLocalStorage.getItem('mg_sap_api_url') || "https://momentum-computing-8775--sbox5.sandbox.my.salesforce-sites.com/services/apexrest/ClearanceStockAPI";
 }
 
 // Salesforce Sandbox Connection Settings
 const SF_LOGIN_URL = "https://momentum-computing-8775--sbox5.sandbox.my.salesforce.com";
 
 export function getSfClientId() {
-  return localStorage.getItem('mg_sf_client_id') || "3MVG9feZg_c.1018.xWzL5Kk2jL_r9_sbox5_OAuth_Connected_App_Client_Id";
+  return safeLocalStorage.getItem('mg_sf_client_id') || "3MVG9feZg_c.1018.xWzL5Kk2jL_r9_sbox5_OAuth_Connected_App_Client_Id";
 }
 
 export function getSfClientSecret() {
-  return localStorage.getItem('mg_sf_client_secret') || "2A9D57C58BD934E2F1E4EAEE76E4B1F3";
+  return safeLocalStorage.getItem('mg_sf_client_secret') || "2A9D57C58BD934E2F1E4EAEE76E4B1F3";
 }
 
 // Obtain Salesforce OAuth Token dynamically using Client Credentials Flow or fallback session
 export async function getSalesforceAccessToken() {
-  const cachedToken = localStorage.getItem('mg_sf_access_token');
-  const tokenExpiry = localStorage.getItem('mg_sf_token_expiry');
+  const cachedToken = safeLocalStorage.getItem('mg_sf_access_token');
+  const tokenExpiry = safeLocalStorage.getItem('mg_sf_token_expiry');
   
   if (cachedToken && tokenExpiry && Date.now() < parseInt(tokenExpiry)) {
     return cachedToken;
@@ -518,9 +553,9 @@ export async function getSalesforceAccessToken() {
     if (response.ok) {
       const data = await response.json();
       if (data.access_token) {
-        localStorage.setItem('mg_sf_access_token', data.access_token);
+        safeLocalStorage.setItem('mg_sf_access_token', data.access_token);
         // Expire in 1 hour
-        localStorage.setItem('mg_sf_token_expiry', (Date.now() + 3500000).toString());
+        safeLocalStorage.setItem('mg_sf_token_expiry', (Date.now() + 3500000).toString());
         return data.access_token;
       }
     }

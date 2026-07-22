@@ -6,9 +6,44 @@ import AdminPanel from './components/AdminPanel';
 import CheckerWorkspace from './components/CheckerWorkspace';
 import { Layers, Sun, Moon, LogOut, ShieldAlert, KeyRound, User, Bell, CheckCheck, Info, AlertTriangle, CheckCircle2, Download, Smartphone } from 'lucide-react';
 
+// Fail-safe wrapper to prevent security exceptions in Brave, Safari Private, and chrome Incognito mode
+export const safeLocalStorage = (() => {
+  const memoryStore = {};
+  return {
+    getItem: (key) => {
+      try {
+        return localStorage.getItem(key);
+      } catch (e) {
+        return memoryStore[key] || null;
+      }
+    },
+    setItem: (key, value) => {
+      try {
+        localStorage.setItem(key, value);
+      } catch (e) {
+        memoryStore[key] = String(value);
+      }
+    },
+    removeItem: (key) => {
+      try {
+        localStorage.removeItem(key);
+      } catch (e) {
+        delete memoryStore[key];
+      }
+    },
+    clear: () => {
+      try {
+        localStorage.clear();
+      } catch (e) {
+        for (const k in memoryStore) delete memoryStore[k];
+      }
+    }
+  };
+})();
+
 function App() {
   const [db, setDb] = useState(() => loadDatabase());
-  const [theme, setTheme] = useState(() => localStorage.getItem('mg_clearance_theme') || 'dark');
+  const [theme, setTheme] = useState(() => safeLocalStorage.getItem('mg_clearance_theme') || 'dark');
   
   // Clean HTML5 Path Routing (No '#' in URL)
   const getNormalizedRoute = () => {
@@ -42,7 +77,7 @@ function App() {
   }, []);
 
   const [currentUser, setCurrentUser] = useState(() => {
-    const session = localStorage.getItem('mg_clearance_session');
+    const session = safeLocalStorage.getItem('mg_clearance_session');
     return session ? JSON.parse(session) : null;
   });
 
@@ -82,7 +117,7 @@ function App() {
   // Apply theme changes
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', theme);
-    localStorage.setItem('mg_clearance_theme', theme);
+    safeLocalStorage.setItem('mg_clearance_theme', theme);
   }, [theme]);
 
   const lastLocalUpdateRef = React.useRef(0);
@@ -126,7 +161,7 @@ function App() {
     // Detect QR Scan link route
     if (routePath.startsWith('/scan/') || routePath.startsWith('#/scan/')) {
       const scannedId = routePath.replace('/scan/', '').replace('#/scan/', '');
-      localStorage.setItem('mg_redirect_scan_id', scannedId);
+      safeLocalStorage.setItem('mg_redirect_scan_id', scannedId);
       if (!currentUser) {
         navigateTo('/login');
       } else {
@@ -164,41 +199,41 @@ function App() {
     user = user.trim().toLowerCase();
 
     // 1. Check Managing Director (MD) Credentials
-    const storedMdPass = localStorage.getItem('mg_md_password') || 'md123';
+    const storedMdPass = safeLocalStorage.getItem('mg_md_password') || 'md123';
     if ((user === 'md' || user === 'director' || user === 'managingdirector') && (pass === storedMdPass || pass === 'md123' || pass === 'md')) {
       const mdSession = { name: "Managing Director", role: "md", username: "md", email: "md@marblegallery.com" };
       setCurrentUser(mdSession);
-      localStorage.setItem('mg_clearance_session', JSON.stringify(mdSession));
+      safeLocalStorage.setItem('mg_clearance_session', JSON.stringify(mdSession));
       navigateTo('/md');
       return { success: true };
     }
 
     // 2. Check Showroom Manager Credentials
-    const storedMgrPass = localStorage.getItem('mg_manager_password') || 'manager123';
+    const storedMgrPass = safeLocalStorage.getItem('mg_manager_password') || 'manager123';
     if ((user === 'manager' || user === 'showroom') && (pass === storedMgrPass || pass === 'manager123' || pass === 'manager')) {
       const managerSession = { name: "Showroom Manager", role: "manager", username: "manager", email: "manager@marblegallery.com" };
       setCurrentUser(managerSession);
-      localStorage.setItem('mg_clearance_session', JSON.stringify(managerSession));
+      safeLocalStorage.setItem('mg_clearance_session', JSON.stringify(managerSession));
       navigateTo('/manager');
       return { success: true };
     }
 
     // 3. Check Checker Credentials
-    const storedCheckerPass = localStorage.getItem('mg_checker_password') || 'checker123';
+    const storedCheckerPass = safeLocalStorage.getItem('mg_checker_password') || 'checker123';
     if ((user === 'checker' || user === 'billing') && (pass === storedCheckerPass || pass === 'checker123' || pass === 'checker')) {
       const checkerSession = { name: "Salesforce Billing Checker", role: "checker", username: "checker", email: "checker@marblegallery.com" };
       setCurrentUser(checkerSession);
-      localStorage.setItem('mg_clearance_session', JSON.stringify(checkerSession));
+      safeLocalStorage.setItem('mg_clearance_session', JSON.stringify(checkerSession));
       navigateTo('/checker');
       return { success: true };
     }
 
     // 4. Check Admin Credentials
-    const storedAdminPass = localStorage.getItem('mg_admin_password') || 'admin123';
+    const storedAdminPass = safeLocalStorage.getItem('mg_admin_password') || 'admin123';
     if (user === 'admin' && (pass === storedAdminPass || pass === 'admin123')) {
       const adminSession = { name: "System Admin", role: "admin", username: "admin", email: "admin@marblegallery.com" };
       setCurrentUser(adminSession);
-      localStorage.setItem('mg_clearance_session', JSON.stringify(adminSession));
+      safeLocalStorage.setItem('mg_clearance_session', JSON.stringify(adminSession));
       navigateTo('/admin');
       return { success: true };
     }
@@ -218,7 +253,7 @@ function App() {
         execId: matchedExec.id 
       };
       setCurrentUser(execSession);
-      localStorage.setItem('mg_clearance_session', JSON.stringify(execSession));
+      safeLocalStorage.setItem('mg_clearance_session', JSON.stringify(execSession));
       navigateTo('/executive');
       return { success: true };
     }
@@ -228,8 +263,10 @@ function App() {
 
   // Secure Logout handler
   const handleLogout = () => {
-    localStorage.removeItem('mg_clearance_session');
-    sessionStorage.clear();
+    safeLocalStorage.removeItem('mg_clearance_session');
+    try {
+      sessionStorage.clear();
+    } catch (e) {}
     setCurrentUser(null);
     setIsProfileMenuOpen(false);
     setIsNotifDrawerOpen(false);

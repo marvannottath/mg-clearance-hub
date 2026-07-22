@@ -8,6 +8,41 @@ import {
 import MDDashboard from './MDDashboard';
 import { isWeeklySpecialActive, getLocalDateString, syncProductsFromSAP, getProductStockAgeMonths, getSapApiUrl, getSfClientId, getSfClientSecret } from '../data/mockData';
 
+// Fail-safe wrapper to prevent security exceptions in Brave, Safari Private, and chrome Incognito mode
+const safeLocalStorage = (() => {
+  const memoryStore = {};
+  return {
+    getItem: (key) => {
+      try {
+        return localStorage.getItem(key);
+      } catch (e) {
+        return memoryStore[key] || null;
+      }
+    },
+    setItem: (key, value) => {
+      try {
+        localStorage.setItem(key, value);
+      } catch (e) {
+        memoryStore[key] = String(value);
+      }
+    },
+    removeItem: (key) => {
+      try {
+        localStorage.removeItem(key);
+      } catch (e) {
+        delete memoryStore[key];
+      }
+    },
+    clear: () => {
+      try {
+        localStorage.clear();
+      } catch (e) {
+        for (const k in memoryStore) delete memoryStore[k];
+      }
+    }
+  };
+})();
+
 function AdminPanel({ 
   currentUser = { role: 'admin' },
   products, executives, salesLedger = [], brands = [], quotations = [],
@@ -80,33 +115,33 @@ function AdminPanel({
 
   // Salesforce API & OAuth configuration states
   const [sapApiUrl, setSapApiUrl] = useState(() => getSapApiUrl());
-  const [sfAccessToken, setSfAccessToken] = useState(() => localStorage.getItem('mg_sf_access_token') || '');
+  const [sfAccessToken, setSfAccessToken] = useState(() => safeLocalStorage.getItem('mg_sf_access_token') || '');
   const [sfClientId, setSfClientId] = useState(() => getSfClientId());
   const [sfClientSecret, setSfClientSecret] = useState(() => getSfClientSecret());
 
   // Main Admin password state
-  const [adminPassword, setAdminPassword] = useState(() => localStorage.getItem('mg_admin_password') || 'admin123');
+  const [adminPassword, setAdminPassword] = useState(() => safeLocalStorage.getItem('mg_admin_password') || 'admin123');
   const [adminPassSuccess, setAdminPassSuccess] = useState('');
 
   const handleUpdateAdminPassword = (e) => {
     e.preventDefault();
     if (!adminPassword.trim()) return;
-    localStorage.setItem('mg_admin_password', adminPassword.trim());
+    safeLocalStorage.setItem('mg_admin_password', adminPassword.trim());
     setAdminPassSuccess("Main Admin password updated successfully!");
     setTimeout(() => setAdminPassSuccess(''), 4000);
   };
 
   const handleSaveSfCredentials = () => {
-    localStorage.setItem('mg_sap_api_url', sapApiUrl.trim());
-    localStorage.setItem('mg_sf_access_token', sfAccessToken.trim());
-    localStorage.setItem('mg_sf_client_id', sfClientId.trim());
-    localStorage.setItem('mg_sf_client_secret', sfClientSecret.trim());
+    safeLocalStorage.setItem('mg_sap_api_url', sapApiUrl.trim());
+    safeLocalStorage.setItem('mg_sf_access_token', sfAccessToken.trim());
+    safeLocalStorage.setItem('mg_sf_client_id', sfClientId.trim());
+    safeLocalStorage.setItem('mg_sf_client_secret', sfClientSecret.trim());
     
     // Wipes cached token expiry so it re-authenticates if Client ID/Secret changed
     if (sfClientId.trim()) {
-      localStorage.removeItem('mg_sf_token_expiry');
+      safeLocalStorage.removeItem('mg_sf_token_expiry');
     } else {
-      localStorage.setItem('mg_sf_token_expiry', (Date.now() + 3500000).toString());
+      safeLocalStorage.setItem('mg_sf_token_expiry', (Date.now() + 3500000).toString());
     }
     
     showToast("Salesforce API & OAuth configurations saved!");
