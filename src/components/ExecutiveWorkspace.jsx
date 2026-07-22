@@ -113,7 +113,7 @@ function ExecutiveWorkspace({ products, activeExecutive, db, onUpdateDb }) {
           addProductToCartDirect(targetProduct);
           showToast(`🔍 Scanned QR: ${targetProduct.name} added to Quote!`);
         } else {
-          alert(`${targetProduct.name} is currently out of clearance stock.`);
+          showToast(`${targetProduct.name} is currently out of clearance stock.`);
         }
       }
     }
@@ -317,7 +317,7 @@ function ExecutiveWorkspace({ products, activeExecutive, db, onUpdateDb }) {
   // Add to cart directly (qty +1)
   const addProductToCartDirect = (product) => {
     if (product.stock === 0) {
-      alert(`${product.name} is currently out of clearance stock.`);
+      showToast(`${product.name} is currently out of clearance stock.`);
       return;
     }
 
@@ -327,7 +327,7 @@ function ExecutiveWorkspace({ products, activeExecutive, db, onUpdateDb }) {
       if (existingItem) {
         const combinedQty = existingItem.qty + 1;
         if (combinedQty > product.stock) {
-          alert(`Insufficient stock. Only ${product.stock} units available in showroom clearance.`);
+          showToast(`Insufficient stock. Only ${product.stock} units available in showroom clearance.`);
           success = false;
           return prevCart;
         }
@@ -348,7 +348,7 @@ function ExecutiveWorkspace({ products, activeExecutive, db, onUpdateDb }) {
   const updateCartQty = (productId, newQty, maxStock) => {
     const qty = parseInt(newQty) || 0;
     if (qty > maxStock) {
-      alert(`Insufficient stock. Only ${maxStock} units available.`);
+      showToast(`Insufficient stock. Only ${maxStock} units available.`);
       return;
     }
     if (qty <= 0) {
@@ -410,7 +410,7 @@ function ExecutiveWorkspace({ products, activeExecutive, db, onUpdateDb }) {
                   html5QrCode.stop().catch(() => {});
                 } catch (e) {}
               } else {
-                alert(`Scanned code: "${decodedText}". Item SKU not found in clearance catalog.`);
+                showToast(`Scanned code: "${decodedText}". Item SKU not found in clearance catalog.`);
               }
             },
             (errorMessage) => {
@@ -456,7 +456,7 @@ function ExecutiveWorkspace({ products, activeExecutive, db, onUpdateDb }) {
   // Generate WhatsApp clean short URL link
   const generateWhatsAppLink = () => {
     if (!customerMobile) {
-      alert("Please enter the customer's WhatsApp/Mobile number first.");
+      showToast("Please enter the customer's WhatsApp/Mobile number first.");
       return;
     }
 
@@ -468,6 +468,7 @@ function ExecutiveWorkspace({ products, activeExecutive, db, onUpdateDb }) {
       customerName: customerName.trim() || 'Walk-in Showroom Client',
       customerMobile: customerMobile || 'N/A',
       customerAddress: customerAddress || '',
+      customerLocation: (customerAddress || '').trim() || 'N/A',
       executiveId: activeExecutive.id,
       executiveName: activeExecutive.name,
       items: cart.map(item => ({
@@ -703,7 +704,7 @@ function ExecutiveWorkspace({ products, activeExecutive, db, onUpdateDb }) {
   const handleInvoiceSubmit = (e) => {
     e.preventDefault();
     if (!invoiceNumber.trim() || !receiptFile) {
-      alert("Please provide the Salesforce Invoice number and receipt file.");
+      showToast("Please provide the Salesforce Invoice number and receipt file.");
       return;
     }
 
@@ -760,7 +761,7 @@ function ExecutiveWorkspace({ products, activeExecutive, db, onUpdateDb }) {
   const handleRequestPayout = async () => {
     const currentBalance = activeExecutive.walletBalance || 0;
     if (currentBalance <= 0) {
-      alert("No cleared earnings available in your wallet to disburse.");
+      showToast("No cleared earnings available in your wallet to disburse.");
       return;
     }
 
@@ -1669,6 +1670,9 @@ function ExecutiveWorkspace({ products, activeExecutive, db, onUpdateDb }) {
                 <div><strong>Quote ID:</strong> {selectedQuoteDetail.id}</div>
                 <div><strong>Client Name:</strong> {selectedQuoteDetail.customerName}</div>
                 <div><strong>Mobile:</strong> {selectedQuoteDetail.customerMobile}</div>
+                {(selectedQuoteDetail.customerLocation || selectedQuoteDetail.customerAddress) && (
+                  <div><strong>Location:</strong> {selectedQuoteDetail.customerLocation || selectedQuoteDetail.customerAddress}</div>
+                )}
                 <div><strong>Date:</strong> {new Date(selectedQuoteDetail.date).toLocaleDateString('en-IN')}</div>
                 <div><strong>Status:</strong> <span style={{ fontWeight: 600, color: 'var(--accent-cyan)' }}>{selectedQuoteDetail.status.replace('_', ' ').toUpperCase()}</span></div>
                 {selectedQuoteDetail.invoiceNo && <div><strong>SAP Invoice:</strong> {selectedQuoteDetail.invoiceNo}</div>}

@@ -146,6 +146,7 @@ function App() {
   const [forgotSuccess, setForgotSuccess] = useState(false);
 
   const [isNotifDrawerOpen, setIsNotifDrawerOpen] = useState(false);
+  const [isInstallModalOpen, setIsInstallModalOpen] = useState(false);
 
   // Click outside to close notification drawer
   useEffect(() => {
@@ -597,7 +598,7 @@ function App() {
         setDeferredPrompt(null);
       });
     } else {
-      alert("📲 To Install MG Clearance App on your Phone:\n\n• Android Chrome: Tap 3 dots (⋮) menu at top right -> Tap 'Install app' or 'Add to Home Screen'.\n• iPhone Safari: Tap Share button (bottom bar) -> Scroll down and tap 'Add to Home Screen'.");
+      setIsInstallModalOpen(true);
     }
   };
 
@@ -1296,6 +1297,36 @@ function LoginView({ onLoginSubmit }) {
             <div style={{ textAlign: 'right' }}>
               <button className="btn btn-primary" onClick={() => setIsForgotModalOpen(false)}>
                 Understood / Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Custom PWA Installation Guide Glass Modal */}
+      {isInstallModalOpen && (
+        <div 
+          style={{ position: 'fixed', inset: 0, zIndex: 99999, background: 'rgba(0,0,0,0.8)', backdropFilter: 'blur(8px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem' }}
+          onClick={(e) => { if (e.target === e.currentTarget) setIsInstallModalOpen(false); }}
+        >
+          <div className="glass-panel fade-in" style={{ width: '100%', maxWidth: '480px', padding: '1.75rem', borderRadius: '16px', background: 'var(--bg-card)', border: '1px solid var(--accent-cyan)', boxShadow: '0 20px 50px rgba(56, 189, 248, 0.25)' }}>
+            <h3 style={{ fontSize: '1.15rem', fontWeight: 800, color: 'var(--accent-cyan)', marginBottom: '0.75rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              📱 Install MG Clearance App
+            </h3>
+            <div style={{ fontSize: '0.85rem', color: 'var(--text-primary)', lineHeight: '1.6', marginBottom: '1.25rem' }}>
+              <p style={{ fontWeight: 700, color: 'var(--accent-amber)', marginBottom: '0.5rem' }}>For Android Chrome Users:</p>
+              <div style={{ background: 'rgba(255,255,255,0.03)', padding: '0.6rem 0.8rem', borderRadius: '6px', marginBottom: '0.75rem', fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
+                Tap 3 dots (⋮) menu at top right ➔ Tap <strong>'Install app'</strong> or <strong>'Add to Home Screen'</strong>.
+              </div>
+
+              <p style={{ fontWeight: 700, color: 'var(--accent-cyan)', marginBottom: '0.5rem' }}>For iPhone Safari Users:</p>
+              <div style={{ background: 'rgba(255,255,255,0.03)', padding: '0.6rem 0.8rem', borderRadius: '6px', fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
+                Tap Share button (bottom bar) ➔ Scroll down and tap <strong>'Add to Home Screen'</strong>.
+              </div>
+            </div>
+            <div style={{ textAlign: 'right' }}>
+              <button className="btn btn-cyan" onClick={() => setIsInstallModalOpen(false)}>
+                Got it / Close
               </button>
             </div>
           </div>

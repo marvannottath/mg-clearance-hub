@@ -153,7 +153,7 @@ function AdminPanel({
     const discPct = parseFloat(bulkDiscount);
     const incPct = parseFloat(bulkIncentive);
     if (isNaN(discPct) || discPct < 0 || discPct > 100 || isNaN(incPct) || incPct < 0 || incPct > 100) {
-      alert("Please provide valid percentage values between 0 and 100.");
+      showToast("Please provide valid percentage values between 0 and 100.");
       return;
     }
 
@@ -406,7 +406,7 @@ function AdminPanel({
   const handleExecSubmit = (e) => {
     e.preventDefault();
     if (!execName || !execEmail || !execUsername || !execPassword) {
-      alert("All fields are required.");
+      showToast("All fields are required.");
       return;
     }
     onAddExecutive({
@@ -423,7 +423,7 @@ function AdminPanel({
     setExecUsername('');
     setExecPassword('');
     setExecTarget(8000000);
-    alert(`Account created successfully for ${execName}!`);
+    showToast(`Account created successfully for ${execName}!`);
   };
 
   // Approve Salesforce Invoice Verification
@@ -519,12 +519,24 @@ function AdminPanel({
       notifications: [newNotif, ...(db.notifications || [])]
     });
 
-    alert(`Quotation verified! ${formatRupee(quote.incentiveAmount)} credited to executive wallet.`);
+    showToast(`Quotation verified! ${formatRupee(quote.incentiveAmount)} credited to executive wallet.`);
+    setSelectedInvoiceDetail(null);
   };
 
-  // Reject Salesforce Invoice (Restores Stock back to clearance inventory)
+  // State for Custom Rejection Modal
+  const [rejectionModalQuote, setRejectionModalQuote] = useState(null);
+  const [rejectionReasonText, setRejectionReasonText] = useState('');
+
+  // Reject Salesforce Invoice (Opens custom rejection modal)
   const handleRejectInvoice = (quote) => {
-    const reason = prompt("Enter reason for rejecting verification:") || "Rejection details not specified by Manager";
+    setRejectionModalQuote(quote);
+    setRejectionReasonText('');
+  };
+
+  const confirmRejection = () => {
+    if (!rejectionModalQuote) return;
+    const quote = rejectionModalQuote;
+    const reason = rejectionReasonText.trim() || "Rejection details not specified by Manager";
     
     let updatedProducts = [...(db.products || [])];
     if (quote.stockDeducted) {
@@ -563,7 +575,9 @@ function AdminPanel({
       quotations: updatedQuotations,
       notifications: [newNotif, ...(db.notifications || [])]
     });
-    alert("Verification rejected. Stock released back to clearance inventory & Executive notified.");
+    showToast("Verification rejected. Stock released back to clearance inventory & Executive notified.");
+    setRejectionModalQuote(null);
+    setSelectedInvoiceDetail(null);
   };
 
   // Brand Margin Setup updates
@@ -596,7 +610,7 @@ function AdminPanel({
   const handleAddWeeklySpecial = (e) => {
     e.preventDefault();
     if (!specSelectedId) {
-      alert("Please select a product first.");
+      showToast("Please select a product first.");
       return;
     }
 
@@ -643,7 +657,7 @@ function AdminPanel({
   const handleAdminPayout = async (exec) => {
     const balance = exec.walletBalance || 0;
     if (balance <= 0) {
-      alert("No balance to pay out.");
+      showToast("No balance to pay out.");
       return;
     }
 
@@ -3164,6 +3178,41 @@ function AdminPanel({
               <button className="btn btn-secondary" onClick={() => setSelectedInvoiceDetail(null)}>Close Preview</button>
               <button className="btn btn-danger" style={{ border: 'none' }} onClick={() => { setSelectedInvoiceDetail(null); handleRejectInvoice(selectedInvoiceDetail); }}>Reject</button>
               <button className="btn btn-emerald" onClick={() => { setSelectedInvoiceDetail(null); handleApproveInvoice(selectedInvoiceDetail); }}>Approve Verification</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Custom Rejection Reason Glass Modal */}
+      {rejectionModalQuote && (
+        <div 
+          style={{ position: 'fixed', inset: 0, zIndex: 99999, background: 'rgba(0,0,0,0.8)', backdropFilter: 'blur(8px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem' }}
+          onClick={(e) => { if (e.target === e.currentTarget) setRejectionModalQuote(null); }}
+        >
+          <div className="glass-panel fade-in" style={{ width: '100%', maxWidth: '480px', padding: '1.75rem', borderRadius: '16px', background: 'var(--bg-card)', border: '1px solid var(--accent-rose)', boxShadow: '0 20px 50px rgba(239, 68, 68, 0.25)' }}>
+            <h3 style={{ fontSize: '1.15rem', fontWeight: 800, color: 'var(--accent-rose)', marginBottom: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <ShieldAlert size={20} />
+              Reject Invoice Verification
+            </h3>
+            <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', marginBottom: '1.25rem' }}>
+              Invoice #{rejectionModalQuote.invoiceNo} ({rejectionModalQuote.customerName}). Please specify a clear rejection reason for the executive:
+            </p>
+            <textarea
+              className="form-input"
+              rows={3}
+              placeholder="e.g. Invoice amount doesn't match quote total, or invalid receipt document uploaded."
+              value={rejectionReasonText}
+              onChange={(e) => setRejectionReasonText(e.target.value)}
+              style={{ width: '100%', padding: '0.75rem', fontSize: '0.85rem', marginBottom: '1.25rem', borderRadius: '8px' }}
+              autoFocus
+            />
+            <div style={{ display: 'flex', gap: '0.75rem', justifyContent: 'flex-end' }}>
+              <button className="btn btn-secondary" style={{ padding: '0.55rem 1.1rem', fontSize: '0.8rem' }} onClick={() => setRejectionModalQuote(null)}>
+                Cancel
+              </button>
+              <button className="btn btn-danger" style={{ padding: '0.55rem 1.1rem', fontSize: '0.8rem', fontWeight: 700 }} onClick={confirmRejection}>
+                Reject & Release Stock
+              </button>
             </div>
           </div>
         </div>

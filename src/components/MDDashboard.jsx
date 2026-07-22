@@ -168,10 +168,16 @@ function MDDashboard({
     }));
   };
 
+  const [toast, setToast] = useState(null);
+  const showToast = (msg) => {
+    setToast(msg);
+    setTimeout(() => setToast(null), 3000);
+  };
+
   // Export Sales Ledger Report as CSV for the MD
   const downloadSalesReportCSV = () => {
     if (filteredSalesLedger.length === 0) {
-      alert("No sales data available to download.");
+      showToast("No sales data available to download.");
       return;
     }
 

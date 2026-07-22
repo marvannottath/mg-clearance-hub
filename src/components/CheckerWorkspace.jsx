@@ -55,7 +55,7 @@ function CheckerWorkspace({ currentUser, db, onUpdateDb }) {
     if (!file) return;
     
     if (file.size > 8 * 1024 * 1024) {
-      alert("File size exceeds 8MB. Please choose a smaller file.");
+      showToast("File size exceeds 8MB. Please choose a smaller file.");
       return;
     }
 
@@ -70,7 +70,7 @@ function CheckerWorkspace({ currentUser, db, onUpdateDb }) {
   const handleSaveSalesforceEntry = (e) => {
     e.preventDefault();
     if (!invoiceNo.trim()) {
-      alert("Please enter the Salesforce Invoice Number.");
+      showToast("Please enter the Salesforce Invoice Number.");
       return;
     }
 
