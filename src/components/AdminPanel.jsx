@@ -984,7 +984,7 @@ function AdminPanel({
       const stockIdx = getIndex(['stock', 'quantity', 'instock', 'in_stock', 'qty', 'stockqty', 'stock_qty'], 6);
       const mrpIdx = getIndex(['mrp', 'mrprate', 'mrp_rate', 'msp', 'retailprice', 'retail_price'], 7);
       const mgPriceIdx = getIndex(['mgprice', 'mg_price', 'galleryprice', 'gallery_price'], 8);
-      const specIdx = getIndex(['specialprice', 'clearanceprice', 'clearance_price', 'special_price', 'clearancerate', 'clearance_rate', 'offerprice', 'offer_price', 'specialrate', 'special_rate', 'netprice', 'net_price', 'dealprice', 'deal_price'], 9);
+      const specIdx = getIndex(['specialprice', 'clearanceprice', 'clearance_price', 'special_price', 'clearancerate', 'clearance_rate', 'offerprice', 'offer_price', 'specialrate', 'special_rate', 'netprice', 'net_price', 'dealprice', 'deal_price', 'clearance', 'sellingprice', 'selling_price', 'saleprice', 'sale_price', 'finalprice', 'final_price', 'discountprice', 'discount_price', 'offer', 'offerrate', 'offer_rate', 'clearanceoffer', 'clearance_offer', 'finalrate', 'final_rate', 'salesprice', 'sales_price', 'clearanceval', 'clearanceamount'], 9);
       const landingIdx = getIndex(['landingcost', 'landing_cost', 'cost', 'costprice', 'cost_price', 'purchaseprice', 'purchase_price'], 10);
       const sizeIdx = getIndex(['size', 'dimension'], 11);
       const finishIdx = getIndex(['finishing', 'finish', 'surface'], 12);
