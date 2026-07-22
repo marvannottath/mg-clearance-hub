@@ -46,8 +46,11 @@ const safeLocalStorage = (() => {
   };
 })();
 
-function ExecutiveWorkspace({ products, activeExecutive, db, onUpdateDb }) {
-  const divisionsList = ['ALL', ...Array.from(new Set(products.map(p => p.division || 'Bathing')))];
+function ExecutiveWorkspace({ products = [], activeExecutive = {}, db = {}, onUpdateDb }) {
+  const safeProducts = products || [];
+  const safeExecutive = activeExecutive || { id: 'exec-001', name: 'Showroom Executive', target: 500000, walletBalance: 0, walletLedger: [] };
+  const activeExecutiveObj = safeExecutive.name ? safeExecutive : { id: 'exec-001', name: 'Showroom Executive', target: 500000, walletBalance: 0, walletLedger: [] };
+  const divisionsList = ['ALL', ...Array.from(new Set(safeProducts.map(p => p.division || 'Bathing')))];
   const [isSessionActive, setIsSessionActive] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState([]);

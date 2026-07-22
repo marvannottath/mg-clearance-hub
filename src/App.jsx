@@ -67,7 +67,7 @@ export class ErrorBoundary extends React.Component {
           <p style={{ color: '#94a3b8', fontSize: '0.85rem', maxWidth: '400px', marginBottom: '1.5rem', lineHeight: '1.6' }}>
             An unexpected temporary rendering exception occurred on this device. Click below to reload and restore session.
           </p>
-          <div style={{ display: 'flex', gap: '0.75rem' }}>
+          <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap', justifyContent: 'center' }}>
             <button 
               className="btn btn-cyan" 
               onClick={() => {
@@ -76,7 +76,17 @@ export class ErrorBoundary extends React.Component {
               }}
               style={{ padding: '0.6rem 1.25rem', fontWeight: 700 }}
             >
-              🔄 Reload MG Clearance Hub
+              🔄 Reload App
+            </button>
+            <button 
+              className="btn btn-amber" 
+              onClick={() => {
+                try { localStorage.clear(); } catch(e){}
+                window.location.href = '/login';
+              }}
+              style={{ padding: '0.6rem 1.25rem', fontWeight: 700 }}
+            >
+              🔑 Clear Session & Re-login
             </button>
           </div>
         </div>
@@ -1040,8 +1050,8 @@ function App() {
 
               {currentUser.role === 'executive' && (
                 <ExecutiveWorkspace 
-                  products={db.products}
-                  activeExecutive={db.executives.find(e => e.id === currentUser.execId) || db.executives[0]}
+                  products={db.products || []}
+                  activeExecutive={(db.executives || []).find(e => e.id === currentUser.execId) || (db.executives || [])[0] || { id: 'exec-001', name: 'Showroom Executive', target: 500000, walletBalance: 0, walletLedger: [] }}
                   db={db}
                   onUpdateDb={updateDb}
                 />
