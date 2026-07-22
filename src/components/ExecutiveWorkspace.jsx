@@ -2467,7 +2467,7 @@ function ExecutiveWorkspace({ products = [], activeExecutive = {}, db = {}, onUp
                           <th style={{ padding: '0.6rem', textAlign: 'right' }}>MRP</th>
                           <th style={{ padding: '0.6rem', textAlign: 'right' }}>Clearance Price</th>
                           <th style={{ padding: '0.6rem', textAlign: 'center' }}>Incentive</th>
-                          <th style={{ padding: '0.6rem', textAlign: 'center' }}>Action</th>
+                          <th style={{ padding: '0.6rem', textAlign: 'center' }}>Cart Action</th>
                         </tr>
                       </thead>
                       <tbody>
@@ -2483,15 +2483,30 @@ function ExecutiveWorkspace({ products = [], activeExecutive = {}, db = {}, onUp
                             const finalPrice = getProductFinalPrice(p);
                             const singleIncentive = getProductIncentiveAmount(p, 1, db.brands || []);
                             const isWeeklySpecial = isWeeklySpecialActive(p);
+                            const cartItem = cart.find(i => i.id === p.id);
 
                             return (
-                              <tr key={p.id} style={{ borderBottom: '1px solid rgba(255,255,255,0.05)', opacity: isOutOfStock ? 0.5 : 1, background: isWeeklySpecial ? 'rgba(245,158,11,0.02)' : 'transparent' }}>
-                                <td style={{ padding: '0.6rem' }}>
-                                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+                              <tr 
+                                key={p.id} 
+                                style={{ 
+                                  borderBottom: '1px solid rgba(255,255,255,0.05)', 
+                                  opacity: isOutOfStock ? 0.5 : 1, 
+                                  background: cartItem ? 'rgba(16, 185, 129, 0.06)' : (isWeeklySpecial ? 'rgba(245,158,11,0.02)' : 'transparent'),
+                                  cursor: isOutOfStock ? 'not-allowed' : 'pointer',
+                                  transition: 'background 0.2s ease'
+                                }}
+                                onClick={() => {
+                                  if (!isOutOfStock && !cartItem) {
+                                    addProductToCartDirect(p);
+                                  }
+                                }}
+                              >
+                                <td style={{ padding: '0.65rem 0.6rem' }}>
+                                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
                                     {p.image ? (
-                                      <img src={p.image} alt={p.name} style={{ width: '42px', height: '42px', objectFit: 'cover', borderRadius: '6px', border: '1px solid var(--border-color)', flexShrink: 0 }} />
+                                      <img src={p.image} alt={p.name} style={{ width: '44px', height: '44px', objectFit: 'cover', borderRadius: '6px', border: '1px solid var(--border-color)', flexShrink: 0 }} />
                                     ) : (
-                                      <div style={{ width: '42px', height: '42px', background: 'var(--bg-secondary)', borderRadius: '6px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.55rem', fontWeight: 700, color: 'var(--text-muted)', border: '1px solid var(--border-color)', flexShrink: 0 }}>
+                                      <div style={{ width: '44px', height: '44px', background: 'var(--bg-secondary)', borderRadius: '6px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.55rem', fontWeight: 700, color: 'var(--text-muted)', border: '1px solid var(--border-color)', flexShrink: 0 }}>
                                         {p.brand}
                                       </div>
                                     )}
@@ -2499,6 +2514,7 @@ function ExecutiveWorkspace({ products = [], activeExecutive = {}, db = {}, onUp
                                       <div style={{ fontWeight: 700, color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
                                         {p.name}
                                         {isWeeklySpecial && <span className="badge badge-warning" style={{ fontSize: '0.55rem', padding: '0.05rem 0.3rem' }}>⚡ Offer</span>}
+                                        {cartItem && <span className="badge badge-success" style={{ fontSize: '0.55rem', padding: '0.05rem 0.35rem' }}>In Cart ({cartItem.qty})</span>}
                                       </div>
                                       <div style={{ fontSize: '0.68rem', color: 'var(--text-muted)' }}>Code: <strong style={{ color: 'var(--accent-cyan)' }}>{p.id}</strong></div>
                                     </div>
@@ -2526,16 +2542,28 @@ function ExecutiveWorkspace({ products = [], activeExecutive = {}, db = {}, onUp
                                     💰 Earn ₹{singleIncentive}
                                   </span>
                                 </td>
-                                <td style={{ padding: '0.6rem', textAlign: 'center' }}>
-                                  <button 
-                                    type="button" 
-                                    className="btn btn-cyan" 
-                                    style={{ padding: '0.35rem 0.85rem', fontSize: '0.72rem', fontWeight: 700 }}
-                                    disabled={isOutOfStock}
-                                    onClick={() => addProductToCartDirect(p)}
-                                  >
-                                    + Add to Quote
-                                  </button>
+                                <td style={{ padding: '0.6rem', textAlign: 'center' }} onClick={(e) => e.stopPropagation()}>
+                                  {cartItem ? (
+                                    <div style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem', background: 'rgba(16,185,129,0.12)', padding: '0.25rem 0.6rem', borderRadius: '20px', border: '1px solid var(--accent-emerald)' }}>
+                                      <button type="button" style={{ background: 'transparent', border: 'none', color: 'var(--text-primary)', cursor: 'pointer', padding: '2px' }} onClick={() => updateCartQty(p.id, cartItem.qty - 1, p.stock)}>
+                                        <Minus size={13} />
+                                      </button>
+                                      <span style={{ fontWeight: 800, fontSize: '0.85rem', color: 'var(--accent-emerald)', minWidth: '18px', textAlign: 'center' }}>{cartItem.qty}</span>
+                                      <button type="button" style={{ background: 'transparent', border: 'none', color: 'var(--text-primary)', cursor: 'pointer', padding: '2px' }} onClick={() => updateCartQty(p.id, cartItem.qty + 1, p.stock)}>
+                                        <Plus size={13} />
+                                      </button>
+                                    </div>
+                                  ) : (
+                                    <button 
+                                      type="button" 
+                                      className="btn btn-cyan" 
+                                      style={{ padding: '0.35rem 0.85rem', fontSize: '0.72rem', fontWeight: 700 }}
+                                      disabled={isOutOfStock}
+                                      onClick={() => addProductToCartDirect(p)}
+                                    >
+                                      + Add to Quote
+                                    </button>
+                                  )}
                                 </td>
                               </tr>
                             );
@@ -2550,6 +2578,7 @@ function ExecutiveWorkspace({ products = [], activeExecutive = {}, db = {}, onUp
                       const isOutOfStock = p.stock === 0;
                       const finalPrice = getProductFinalPrice(p);
                       const isWeeklySpecial = isWeeklySpecialActive(p);
+                      const cartItem = cart.find(i => i.id === p.id);
 
                       return (
                         <div 
@@ -2557,12 +2586,16 @@ function ExecutiveWorkspace({ products = [], activeExecutive = {}, db = {}, onUp
                           className={`glass-panel executive-catalog-card ${isWeeklySpecial ? 'weekly-special-card' : ''}`}
                           style={{ 
                             opacity: isOutOfStock ? 0.5 : 1,
-                            border: isWeeklySpecial ? '1.5px solid rgba(245,158,11,0.3)' : '1px solid var(--border-color)',
-                            background: isWeeklySpecial ? 'rgba(245,158,11,0.01)' : 'rgba(255,255,255,0.01)',
+                            border: cartItem ? '2px solid var(--accent-emerald)' : (isWeeklySpecial ? '1.5px solid rgba(245,158,11,0.4)' : '1px solid var(--border-color)'),
+                            background: cartItem ? 'rgba(16, 185, 129, 0.04)' : (isWeeklySpecial ? 'rgba(245,158,11,0.01)' : 'rgba(255,255,255,0.01)'),
                             cursor: isOutOfStock ? 'not-allowed' : 'pointer',
-                            padding: '0.75rem'
+                            padding: '0.85rem'
                           }}
-                          onClick={() => !isOutOfStock && addProductToCartDirect(p)}
+                          onClick={() => {
+                            if (!isOutOfStock && !cartItem) {
+                              addProductToCartDirect(p);
+                            }
+                          }}
                         >
                           <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
                             {p.image ? (
@@ -2570,24 +2603,30 @@ function ExecutiveWorkspace({ products = [], activeExecutive = {}, db = {}, onUp
                                 src={p.image} 
                                 alt={p.name} 
                                 className="catalog-card-img"
-                                style={{ width: '55px', height: '55px', objectFit: 'cover', borderRadius: '6px', border: '1px solid var(--border-color)', flexShrink: 0 }} 
+                                style={{ width: '60px', height: '60px', objectFit: 'cover', borderRadius: '8px', border: '1px solid var(--border-color)', flexShrink: 0 }} 
                               />
                             ) : (
-                              <div className="catalog-card-placeholder" style={{ width: '55px', height: '55px', background: 'var(--bg-secondary)', borderRadius: '6px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.65rem', fontWeight: 700, color: 'var(--text-muted)', border: '1px solid var(--border-color)', flexShrink: 0 }}>
+                              <div className="catalog-card-placeholder" style={{ width: '60px', height: '60px', background: 'var(--bg-secondary)', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.65rem', fontWeight: 700, color: 'var(--text-muted)', border: '1px solid var(--border-color)', flexShrink: 0 }}>
                                 {p.brand}
                               </div>
                             )}
                             <div style={{ flex: 1, minWidth: 0 }}>
-                              {isWeeklySpecial && (
-                                <span className="badge badge-warning" style={{ fontSize: '0.6rem', padding: '0.1rem 0.35rem', marginBottom: '0.25rem', display: 'inline-block' }}>
-                                  ⚡ Weekly Offer
-                                </span>
-                              )}
-                              <div style={{ fontSize: '0.8rem', fontWeight: 700, textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap' }} title={p.name}>
+                              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.2rem' }}>
+                                <span className={`brand-pill ${p.brand.toLowerCase()}`} style={{ fontSize: '0.6rem', padding: '0.1rem 0.4rem' }}>{p.brand}</span>
+                                {cartItem ? (
+                                  <span className="badge badge-success" style={{ fontSize: '0.6rem', padding: '0.1rem 0.4rem' }}>In Cart ({cartItem.qty})</span>
+                                ) : (
+                                  isWeeklySpecial && <span className="badge badge-warning" style={{ fontSize: '0.55rem', padding: '0.05rem 0.35rem' }}>⚡ Offer</span>
+                                )}
+                              </div>
+
+                              <div style={{ fontSize: '0.82rem', fontWeight: 700, textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap' }} title={p.name}>
                                 {p.name}
                               </div>
+                              <div style={{ fontSize: '0.68rem', color: 'var(--text-muted)' }}>Code: <strong style={{ color: 'var(--accent-cyan)' }}>{p.id}</strong></div>
+
                               {p.division === 'Tiles' && (
-                                <div style={{ fontSize: '0.7rem', color: 'var(--text-secondary)', marginTop: '0.15rem', display: 'flex', flexDirection: 'column', gap: '0.1rem' }}>
+                                <div style={{ fontSize: '0.68rem', color: 'var(--text-secondary)', marginTop: '0.15rem', display: 'flex', flexDirection: 'column', gap: '0.1rem' }}>
                                   <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                                     <span>📏 {p.size || 'N/A'}</span>
                                     <span>✨ {p.finishing || 'N/A'}</span>
@@ -2597,43 +2636,44 @@ function ExecutiveWorkspace({ products = [], activeExecutive = {}, db = {}, onUp
                                   </div>
                                 </div>
                               )}
-                              <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '0.25rem', alignItems: 'center' }}>
-                                <span className={`brand-pill ${p.brand.toLowerCase()}`} style={{ fontSize: '0.65rem', padding: '0.1rem 0.4rem' }}>{p.brand}</span>
-                                <span style={{ fontSize: '0.65rem', color: p.stock > 0 ? 'var(--accent-emerald)' : 'var(--accent-rose)', fontWeight: 500 }}>
-                                  {p.stock > 0 ? `${p.stock} units` : 'Out of Stock'}
+
+                              <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '0.35rem', alignItems: 'center' }}>
+                                <div>
+                                  <span style={{ fontSize: '0.88rem', fontWeight: 800, color: 'var(--accent-rose)' }}>{formatRupee(finalPrice)}</span>
+                                  <span style={{ fontSize: '0.65rem', color: 'var(--text-muted)', textDecoration: 'line-through', marginLeft: '0.35rem' }}>{formatRupee(p.mrp)}</span>
+                                </div>
+                                
+                                <span style={{ fontSize: '0.65rem', color: p.stock > 0 ? 'var(--accent-emerald)' : 'var(--accent-rose)', fontWeight: 600 }}>
+                                  {p.stock > 0 ? `${p.stock} in stock` : 'Out of Stock'}
                                 </span>
                               </div>
-                              <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', marginTop: '0.25rem', flexWrap: 'wrap', width: '100%' }}>
-                                <span style={{ fontSize: '0.85rem', fontWeight: 700, color: 'var(--accent-rose)' }}>{formatRupee(finalPrice)}</span>
-                                {isWeeklySpecial && p.extraCustomerDiscount > 0 && (
-                                  <span style={{ fontSize: '0.65rem', color: 'var(--text-muted)', textDecoration: 'line-through' }}>{formatRupee(p.specialPrice)}</span>
+
+                              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: '0.4rem' }} onClick={(e) => e.stopPropagation()}>
+                                <span style={{ fontSize: '0.65rem', color: 'var(--accent-cyan)', fontWeight: 700, background: 'rgba(6, 182, 212, 0.08)', padding: '0.15rem 0.4rem', borderRadius: '4px', border: '1px solid rgba(6, 182, 212, 0.15)' }}>
+                                  💰 Earn ₹{getProductIncentiveAmount(p, 1, db.brands || [])}
+                                </span>
+
+                                {cartItem ? (
+                                  <div style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem', background: 'rgba(16,185,129,0.12)', padding: '0.2rem 0.5rem', borderRadius: '20px', border: '1px solid var(--accent-emerald)' }}>
+                                    <button type="button" style={{ background: 'transparent', border: 'none', color: 'var(--text-primary)', cursor: 'pointer', padding: '2px' }} onClick={() => updateCartQty(p.id, cartItem.qty - 1, p.stock)}>
+                                      <Minus size={13} />
+                                    </button>
+                                    <span style={{ fontWeight: 800, fontSize: '0.8rem', color: 'var(--accent-emerald)', minWidth: '16px', textAlign: 'center' }}>{cartItem.qty}</span>
+                                    <button type="button" style={{ background: 'transparent', border: 'none', color: 'var(--text-primary)', cursor: 'pointer', padding: '2px' }} onClick={() => updateCartQty(p.id, cartItem.qty + 1, p.stock)}>
+                                      <Plus size={13} />
+                                    </button>
+                                  </div>
+                                ) : (
+                                  <button 
+                                    type="button" 
+                                    className="btn btn-cyan" 
+                                    style={{ padding: '0.25rem 0.65rem', fontSize: '0.68rem', fontWeight: 700 }}
+                                    disabled={isOutOfStock}
+                                    onClick={() => addProductToCartDirect(p)}
+                                  >
+                                    + Add to Cart
+                                  </button>
                                 )}
-                                <span style={{ fontSize: '0.65rem', color: 'var(--text-muted)', textDecoration: 'line-through' }}>{formatRupee(p.mrp)}</span>
-                                
-                                {/* Private Salesperson Incentive - Hidden from Client Invoice */}
-                                {(() => {
-                                  const singleIncentive = getProductIncentiveAmount(p, 1, db.brands || []);
-                                  return (
-                                    <span 
-                                      style={{ 
-                                        fontSize: '0.65rem', 
-                                        color: 'var(--accent-cyan)', 
-                                        fontWeight: 'bold', 
-                                        background: 'rgba(6, 182, 212, 0.08)', 
-                                        padding: '0.15rem 0.4rem', 
-                                        borderRadius: '4px', 
-                                        marginLeft: 'auto',
-                                        display: 'inline-flex',
-                                        alignItems: 'center',
-                                        gap: '0.15rem',
-                                        border: '1px solid rgba(6, 182, 212, 0.15)'
-                                      }} 
-                                      title="Your personal sales commission (never shown on customer quotation)"
-                                    >
-                                      💰 Earn ₹{singleIncentive}
-                                    </span>
-                                  );
-                                })()}
                               </div>
                             </div>
                           </div>
