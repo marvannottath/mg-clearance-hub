@@ -893,27 +893,49 @@ function ExecutiveWorkspace({ products = [], activeExecutive = {}, db = {}, onUp
           </div>
         </div>
 
-        {/* Target and KPI progress */}
-        <div className="glass-panel" style={{ padding: '1.25rem', display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+        {/* Target and KPI progress - Premium Visual Upgrade */}
+        <div className="glass-panel" style={{ padding: '1.25rem', display: 'flex', flexDirection: 'column', gap: '0.85rem', background: 'var(--bg-card)', border: '1px solid var(--border-color)', borderRadius: '16px', boxShadow: '0 8px 24px rgba(0,0,0,0.12)' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <span style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--text-secondary)' }}>Target Progress</span>
-            <span style={{ fontSize: '0.85rem', fontWeight: 700, color: 'var(--accent-cyan)' }}>
-              {activeExecutive.target > 0 ? ((clearedLiquidityVal / activeExecutive.target) * 100).toFixed(0) : 0}%
-            </span>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+              <Award size={18} color="var(--accent-cyan)" />
+              <span style={{ fontSize: '0.9rem', fontWeight: 800, color: 'var(--text-primary)' }}>Target Progress</span>
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+              {((clearedLiquidityVal / activeExecutive.target) * 100) >= 100 ? (
+                <span className="badge badge-success" style={{ fontSize: '0.65rem', padding: '0.15rem 0.5rem', fontWeight: 800 }}>🏆 Target Achieved!</span>
+              ) : (
+                <span style={{ fontSize: '0.7rem', color: 'var(--accent-cyan)', background: 'var(--accent-cyan-glow)', padding: '0.15rem 0.5rem', borderRadius: '20px', fontWeight: 700 }}>
+                  🎯 In Progress
+                </span>
+              )}
+              <span style={{ fontSize: '1.15rem', fontWeight: 900, color: 'var(--accent-cyan)', letterSpacing: '-0.03em' }}>
+                {activeExecutive.target > 0 ? ((clearedLiquidityVal / activeExecutive.target) * 100).toFixed(1) : 0}%
+              </span>
+            </div>
           </div>
           
-          <div className="progress-container" style={{ height: '8px', background: 'rgba(255,255,255,0.05)', borderRadius: '4px', overflow: 'hidden' }}>
-            <div className="progress-bar emerald" style={{ height: '100%', width: `${Math.min(100, (clearedLiquidityVal / activeExecutive.target) * 100)}%` }}></div>
+          {/* Animated Gradient Progress Bar */}
+          <div style={{ position: 'relative', width: '100%', height: '14px', background: 'rgba(0,0,0,0.3)', borderRadius: '10px', overflow: 'hidden', padding: '2px', border: '1px solid var(--border-color)' }}>
+            <div 
+              style={{ 
+                height: '100%', 
+                width: `${Math.max(1.5, Math.min(100, (clearedLiquidityVal / activeExecutive.target) * 100))}%`,
+                background: 'linear-gradient(90deg, #10b981 0%, #06b6d4 100%)',
+                borderRadius: '8px',
+                boxShadow: '0 0 12px rgba(16, 185, 129, 0.4)',
+                transition: 'width 0.8s cubic-bezier(0.4, 0, 0.2, 1)'
+              }}
+            />
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginTop: '0.5rem', borderTop: '1px solid var(--border-color)', paddingTop: '0.75rem' }}>
-            <div>
-              <div style={{ fontSize: '0.65rem', color: 'var(--text-muted)' }}>CLEARED REVENUE</div>
-              <div style={{ fontSize: '0.95rem', fontWeight: 800, color: 'var(--accent-emerald)' }}>{formatRupee(clearedLiquidityVal)}</div>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem', marginTop: '0.25rem', borderTop: '1px dashed var(--border-color)', paddingTop: '0.75rem' }}>
+            <div style={{ background: 'rgba(16, 185, 129, 0.05)', padding: '0.6rem 0.75rem', borderRadius: '10px', border: '1px solid rgba(16, 185, 129, 0.15)' }}>
+              <div style={{ fontSize: '0.62rem', color: 'var(--text-muted)', fontWeight: 700, letterSpacing: '0.04em', textTransform: 'uppercase' }}>CLEARED REVENUE</div>
+              <div style={{ fontSize: '1rem', fontWeight: 900, color: 'var(--accent-emerald)', marginTop: '0.1rem' }}>{formatRupee(clearedLiquidityVal)}</div>
             </div>
-            <div>
-              <div style={{ fontSize: '0.65rem', color: 'var(--text-muted)' }}>CAMPAIGN TARGET</div>
-              <div style={{ fontSize: '0.95rem', fontWeight: 800 }}>{formatRupee(activeExecutive.target)}</div>
+            <div style={{ background: 'rgba(6, 182, 212, 0.05)', padding: '0.6rem 0.75rem', borderRadius: '10px', border: '1px solid rgba(6, 182, 212, 0.15)' }}>
+              <div style={{ fontSize: '0.62rem', color: 'var(--text-muted)', fontWeight: 700, letterSpacing: '0.04em', textTransform: 'uppercase' }}>CAMPAIGN TARGET</div>
+              <div style={{ fontSize: '1rem', fontWeight: 900, color: 'var(--text-primary)', marginTop: '0.1rem' }}>{formatRupee(activeExecutive.target)}</div>
             </div>
           </div>
         </div>

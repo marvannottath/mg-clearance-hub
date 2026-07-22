@@ -2483,7 +2483,7 @@ function AdminPanel({
                     />
                   </div>
 
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '0.75rem' }}>
                     <div className="form-group" style={{ marginBottom: 0 }}>
                       <label className="form-label" style={{ fontSize: '0.75rem' }}>Login Username</label>
                       <input 
@@ -2504,6 +2504,18 @@ function AdminPanel({
                         value={execPassword}
                         onChange={(e) => setExecPassword(e.target.value)}
                         placeholder="Set password"
+                        required
+                        style={{ height: '36px' }}
+                      />
+                    </div>
+                    <div className="form-group" style={{ marginBottom: 0 }}>
+                      <label className="form-label" style={{ fontSize: '0.75rem' }}>Target (₹)</label>
+                      <input 
+                        type="number" 
+                        className="form-input" 
+                        value={execTarget}
+                        onChange={(e) => setExecTarget(e.target.value)}
+                        placeholder="Target Amount"
                         required
                         style={{ height: '36px' }}
                       />
