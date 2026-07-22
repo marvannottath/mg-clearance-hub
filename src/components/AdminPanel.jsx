@@ -2075,78 +2075,7 @@ function AdminPanel({
 
 
 
-        {/* Tab 5: Bulk CSV Import */}
-        {activeTab === 'import' && (
-          <div className="fade-in">
-            <h3 className="panel-title">
-              <FileSpreadsheet size={20} color="var(--accent-cyan)" />
-              Bulk Inventory Sheet Import (with Landing Cost)
-            </h3>
-            <p style={{ color: 'var(--text-secondary)', fontSize: '0.875rem', marginBottom: '1.5rem' }}>
-              Download our current clearance inventory sheet. You can append stock numbers, custom special rates, and **Landing Cost** columns, then upload to refresh.
-            </p>
 
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2rem', marginBottom: '1.5rem' }}>
-              <div style={{ background: 'rgba(255,255,255,0.01)', border: '1px solid var(--border-color)', padding: '1.5rem', borderRadius: '12px' }}>
-                <h4 style={{ fontSize: '1rem', fontWeight: 600, marginBottom: '0.75rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                  <Download size={18} color="var(--accent-cyan)" />
-                  1. Download Inventory CSV
-                </h4>
-                <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', marginBottom: '1.5rem' }}>
-                  Extracts current stock and includes landing cost fields for spreadsheet editing.
-                </p>
-                <button className="btn btn-secondary" onClick={downloadCSVSample}>
-                  <Download size={16} />
-                  Download Current Stock CSV
-                </button>
-              </div>
-
-              <div style={{ background: 'rgba(255,255,255,0.01)', border: '1px solid var(--border-color)', padding: '1.5rem', borderRadius: '12px' }}>
-                <h4 style={{ fontSize: '1rem', fontWeight: 600, marginBottom: '0.75rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                  <UploadCloud size={18} color="var(--accent-emerald)" />
-                  2. Upload Modified CSV Sheet
-                </h4>
-                <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', marginBottom: '1rem' }}>
-                  Choose the modified file. It will parse and synchronize database parameters instantly.
-                </p>
-
-                <div 
-                  className="upload-zone"
-                  onClick={() => document.getElementById('csv-file-upload').click()}
-                >
-                  <UploadCloud className="upload-icon" size={32} />
-                  <span style={{ fontSize: '0.85rem', fontWeight: 600 }}>Click to browse and upload modified CSV</span>
-                  <input 
-                    type="file" 
-                    id="csv-file-upload" 
-                    accept=".csv"
-                    style={{ display: 'none' }} 
-                    onChange={handleCSVImport}
-                  />
-                </div>
-              </div>
-            </div>
-
-            {importStatus && (
-              <div 
-                style={{ 
-                  background: importStatus.success ? 'rgba(16, 185, 129, 0.1)' : 'rgba(239, 68, 68, 0.1)',
-                  border: `1px solid ${importStatus.success ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)'}`,
-                  color: importStatus.success ? 'var(--accent-emerald)' : 'var(--accent-rose)',
-                  padding: '1rem',
-                  borderRadius: '8px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '0.75rem',
-                  fontSize: '0.875rem'
-                }}
-              >
-                {importStatus.success ? <CheckCircle size={20} /> : <AlertCircle size={20} />}
-                <span>{importStatus.message}</span>
-              </div>
-            )}
-          </div>
-        )}
 
         {/* Tab 6: Showroom QR Stickers */}
         {activeTab === 'stickers' && (
