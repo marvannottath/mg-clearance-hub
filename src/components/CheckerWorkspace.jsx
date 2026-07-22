@@ -19,6 +19,7 @@ function CheckerWorkspace({ currentUser, db, onUpdateDb }) {
 
   // Quote Inspection Modal State
   const [selectedQuoteDetail, setSelectedQuoteDetail] = useState(null);
+  const [printableQuoteModal, setPrintableQuoteModal] = useState(null);
 
   const showToast = (msg) => {
     setToastMsg(msg);
@@ -589,11 +590,11 @@ function CheckerWorkspace({ currentUser, db, onUpdateDb }) {
             {/* Modal Actions */}
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.75rem' }}>
               <button 
-                className="btn btn-secondary" 
-                onClick={() => window.open(`#/share/${selectedQuoteDetail.id}`, '_blank')}
-                style={{ fontSize: '0.8rem', padding: '0.5rem 1rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}
+                className="btn btn-emerald" 
+                onClick={() => setPrintableQuoteModal(selectedQuoteDetail)}
+                style={{ fontSize: '0.8rem', padding: '0.5rem 1rem', display: 'flex', alignItems: 'center', gap: '0.4rem', fontWeight: 700 }}
               >
-                <FileText size={14} /> Open Printable PDF Quote Sheet
+                <FileText size={14} /> 🖨️ View & Print PDF Quotation Sheet
               </button>
 
               <div style={{ display: 'flex', gap: '0.75rem' }}>
@@ -615,6 +616,156 @@ function CheckerWorkspace({ currentUser, db, onUpdateDb }) {
               </div>
             </div>
 
+          </div>
+        </div>
+      )}
+
+      {/* Standalone Printable PDF Quote Modal */}
+      {printableQuoteModal && (
+        <div className="modal-backdrop" style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(10px)', zIndex: 999999, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem' }}>
+          <div className="glass-panel fade-in" style={{ maxWidth: '850px', width: '100%', padding: '1.5rem', borderRadius: '16px', background: 'var(--bg-card)', border: '1px solid var(--accent-cyan)', maxHeight: '92vh', overflowY: 'auto' }}>
+            
+            {/* Top Toolbar (No-Print) */}
+            <div className="no-print" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem', paddingBottom: '0.75rem', borderBottom: '1px solid var(--border-color)', gap: '0.75rem', flexWrap: 'wrap' }}>
+              <div style={{ fontWeight: 700, color: 'var(--accent-cyan)', fontSize: '0.95rem' }}>
+                🖨️ PDF Quotation Print Preview
+              </div>
+              <div style={{ display: 'flex', gap: '0.6rem', flexWrap: 'wrap' }}>
+                <button 
+                  className="btn btn-emerald" 
+                  onClick={() => window.print()}
+                  style={{ fontSize: '0.8rem', fontWeight: 700, padding: '0.45rem 0.85rem' }}
+                >
+                  🖨️ Print / Save as PDF
+                </button>
+                <button 
+                  className="btn btn-secondary" 
+                  onClick={() => window.open(`${window.location.origin}/#/share/${printableQuoteModal.id}`, '_blank')}
+                  style={{ fontSize: '0.8rem', padding: '0.45rem 0.85rem' }}
+                >
+                  🔗 Open in New Tab
+                </button>
+                <button 
+                  className="btn btn-secondary" 
+                  onClick={() => setPrintableQuoteModal(null)}
+                  style={{ fontSize: '0.8rem', padding: '0.45rem 0.85rem' }}
+                >
+                  Close
+                </button>
+              </div>
+            </div>
+
+            {/* Formatted White Print Sheet */}
+            <div className="print-invoice-sheet" style={{ background: '#ffffff', color: '#0f172a', padding: '2rem', borderRadius: '8px', boxShadow: '0 4px 25px rgba(0,0,0,0.2)', fontFamily: '"Outfit", "Inter", sans-serif' }}>
+              
+              {/* Header */}
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', borderBottom: '2px solid #0f172a', paddingBottom: '0.85rem', marginBottom: '1rem' }}>
+                <div>
+                  <h2 style={{ fontSize: '1.5rem', fontWeight: 800, color: '#0f172a', letterSpacing: '0.04em', margin: 0 }}>MARBLE GALLERY</h2>
+                  <span style={{ fontSize: '0.72rem', color: '#0284c7', fontWeight: 800, letterSpacing: '0.12em' }}>MG LUXE BATH & TILE DIVISION</span>
+                  <div style={{ fontSize: '0.72rem', color: '#64748b', marginTop: '0.2rem', lineHeight: '1.3' }}>
+                    MG Group Showroom • Special Offer Clearance Collection
+                  </div>
+                </div>
+                <div style={{ textAlign: 'right' }}>
+                  <h3 style={{ fontSize: '1.05rem', fontWeight: 800, color: '#0f172a', margin: 0 }}>SPECIAL PRICE QUOTATION</h3>
+                  <div style={{ fontSize: '0.75rem', color: '#475569', marginTop: '0.2rem', lineHeight: '1.3' }}>
+                    <strong>Quote No:</strong> {printableQuoteModal.id}<br/>
+                    <strong>Date:</strong> {new Date(printableQuoteModal.date || Date.now()).toLocaleDateString('en-IN')}<br/>
+                    <strong>Time:</strong> {new Date(printableQuoteModal.date || Date.now()).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })}
+                  </div>
+                </div>
+              </div>
+
+              {/* Client & Executive Info Grid */}
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem', fontSize: '0.78rem', background: '#f8fafc', padding: '0.75rem 1rem', borderRadius: '6px', marginBottom: '1rem', color: '#334155', border: '1px solid #e2e8f0' }}>
+                <div>
+                  <strong>Prepared By:</strong> {printableQuoteModal.executiveName || 'Showroom Executive'}<br/>
+                  <strong>Client Name:</strong> {printableQuoteModal.customerName || 'Walk-in Client'}<br/>
+                  <strong>Location:</strong> <span style={{ color: '#0284c7', fontWeight: 700 }}>{printableQuoteModal.customerLocation || printableQuoteModal.customerAddress || 'Showroom Walk-in'}</span>
+                </div>
+                <div style={{ textAlign: 'right' }}>
+                  <strong>Client Mobile:</strong> {printableQuoteModal.customerMobile || 'N/A'}<br/>
+                  <strong>Salesforce Status:</strong> {printableQuoteModal.invoiceNo ? `Invoice #${printableQuoteModal.invoiceNo}` : 'Pending Entry'}
+                </div>
+              </div>
+
+              {/* Line Items Table */}
+              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.78rem', marginBottom: '1.25rem' }}>
+                <thead>
+                  <tr style={{ background: '#0f172a', color: '#ffffff', textAlign: 'left' }}>
+                    <th style={{ padding: '0.55rem 0.5rem', borderRadius: '4px 0 0 4px' }}>Item Description</th>
+                    <th style={{ padding: '0.55rem 0.5rem', textAlign: 'center' }}>Qty</th>
+                    <th style={{ padding: '0.55rem 0.5rem', textAlign: 'right' }}>MRP</th>
+                    <th style={{ padding: '0.55rem 0.5rem', textAlign: 'right' }}>Clearance Rate</th>
+                    <th style={{ padding: '0.55rem 0.5rem', textAlign: 'right', borderRadius: '0 4px 4px 0' }}>Subtotal</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {(printableQuoteModal.items || []).map((item, idx) => (
+                    <tr key={idx} style={{ borderBottom: '1px solid #e2e8f0' }}>
+                      <td style={{ padding: '0.65rem 0.5rem' }}>
+                        <div style={{ fontWeight: 700, color: '#0f172a' }}>{item.name}</div>
+                        <div style={{ fontSize: '0.68rem', color: '#64748b' }}>
+                          Code: {item.productId || item.id} | Brand: {item.brand}
+                          {item.size ? ` | Size: ${item.size}` : ''} {item.location ? ` | Loc: ${item.location}` : ''}
+                        </div>
+                      </td>
+                      <td style={{ padding: '0.65rem 0.5rem', textAlign: 'center', fontWeight: 700, color: '#0f172a' }}>{item.qty || 1}</td>
+                      <td style={{ padding: '0.65rem 0.5rem', textAlign: 'right', color: '#94a3b8', textDecoration: 'line-through' }}>{formatRupee(item.mrp || 0)}</td>
+                      <td style={{ padding: '0.65rem 0.5rem', textAlign: 'right', fontWeight: 600, color: '#0284c7' }}>{formatRupee(item.specialPrice || item.pricePaid || 0)}</td>
+                      <td style={{ padding: '0.65rem 0.5rem', textAlign: 'right', fontWeight: 700, color: '#0f172a' }}>{formatRupee((item.specialPrice || item.pricePaid || 0) * (item.qty || 1))}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+
+              {/* Tax & Summary Totals */}
+              {(() => {
+                const cartTotalPaid = (printableQuoteModal.items || []).reduce((s,i) => s + ((i.specialPrice || i.pricePaid || 0) * (i.qty || 1)), 0);
+                const cartTotalMrp = (printableQuoteModal.items || []).reduce((s,i) => s + ((i.mrp || 0) * (i.qty || 1)), 0);
+                const totalItems = (printableQuoteModal.items || []).reduce((s,i) => s + (i.qty || 1), 0);
+                const taxableValue = Math.round(cartTotalPaid / 1.18);
+                const totalTax = cartTotalPaid - taxableValue;
+                const cgst = Math.round(totalTax / 2);
+                const sgst = totalTax - cgst;
+
+                return (
+                  <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '1rem' }}>
+                    <div style={{ width: '280px', fontSize: '0.78rem', background: '#f8fafc', padding: '0.75rem', borderRadius: '6px', border: '1px solid #e2e8f0', color: '#334155' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.25rem' }}>
+                        <span>Total Items:</span>
+                        <span style={{ fontWeight: 700 }}>{totalItems} units</span>
+                      </div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.25rem' }}>
+                        <span>MRP Value:</span>
+                        <span style={{ textDecoration: 'line-through', color: '#94a3b8' }}>{formatRupee(cartTotalMrp)}</span>
+                      </div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.25rem', borderTop: '1px dashed #e2e8f0', paddingTop: '0.25rem' }}>
+                        <span>Taxable Amount (Excl. GST):</span>
+                        <span>{formatRupee(taxableValue)}</span>
+                      </div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.25rem' }}>
+                        <span>CGST (9.0%):</span>
+                        <span>{formatRupee(cgst)}</span>
+                      </div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.25rem' }}>
+                        <span>SGST (9.0%):</span>
+                        <span>{formatRupee(sgst)}</span>
+                      </div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '0.4rem', borderTop: '2px solid #0f172a', paddingTop: '0.4rem', fontSize: '0.95rem', fontWeight: 800, color: '#059669' }}>
+                        <span>NET BILLABLE VALUE:</span>
+                        <span>{formatRupee(cartTotalPaid)}</span>
+                      </div>
+                      <div style={{ fontSize: '0.7rem', color: '#059669', textAlign: 'right', marginTop: '0.2rem', fontWeight: 700 }}>
+                        Client Savings: {formatRupee(cartTotalMrp - cartTotalPaid)}
+                      </div>
+                    </div>
+                  </div>
+                );
+              })()}
+
+            </div>
           </div>
         </div>
       )}

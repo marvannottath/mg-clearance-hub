@@ -93,9 +93,11 @@ function App() {
   // Clean HTML5 Path Routing (No '#' in URL)
   const getNormalizedRoute = () => {
     let p = window.location.pathname;
-    let h = window.location.hash.replace('#', '');
+    let h = window.location.hash;
+    if (p && p.includes('/share/')) return p;
+    if (h && h.includes('/share/')) return h.replace('#', '');
     if (p && p !== '/' && p !== '') return p;
-    if (h && h !== '/' && h !== '') return h;
+    if (h && h !== '/' && h !== '') return h.replace('#', '');
     return '/login';
   };
 
