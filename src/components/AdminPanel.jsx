@@ -3,7 +3,7 @@ import {
   Plus, Edit, Trash2, Download, Upload, UploadCloud, 
   Printer, Users, CheckCircle, FileSpreadsheet, PlusCircle, 
   CheckSquare, Square, DollarSign, AlertCircle, Percent, Star, 
-  Volume2, RefreshCw, Eye, FileText, Zap, ShieldAlert, Globe, Database
+  Volume2, RefreshCw, Eye, FileText, Zap, ShieldAlert, Globe, Database, KeyRound
 } from 'lucide-react';
 import MDDashboard from './MDDashboard';
 import { isWeeklySpecialActive, getLocalDateString, syncProductsFromSAP, getProductStockAgeMonths, getSapApiUrl, getSfClientId, getSfClientSecret } from '../data/mockData';
@@ -157,34 +157,37 @@ function AdminPanel({
       return;
     }
 
-    if (!confirm(`Are you sure you want to apply a ${discPct}% clearance price discount and a ${incPct}% sales executive incentive to all ${filteredInventoryProducts.length} filtered aging products?`)) {
-      return;
-    }
+    window.customConfirm(
+      "Apply Bulk Pricing Scheme",
+      `Are you sure you want to apply a ${discPct}% clearance price discount and a ${incPct}% sales executive incentive to all ${filteredInventoryProducts.length} filtered aging products?`,
+      false,
+      () => {
+        const updatedProducts = db.products.map(p => {
+          const isFiltered = filteredInventoryProducts.some(f => f.id === p.id);
+          if (isFiltered) {
+            const newSpecialPrice = Math.round(p.mrp * (1 - discPct / 100));
+            return {
+              ...p,
+              specialPrice: newSpecialPrice,
+              isWeeklySpecial: true,
+              weeklySpecialUntil: "2026-12-31", // Valid for current clearance campaign
+              extraCustomerDiscount: 0,
+              weeklySpecialIncentive: incPct
+            };
+          }
+          return p;
+        });
 
-    const updatedProducts = db.products.map(p => {
-      const isFiltered = filteredInventoryProducts.some(f => f.id === p.id);
-      if (isFiltered) {
-        const newSpecialPrice = Math.round(p.mrp * (1 - discPct / 100));
-        return {
-          ...p,
-          specialPrice: newSpecialPrice,
-          isWeeklySpecial: true,
-          weeklySpecialUntil: "2026-12-31", // Valid for current clearance campaign
-          extraCustomerDiscount: 0,
-          weeklySpecialIncentive: incPct
-        };
+        onUpdateDb({
+          ...db,
+          products: updatedProducts
+        });
+
+        showToast(`Bulk clearance scheme applied successfully to ${filteredInventoryProducts.length} aging items!`);
+        setBulkDiscount('');
+        setBulkIncentive('');
       }
-      return p;
-    });
-
-    onUpdateDb({
-      ...db,
-      products: updatedProducts
-    });
-
-    showToast(`Bulk clearance scheme applied successfully to ${filteredInventoryProducts.length} aging items!`);
-    setBulkDiscount('');
-    setBulkIncentive('');
+    );
   };
 
   // Product Form States
@@ -289,6 +292,17 @@ function AdminPanel({
       setSelectedStickerIds(products.map(p => p.id));
     }
   }, [products]);
+
+  // Click outside to close specials product search dropdown
+  useEffect(() => {
+    const handleSpecClickOutside = (e) => {
+      if (isSpecDropdownOpen && !e.target.closest('#spec-search-container')) {
+        setIsSpecDropdownOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleSpecClickOutside);
+    return () => document.removeEventListener('mousedown', handleSpecClickOutside);
+  }, [isSpecDropdownOpen]);
 
   // Toggle selection of sticker print
   const toggleStickerSelection = (id) => {
@@ -413,8 +427,12 @@ function AdminPanel({
   };
 
   // Approve Salesforce Invoice Verification
-  const handleApproveInvoice = (quote) => {
-    if (!confirm(`Approve quotation ${quote.id} and credit ${formatRupee(quote.incentiveAmount)} to executive wallet?`)) {
+  const handleApproveInvoice = async (quote) => {
+    if (!(await window.customConfirm(
+      "Approve Quotation & Credit Incentive",
+      `Approve quotation ${quote.id} and credit ${formatRupee(quote.incentiveAmount)} to executive wallet?`,
+      false
+    ))) {
       return;
     }
 
@@ -622,14 +640,18 @@ function AdminPanel({
   };
 
   // Cash Payout Disbursement
-  const handleAdminPayout = (exec) => {
+  const handleAdminPayout = async (exec) => {
     const balance = exec.walletBalance || 0;
     if (balance <= 0) {
       alert("No balance to pay out.");
       return;
     }
 
-    if (!confirm(`Confirm cash disbursement of ${formatRupee(balance)} to ${exec.name}? Wallet balance will reset to zero.`)) {
+    if (!(await window.customConfirm(
+      "Confirm Cash Payout",
+      `Confirm cash disbursement of ${formatRupee(balance)} to ${exec.name}? Wallet balance will reset to zero.`,
+      false
+    ))) {
       return;
     }
 
@@ -658,7 +680,12 @@ function AdminPanel({
 
   // Campaign DB Reset helper
   const handleResetDatabase = async () => {
-    if (confirm("WARNING: This will reset the showroom campaign database to its initial defaults. All verified invoices, quotations, and wallet ledger logs will be wiped. Proceed?")) {
+    if (await window.customConfirm(
+      "Factory Reset Database",
+      "WARNING: This will reset the showroom campaign database to its initial defaults. All verified invoices, quotations, and wallet ledger logs will be wiped. Proceed?",
+      true,
+      "Factory Reset"
+    )) {
       safeLocalStorage.removeItem('mg_clearance_db_v7');
       try {
         await fetch('/api/reset-db', { method: 'POST' });
@@ -670,7 +697,12 @@ function AdminPanel({
   };
 
   const handleClearAllProducts = async () => {
-    if (confirm("⚠️ ARE YOU SURE YOU WANT TO CLEAR ALL CLEARANCE INVENTORY PRODUCTS?\nThis will erase all clearance products and wipe all sales ledger, quotations, and executive incentives so you can start a fresh campaign from scratch.")) {
+    if (await window.customConfirm(
+      "Clear Clearance Inventory & Stats",
+      "⚠️ ARE YOU SURE YOU WANT TO CLEAR ALL CLEARANCE INVENTORY PRODUCTS?\nThis will erase all clearance products and wipe all sales ledger, quotations, and executive incentives so you can start a fresh campaign from scratch.",
+      true,
+      "Clear All Data"
+    )) {
       const updatedExecutives = (db.executives || []).map(exec => ({
         ...exec,
         cleared: 0,
@@ -730,11 +762,15 @@ function AdminPanel({
     return matchesExec && matchesStatus && matchesSearch;
   });
 
-  const handleCancelAuditQuotation = (quoteId) => {
+  const handleCancelAuditQuotation = async (quoteId) => {
     const targetQuote = (quotations || []).find(q => q.id === quoteId);
     if (!targetQuote) return;
 
-    if (confirm(`Cancel quotation ${quoteId} and release reserved stock back to clearance inventory?`)) {
+    if (await window.customConfirm(
+      "Cancel Quotation",
+      `Cancel quotation ${quoteId} and release reserved stock back to clearance inventory?`,
+      false
+    )) {
       let updatedProducts = [...(db.products || [])];
       if (targetQuote.stockDeducted) {
         targetQuote.items.forEach(item => {
@@ -1192,22 +1228,28 @@ function AdminPanel({
                   type="button"
                   className={`sidebar-nav-btn ${activeTab === 'executives' ? 'active' : ''}`} 
                   onClick={() => setActiveTab('executives')}
+                  style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}
                 >
-                  🔑 Team Passwords & Security
+                  <KeyRound size={15} color="var(--accent-emerald)" />
+                  <span>Team Passwords & Security</span>
                 </button>
                 <button 
                   type="button"
                   className={`sidebar-nav-btn ${activeTab === 'dns' ? 'active' : ''}`} 
                   onClick={() => setActiveTab('dns')}
+                  style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}
                 >
-                  🌐 DNS & Custom Domain
+                  <Globe size={15} color="var(--accent-emerald)" />
+                  <span>DNS & Custom Domain</span>
                 </button>
                 <button 
                   type="button"
                   className={`sidebar-nav-btn ${activeTab === 'db_tools' ? 'active' : ''}`} 
                   onClick={() => setActiveTab('db_tools')}
+                  style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}
                 >
-                  💾 Database Reset & Backup
+                  <Database size={15} color="var(--accent-emerald)" />
+                  <span>Database Reset & Backup</span>
                 </button>
               </div>
             </div>
@@ -1372,9 +1414,9 @@ function AdminPanel({
                             </span>
                             {p.division === 'Tiles' && (
                               <>
-                                <span style={{ color: 'var(--text-muted)' }}>📏 {p.size || 'N/A'}</span>
-                                <span style={{ color: 'var(--text-muted)' }}>✨ {p.finishing || 'N/A'}</span>
-                                <span style={{ color: 'var(--accent-cyan)' }}>📍 Loc: {p.location || 'N/A'}</span>
+                                <span style={{ color: 'var(--text-muted)' }}>Size: {p.size || 'N/A'}</span>
+                                <span style={{ color: 'var(--text-muted)' }}>Finish: {p.finishing || 'N/A'}</span>
+                                <span style={{ color: 'var(--accent-cyan)' }}>Loc: {p.location || 'N/A'}</span>
                               </>
                             )}
                           </div>
@@ -1394,9 +1436,9 @@ function AdminPanel({
                         <td style={{ fontWeight: 'bold', color: 'var(--accent-rose)' }}>{formatRupee(p.specialPrice)}</td>
                         <td>
                           {isWeeklySpecialActive(p) ? (
-                            <span className="badge badge-warning" title={p.weeklySpecialUntil ? `Valid until ${p.weeklySpecialUntil}` : 'Indefinite duration'}>⚡ Special</span>
+                            <span className="badge badge-warning" title={p.weeklySpecialUntil ? `Valid until ${p.weeklySpecialUntil}` : 'Indefinite duration'}>Special</span>
                           ) : p.isWeeklySpecial ? (
-                            <span className="badge" style={{ background: 'rgba(255,255,255,0.04)', color: 'var(--text-muted)', fontSize: '0.7rem', padding: '0.1rem 0.3rem', borderRadius: '4px' }} title={`Expired on ${p.weeklySpecialUntil}`}>⚡ Expired</span>
+                            <span className="badge" style={{ background: 'rgba(255,255,255,0.04)', color: 'var(--text-muted)', fontSize: '0.7rem', padding: '0.1rem 0.3rem', borderRadius: '4px' }} title={`Expired on ${p.weeklySpecialUntil}`}>Expired</span>
                           ) : (
                             <span style={{ color: 'var(--text-muted)', fontSize: '0.75rem' }}>No</span>
                           )}
@@ -1406,7 +1448,7 @@ function AdminPanel({
                             <button className="btn btn-secondary" style={{ padding: '0.25rem 0.5rem' }} onClick={() => openEditProductModal(p)}>
                               <Edit size={14} />
                             </button>
-                            <button className="btn btn-danger" style={{ padding: '0.25rem 0.5rem', border: 'none' }} onClick={() => { if(confirm("Remove item from clearance?")) onDeleteProduct(p.id) }}>
+                             <button className="btn btn-danger" style={{ padding: '0.25rem 0.5rem', border: 'none' }} onClick={async () => { if (await window.customConfirm("Remove Product", "Are you sure you want to remove this item from clearance?", true, "Remove")) onDeleteProduct(p.id); }}>
                               <Trash2 size={14} />
                             </button>
                           </div>
@@ -1647,13 +1689,13 @@ function AdminPanel({
                           <td style={{ fontWeight: 700, color: 'var(--accent-emerald)' }}>{formatRupee(totalVal)}</td>
                           <td>
                             {quote.status === 'approved' ? (
-                              <span className="badge badge-emerald">✅ Billed & Deducted</span>
+                              <span className="badge badge-emerald">Billed & Deducted</span>
                             ) : quote.status === 'cancelled' ? (
-                              <span className="badge" style={{ background: 'rgba(255,255,255,0.05)', color: 'var(--text-muted)' }}>🚫 Cancelled & Released</span>
+                              <span className="badge" style={{ background: 'rgba(255,255,255,0.05)', color: 'var(--text-muted)' }}>Cancelled & Released</span>
                             ) : quote.status === 'pending_verification' ? (
-                              <span className="badge badge-warning">⏳ Submitted Receipt</span>
+                              <span className="badge badge-warning">Submitted Receipt</span>
                             ) : (
-                              <span className="badge badge-cyan">🔒 Stock Reserved (Draft)</span>
+                              <span className="badge badge-cyan">Stock Reserved (Draft)</span>
                             )}
                           </td>
                           <td>
@@ -1663,7 +1705,7 @@ function AdminPanel({
                                 style={{ padding: '0.25rem 0.6rem', fontSize: '0.75rem', border: 'none' }}
                                 onClick={() => handleCancelAuditQuotation(quote.id)}
                               >
-                                🚫 Cancel & Release
+                                Cancel & Release
                               </button>
                             ) : (
                               <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Completed</span>
@@ -1698,45 +1740,90 @@ function AdminPanel({
               </h4>
               
               <form onSubmit={handleAddWeeklySpecial} style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '1.25rem', alignItems: 'flex-end' }}>
-                <div className="form-group" style={{ marginBottom: 0, position: 'relative' }}>
+                <div id="spec-search-container" className="form-group" style={{ marginBottom: 0, position: 'relative' }}>
                   <label className="form-label">Select Clearance Product</label>
-                  <div style={{ position: 'relative' }}>
-                    <input 
-                      type="text" 
-                      className="form-input" 
-                      placeholder="Type code or name (e.g. SA41495, WATERO)..." 
-                      value={specSearchQuery}
-                      onChange={(e) => {
-                        setSpecSearchQuery(e.target.value);
-                        setIsSpecDropdownOpen(true);
-                      }}
-                      onFocus={() => setIsSpecDropdownOpen(true)}
-                      style={{ fontSize: '0.85rem', fontWeight: 600, paddingRight: specSelectedId ? '110px' : '12px' }}
-                    />
-                    {specSelectedId && (
-                      <span style={{ position: 'absolute', right: '8px', top: '50%', transform: 'translateY(-50%)', fontSize: '0.68rem', color: 'var(--accent-emerald)', background: 'rgba(16, 185, 129, 0.12)', padding: '0.15rem 0.45rem', borderRadius: '4px', fontWeight: 700, pointerEvents: 'none' }}>
-                        Selected
-                      </span>
-                    )}
-                  </div>
+                  
+                  {specSelectedId ? (
+                    (() => {
+                      const selectedProd = products.find(p => p.id === specSelectedId);
+                      if (!selectedProd) return null;
+                      return (
+                        <div style={{ 
+                          background: 'rgba(14, 165, 233, 0.05)', 
+                          border: '1px solid var(--accent-cyan)', 
+                          padding: '0.65rem 0.85rem', 
+                          borderRadius: '8px', 
+                          display: 'flex', 
+                          justifyContent: 'space-between', 
+                          alignItems: 'center',
+                          marginTop: '0.25rem',
+                          minHeight: '46px'
+                        }}>
+                          <div style={{ marginRight: '1rem', overflow: 'hidden' }}>
+                            <div style={{ fontSize: '0.82rem', fontWeight: 800, color: 'var(--text-primary)', whiteSpace: 'nowrap', textOverflow: 'ellipsis', overflow: 'hidden' }}>
+                              <span style={{ color: 'var(--accent-cyan)' }}>{selectedProd.id}</span> - {selectedProd.name}
+                            </div>
+                            <div style={{ fontSize: '0.7rem', color: 'var(--text-secondary)', marginTop: '0.15rem' }}>
+                              Brand: <strong>{selectedProd.brand}</strong> • Stock: <strong>{selectedProd.stock}</strong> • Special: <strong>{formatRupee(selectedProd.specialPrice)}</strong>
+                            </div>
+                          </div>
+                          <button 
+                            type="button" 
+                            className="btn btn-ghost" 
+                            onClick={() => {
+                              setSpecSelectedId('');
+                              setSpecSearchQuery('');
+                            }}
+                            style={{ 
+                              padding: '0.25rem 0.6rem', 
+                              fontSize: '0.7rem', 
+                              fontWeight: 700,
+                              color: 'var(--accent-rose)', 
+                              border: '1px solid rgba(239, 68, 68, 0.3)',
+                              borderRadius: '4px',
+                              background: 'rgba(239, 68, 68, 0.05)',
+                              cursor: 'pointer'
+                            }}
+                          >
+                            Change
+                          </button>
+                        </div>
+                      );
+                    })()
+                  ) : (
+                    <div style={{ position: 'relative' }}>
+                      <input 
+                        type="text" 
+                        className="form-input" 
+                        placeholder="Type code or name (e.g. SA41495, WATERO)..." 
+                        value={specSearchQuery}
+                        onChange={(e) => {
+                          setSpecSearchQuery(e.target.value);
+                          setIsSpecDropdownOpen(true);
+                        }}
+                        onFocus={() => setIsSpecDropdownOpen(true)}
+                        style={{ fontSize: '0.85rem', fontWeight: 600 }}
+                      />
+                    </div>
+                  )}
 
                   {/* Interactive Floating Dropdown Results */}
-                  {isSpecDropdownOpen && (
+                  {isSpecDropdownOpen && !specSelectedId && (
                     <div 
                       className="search-results-list"
                       style={{ 
                         position: 'absolute', 
                         top: '100%', 
                         left: 0, 
-                        right: 0, 
+                        minWidth: '420px', 
                         maxHeight: '240px', 
                         overflowY: 'auto', 
                         zIndex: 9999,
-                        background: 'var(--bg-card)',
+                        background: '#121824',
                         border: '1px solid var(--accent-cyan)',
                         borderRadius: '8px',
-                        boxShadow: '0 8px 24px rgba(0,0,0,0.5)',
-                        marginTop: '4px'
+                        boxShadow: '0 12px 32px rgba(0,0,0,0.6)',
+                        marginTop: '6px'
                       }}
                     >
                       {(() => {
@@ -2302,7 +2389,7 @@ function AdminPanel({
                 {/* Main Admin Password Security Panel */}
                 <div style={{ background: 'rgba(255,255,255,0.01)', padding: '0.85rem', borderRadius: '8px', border: '1px solid var(--accent-emerald)' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
-                    <span style={{ fontWeight: 700, fontSize: '0.85rem', color: 'var(--accent-emerald)' }}>🛡️ System Admin Account (`admin`)</span>
+                    <span style={{ fontWeight: 700, fontSize: '0.85rem', color: 'var(--accent-emerald)', display: 'inline-flex', alignItems: 'center', gap: '0.35rem' }}><ShieldAlert size={16} color="var(--accent-emerald)" /> System Admin Account (`admin`)</span>
                     <span style={{ fontSize: '0.7rem', color: '#fff', background: 'var(--accent-emerald)', padding: '0.1rem 0.4rem', borderRadius: '4px' }}>Role: admin</span>
                   </div>
                   <form onSubmit={handleUpdateAdminPassword} style={{ display: 'flex', gap: '0.5rem' }}>
@@ -2425,10 +2512,10 @@ function AdminPanel({
                           >
                             <Edit size={16} />
                           </button>
-                          <button 
+                           <button 
                             className="btn btn-icon btn-danger" 
                             title="Delete Account" 
-                            onClick={() => { if (confirm(`Delete executive account for ${exec.name}?`)) onDeleteExecutive(exec.id); }}
+                            onClick={async () => { if (await window.customConfirm("Delete Executive Account", `Delete executive account for ${exec.name}?`, true, "Delete")) onDeleteExecutive(exec.id); }}
                           >
                             <Trash2 size={16} />
                           </button>
@@ -2581,7 +2668,10 @@ function AdminPanel({
 
             {/* Network Latency Tester */}
             <div className="glass-panel" style={{ padding: '1.25rem', borderRadius: '12px' }}>
-              <h4 style={{ fontSize: '0.95rem', fontWeight: 700, marginBottom: '0.75rem' }}>⚡ Domain Connectivity & Latency Monitor</h4>
+              <h4 style={{ fontSize: '0.95rem', fontWeight: 700, marginBottom: '0.75rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                <Zap size={18} color="var(--accent-amber)" />
+                Domain Connectivity & Latency Monitor
+              </h4>
               <button className="btn btn-cyan" onClick={() => {
                 const t0 = performance.now();
                 fetch('/api/db')
@@ -2626,8 +2716,8 @@ function AdminPanel({
                   downloadAnchor.click();
                   downloadAnchor.remove();
                   showToast("Full database backup downloaded successfully!");
-                }} style={{ padding: '0.55rem 1.1rem', fontSize: '0.8rem', fontWeight: 700 }}>
-                  📥 Download DB Backup (.json)
+                }} style={{ padding: '0.55rem 1.1rem', fontSize: '0.8rem', fontWeight: 700, display: 'inline-flex', alignItems: 'center', gap: '0.35rem' }}>
+                  <Download size={15} /> Download DB Backup (.json)
                 </button>
               </div>
 
@@ -2680,8 +2770,8 @@ function AdminPanel({
                 <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', marginBottom: '1rem' }}>
                   This will erase all product items from the system so you can upload a fresh CSV. Executive accounts and ledger logs will NOT be affected.
                 </p>
-                <button className="btn btn-danger" onClick={handleClearAllProducts} style={{ padding: '0.5rem 1rem', fontSize: '0.8rem', fontWeight: 700, background: 'rgba(239, 68, 68, 0.15)', color: 'var(--accent-rose)', border: '1px solid rgba(239, 68, 68, 0.3)' }}>
-                  🧹 Clear All Products Only
+                <button className="btn btn-danger" onClick={handleClearAllProducts} style={{ padding: '0.5rem 1rem', fontSize: '0.8rem', fontWeight: 700, background: 'rgba(239, 68, 68, 0.15)', color: 'var(--accent-rose)', border: '1px solid rgba(239, 68, 68, 0.3)', display: 'inline-flex', alignItems: 'center', gap: '0.35rem' }}>
+                  <Trash2 size={15} /> Clear All Products Only
                 </button>
               </div>
 
@@ -2694,8 +2784,8 @@ function AdminPanel({
                 <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', marginBottom: '1rem' }}>
                   This action wipes all data (verified invoices, wallet ledgers, sales history, etc.) and resets stock inventory to campaign initial defaults.
                 </p>
-                <button className="btn btn-danger" onClick={handleResetDatabase} style={{ padding: '0.5rem 1rem', fontSize: '0.8rem', fontWeight: 700 }}>
-                  ⚠️ Factory Reset Database
+                <button className="btn btn-danger" onClick={handleResetDatabase} style={{ padding: '0.5rem 1rem', fontSize: '0.8rem', fontWeight: 700, display: 'inline-flex', alignItems: 'center', gap: '0.35rem' }}>
+                  <ShieldAlert size={15} /> Factory Reset Database
                 </button>
               </div>
             </div>

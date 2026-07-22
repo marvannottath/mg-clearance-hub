@@ -4,7 +4,7 @@ import MDDashboard from './components/MDDashboard';
 import ExecutiveWorkspace from './components/ExecutiveWorkspace';
 import AdminPanel from './components/AdminPanel';
 import CheckerWorkspace from './components/CheckerWorkspace';
-import { Layers, Sun, Moon, LogOut, ShieldAlert, KeyRound, User, Bell, CheckCheck, Info, AlertTriangle, CheckCircle2, Download, Smartphone } from 'lucide-react';
+import { Layers, Sun, Moon, LogOut, ShieldAlert, KeyRound, User, Bell, CheckCheck, Info, AlertTriangle, CheckCircle2, Download, Smartphone, HelpCircle } from 'lucide-react';
 
 // Fail-safe wrapper to prevent security exceptions in Brave, Safari Private, and chrome Incognito mode
 export const safeLocalStorage = (() => {
@@ -146,6 +146,47 @@ function App() {
   const [forgotSuccess, setForgotSuccess] = useState(false);
 
   const [isNotifDrawerOpen, setIsNotifDrawerOpen] = useState(false);
+
+  // Click outside to close notification drawer
+  useEffect(() => {
+    const handleNotifClickOutside = (e) => {
+      if (isNotifDrawerOpen && !e.target.closest('#notification-bell-btn') && !e.target.closest('#notification-drawer')) {
+        setIsNotifDrawerOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleNotifClickOutside);
+    return () => document.removeEventListener('mousedown', handleNotifClickOutside);
+  }, [isNotifDrawerOpen]);
+
+  // Unified Custom Confirmation Modal State & Global Handler
+  const [confirmModal, setConfirmModal] = useState({
+    isOpen: false,
+    title: '',
+    message: '',
+    resolve: null,
+    isDanger: false,
+    confirmText: 'Proceed',
+    cancelText: 'Cancel'
+  });
+
+  useEffect(() => {
+    window.customConfirm = (title, message, isDanger = false, confirmText = 'Proceed', cancelText = 'Cancel') => {
+      return new Promise((resolve) => {
+        setConfirmModal({
+          isOpen: true,
+          title,
+          message,
+          resolve,
+          isDanger,
+          confirmText,
+          cancelText
+        });
+      });
+    };
+    return () => {
+      delete window.customConfirm;
+    };
+  }, []);
 
   const getUserNotifications = () => {
     if (!currentUser || !db.notifications) return [];
@@ -605,6 +646,7 @@ function App() {
             {currentUser && (
               <div style={{ position: 'relative' }}>
                 <button 
+                  id="notification-bell-btn"
                   onClick={() => setIsNotifDrawerOpen(!isNotifDrawerOpen)}
                   style={{ 
                     width: '38px', 
@@ -646,6 +688,7 @@ function App() {
                 {/* Floating Notification Drawer */}
                 {isNotifDrawerOpen && (
                   <div 
+                    id="notification-drawer"
                     className="glass-panel" 
                     style={{ 
                       position: 'absolute', 
@@ -1004,6 +1047,91 @@ function App() {
         }}>
           © 2026 Marble Gallery (MG) Group. All rights reserved. • Clearance Liquidation Dashboard (MG Luxe Bath & Tile)
         </footer>
+      )}
+
+      {/* Global Custom Confirmation Modal */}
+      {confirmModal.isOpen && (
+        <div 
+          className="modal-backdrop fade-in" 
+          onClick={() => { confirmModal.resolve(false); setConfirmModal(prev => ({ ...prev, isOpen: false })); }}
+          style={{ 
+            position: 'fixed', 
+            inset: 0, 
+            background: 'rgba(0, 0, 0, 0.75)', 
+            zIndex: 9999999, 
+            display: 'flex', 
+            alignItems: 'center', 
+            justifyContent: 'center', 
+            padding: '1rem',
+            backdropFilter: 'blur(4px)'
+          }}
+        >
+          <div 
+            className="glass-panel" 
+            onClick={(e) => e.stopPropagation()}
+            style={{ 
+              maxWidth: '440px', 
+              width: '100%', 
+              padding: '1.75rem', 
+              borderRadius: '16px', 
+              background: '#121824',
+              border: `1px solid ${confirmModal.isDanger ? 'var(--accent-rose)' : 'var(--accent-cyan)'}`,
+              boxShadow: '0 20px 50px rgba(0,0,0,0.6)',
+              animation: 'scaleUp 0.2s ease-out'
+            }}
+          >
+            <h3 style={{ 
+              fontSize: '1.25rem', 
+              fontWeight: 800, 
+              color: confirmModal.isDanger ? 'var(--accent-rose)' : 'var(--accent-cyan)', 
+              marginBottom: '0.85rem',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.5rem'
+            }}>
+              {confirmModal.isDanger ? <ShieldAlert size={22} color="var(--accent-rose)" /> : <HelpCircle size={22} color="var(--accent-cyan)" />}
+              {confirmModal.title}
+            </h3>
+            
+            <p style={{ 
+              fontSize: '0.88rem', 
+              color: 'var(--text-secondary)', 
+              lineHeight: '1.6', 
+              marginBottom: '1.5rem',
+              whiteSpace: 'pre-line'
+            }}>
+              {confirmModal.message}
+            </p>
+            
+            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.75rem' }}>
+              <button 
+                type="button"
+                className="btn btn-secondary" 
+                onClick={() => { confirmModal.resolve(false); setConfirmModal(prev => ({ ...prev, isOpen: false })); }}
+                style={{ padding: '0.55rem 1.25rem', fontSize: '0.8rem', fontWeight: 700 }}
+              >
+                {confirmModal.cancelText}
+              </button>
+              <button 
+                type="button"
+                className={`btn ${confirmModal.isDanger ? 'btn-danger' : 'btn-cyan'}`} 
+                onClick={() => { confirmModal.resolve(true); setConfirmModal(prev => ({ ...prev, isOpen: false })); }}
+                style={{ 
+                  padding: '0.55rem 1.25rem', 
+                  fontSize: '0.8rem', 
+                  fontWeight: 700,
+                  background: confirmModal.isDanger ? 'var(--accent-rose)' : 'var(--accent-cyan)',
+                  color: '#fff',
+                  border: 'none',
+                  borderRadius: '8px',
+                  cursor: 'pointer'
+                }}
+              >
+                {confirmModal.confirmText}
+              </button>
+            </div>
+          </div>
+        </div>
       )}
 
       {/* Offline Network Banner */}

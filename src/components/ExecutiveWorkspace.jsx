@@ -295,8 +295,13 @@ function ExecutiveWorkspace({ products, activeExecutive, db, onUpdateDb }) {
   };
 
   // End/Cancel customer session
-  const endSession = () => {
-    if (cart.length > 0 && !confirm("Discard current selection and end customer session?")) {
+  const endSession = async () => {
+    if (cart.length > 0 && !(await window.customConfirm(
+      "End Customer Session",
+      "Discard current selection and end customer session?",
+      true,
+      "Discard"
+    ))) {
       return;
     }
     setIsSessionActive(false);
@@ -638,11 +643,16 @@ function ExecutiveWorkspace({ products, activeExecutive, db, onUpdateDb }) {
     setMobileTab('overview');
   };
 
-  const handleDeleteQuotation = (quoteId) => {
+  const handleDeleteQuotation = async (quoteId) => {
     const targetQuote = (db.quotations || []).find(q => q.id === quoteId);
     if (!targetQuote) return;
 
-    if (!confirm(`Are you sure you want to delete quotation ${quoteId}?`)) {
+    if (!(await window.customConfirm(
+      "Delete Quotation",
+      `Are you sure you want to delete quotation ${quoteId}?`,
+      true,
+      "Delete"
+    ))) {
       return;
     }
 
@@ -747,14 +757,18 @@ function ExecutiveWorkspace({ products, activeExecutive, db, onUpdateDb }) {
   };
 
   // Payout request payout handler
-  const handleRequestPayout = () => {
+  const handleRequestPayout = async () => {
     const currentBalance = activeExecutive.walletBalance || 0;
     if (currentBalance <= 0) {
       alert("No cleared earnings available in your wallet to disburse.");
       return;
     }
 
-    if (!confirm(`Are you sure you want to request payout for ${formatRupee(currentBalance)}?`)) {
+    if (!(await window.customConfirm(
+      "Request Cash Payout",
+      `Are you sure you want to request payout for ${formatRupee(currentBalance)}?`,
+      false
+    ))) {
       return;
     }
 
