@@ -78,7 +78,7 @@ function MDDashboard({
   // 1. Data Prep: Cumulative Clearance Progress (Timeline)
   const getTimelineData = () => {
     if (filteredSalesLedger.length === 0) {
-      return [{ date: 'Start', Cleared: 0, Target: targetLandingCost }];
+      return [{ date: 'Start', Cleared: 0, RemainingInventory: targetLandingCost, TargetLine: targetLandingCost }];
     }
     
     const sortedSales = [...filteredSalesLedger].sort((a, b) => new Date(a.date) - new Date(b.date));
