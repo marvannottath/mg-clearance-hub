@@ -64,9 +64,16 @@ export class ErrorBoundary extends React.Component {
             <ShieldAlert size={32} color="#ef4444" />
           </div>
           <h2 style={{ fontSize: '1.4rem', fontWeight: 800, marginBottom: '0.5rem', color: '#f8fafc' }}>System Recovery Required</h2>
-          <p style={{ color: '#94a3b8', fontSize: '0.85rem', maxWidth: '400px', marginBottom: '1.5rem', lineHeight: '1.6' }}>
-            An unexpected temporary rendering exception occurred on this device. Click below to reload and restore session.
+          <p style={{ color: '#94a3b8', fontSize: '0.85rem', maxWidth: '500px', marginBottom: '1rem', lineHeight: '1.6' }}>
+            An unexpected temporary rendering exception occurred on this device.
           </p>
+          {this.state.error && (
+            <pre style={{ background: 'rgba(239, 68, 68, 0.1)', color: '#fca5a5', padding: '0.85rem', borderRadius: '8px', border: '1px solid rgba(239, 68, 68, 0.2)', fontSize: '0.75rem', maxWidth: '600px', width: '100%', overflowX: 'auto', textAlign: 'left', marginBottom: '1.25rem', whiteSpace: 'pre-wrap', wordBreak: 'break-all' }}>
+              {this.state.error.toString()}
+              {'\n\n'}
+              {this.state.error.stack}
+            </pre>
+          )}
           <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap', justifyContent: 'center' }}>
             <button 
               className="btn btn-cyan" 
