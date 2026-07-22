@@ -669,6 +669,19 @@ function AdminPanel({
     }
   };
 
+  const handleClearAllProducts = async () => {
+    if (confirm("⚠️ ARE YOU SURE YOU WANT TO CLEAR ALL CLEARANCE INVENTORY PRODUCTS?\nThis will erase all clearance products so you can upload your real showroom CSV inventory sheet from scratch. Exec accounts, sales ledger, and quotations will NOT be deleted.")) {
+      const updatedDb = { ...db, products: [] };
+      if (onUpdateDb) onUpdateDb(updatedDb);
+      try {
+        await fetch('/api/reset-products', { method: 'POST' });
+      } catch (e) {
+        console.error("Failed to clear products on server:", e);
+      }
+      showToast("All clearance products cleared! Ready for new CSV import.");
+    }
+  };
+
   // Filter states
   const [inventorySearch, setInventorySearch] = useState('');
   const [inventoryStockFilter, setInventoryStockFilter] = useState('ALL');
@@ -883,29 +896,37 @@ function AdminPanel({
       const headersRow = parseCSVLine(lines[0]).map(h => h.toLowerCase().trim());
       
       const getIndex = (possibleNames, fallbackIndex) => {
+        // 1. Try exact cleaned match (ignoring spaces, underscores, dashes)
         for (const name of possibleNames) {
-          const idx = headersRow.findIndex(h => h === name || h.includes(name));
+          const cleanName = name.replace(/[\s_-]/g, '').toLowerCase();
+          const idx = headersRow.findIndex(h => h.replace(/[\s_-]/g, '').toLowerCase() === cleanName);
+          if (idx !== -1) return idx;
+        }
+        // 2. Try substring cleaned match
+        for (const name of possibleNames) {
+          const cleanName = name.replace(/[\s_-]/g, '').toLowerCase();
+          const idx = headersRow.findIndex(h => h.replace(/[\s_-]/g, '').toLowerCase().includes(cleanName));
           if (idx !== -1) return idx;
         }
         return fallbackIndex;
       };
 
-      const idIdx = getIndex(['id', 'code', 'productcode', 'product_code'], 0);
-      const nameIdx = getIndex(['name', 'productname', 'product_name', 'itemname'], 1);
+      const idIdx = getIndex(['id', 'code', 'productcode', 'product_code', 'itemno', 'item_no'], 0);
+      const nameIdx = getIndex(['name', 'productname', 'product_name', 'itemname', 'item_name'], 1);
       const brandIdx = getIndex(['brand'], 2);
-      const catIdx = getIndex(['category', 'product_category'], 3);
-      const divIdx = getIndex(['division'], 4);
-      const descIdx = getIndex(['description'], 5);
-      const stockIdx = getIndex(['stock', 'quantity', 'in_stock', 'qty'], 6);
-      const mrpIdx = getIndex(['mrp', 'price', 'msp'], 7);
-      const mgPriceIdx = getIndex(['mgprice', 'mg_price'], 8);
-      const specIdx = getIndex(['specialprice', 'clearanceprice', 'clearance_price', 'special_price'], 9);
-      const landingIdx = getIndex(['landingcost', 'cost', 'cost_price'], 10);
-      const sizeIdx = getIndex(['size'], 11);
-      const finishIdx = getIndex(['finishing', 'finish'], 12);
-      const locIdx = getIndex(['location', 'rack', 'pallet'], 13);
-      const sinceIdx = getIndex(['instocksince', 'in_stock_since', 'since'], 14);
-      const imgIdx = getIndex(['image', 'img'], 15);
+      const catIdx = getIndex(['category', 'product_category', 'division'], 3);
+      const divIdx = getIndex(['division', 'dept', 'department'], 4);
+      const descIdx = getIndex(['description', 'remarks', 'details'], 5);
+      const stockIdx = getIndex(['stock', 'quantity', 'instock', 'in_stock', 'qty', 'stockqty', 'stock_qty'], 6);
+      const mrpIdx = getIndex(['mrp', 'mrprate', 'mrp_rate', 'price', 'msp', 'retailprice', 'retail_price'], 7);
+      const mgPriceIdx = getIndex(['mgprice', 'mg_price', 'galleryprice', 'gallery_price'], 8);
+      const specIdx = getIndex(['specialprice', 'clearanceprice', 'clearance_price', 'special_price', 'clearancerate', 'clearance_rate', 'offerprice', 'offer_price', 'rate', 'specialrate', 'special_rate', 'netprice', 'net_price'], 9);
+      const landingIdx = getIndex(['landingcost', 'landing_cost', 'cost', 'costprice', 'cost_price', 'purchaseprice', 'purchase_price'], 10);
+      const sizeIdx = getIndex(['size', 'dimension'], 11);
+      const finishIdx = getIndex(['finishing', 'finish', 'surface'], 12);
+      const locIdx = getIndex(['location', 'rack', 'pallet', 'bin'], 13);
+      const sinceIdx = getIndex(['instocksince', 'in_stock_since', 'since', 'date'], 14);
+      const imgIdx = getIndex(['image', 'img', 'photo'], 15);
 
       const parsedItems = [];
       let updatedCount = 0;
@@ -1245,23 +1266,6 @@ function AdminPanel({
                   <Plus size={16} />
                   Add Product
                 </button>
-                {currentUser.role === 'admin' && (
-                  <button 
-                    className="btn btn-danger" 
-                    onClick={async () => {
-                      if (confirm("⚠️ ARE YOU SURE YOU WANT TO CLEAR ALL SAMPLE PRODUCTS?\nThis will erase all demo items so you can upload your real showroom CSV inventory sheet from scratch.")) {
-                        const updatedDb = { ...db, products: [] };
-                        if (onUpdateDb) onUpdateDb(updatedDb);
-                        try { await fetch('/api/reset-products', { method: 'POST' }); } catch(e){}
-                        showToast("All sample products erased! Ready for real CSV import.");
-                      }
-                    }}
-                    style={{ border: 'none', background: 'rgba(239,68,68,0.15)', color: 'var(--accent-rose)' }}
-                  >
-                    <Trash2 size={14} />
-                    Clear All Products
-                  </button>
-                )}
               </div>
             </div>
             {/* Bulk Liquidation Action for Filtered Aging Stock */}
@@ -2651,18 +2655,35 @@ function AdminPanel({
 
             </div>
 
-            {/* Reset Database Trigger */}
-            <div className="glass-panel" style={{ padding: '1.25rem', borderRadius: '12px', border: '1px solid var(--accent-rose)', background: 'rgba(239, 68, 68, 0.03)' }}>
-              <h4 style={{ fontSize: '0.95rem', fontWeight: 700, color: 'var(--accent-rose)', marginBottom: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-                <ShieldAlert size={18} />
-                Reset Database to Showroom Campaign Defaults
-              </h4>
-              <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', marginBottom: '1rem' }}>
-                This action wipes local storage caches and re-initializes stock inventory and executives to factory defaults.
-              </p>
-              <button className="btn btn-danger" onClick={handleResetDatabase} style={{ padding: '0.5rem 1rem', fontSize: '0.8rem', fontWeight: 700 }}>
-                ⚠️ Factory Reset Database
-              </button>
+            {/* Reset Database and Inventory Triggers */}
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem' }}>
+              {/* Clear Products Only */}
+              <div className="glass-panel" style={{ padding: '1.25rem', borderRadius: '12px', border: '1px solid var(--accent-rose)', background: 'rgba(239, 68, 68, 0.02)' }}>
+                <h4 style={{ fontSize: '0.95rem', fontWeight: 700, color: 'var(--accent-rose)', marginBottom: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                  <Trash2 size={18} />
+                  Clear Clearance Stock Inventory
+                </h4>
+                <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', marginBottom: '1rem' }}>
+                  This will erase all product items from the system so you can upload a fresh CSV. Executive accounts and ledger logs will NOT be affected.
+                </p>
+                <button className="btn btn-danger" onClick={handleClearAllProducts} style={{ padding: '0.5rem 1rem', fontSize: '0.8rem', fontWeight: 700, background: 'rgba(239, 68, 68, 0.15)', color: 'var(--accent-rose)', border: '1px solid rgba(239, 68, 68, 0.3)' }}>
+                  🧹 Clear All Products Only
+                </button>
+              </div>
+
+              {/* Full Factory Reset */}
+              <div className="glass-panel" style={{ padding: '1.25rem', borderRadius: '12px', border: '1px solid var(--accent-rose)', background: 'rgba(239, 68, 68, 0.03)' }}>
+                <h4 style={{ fontSize: '0.95rem', fontWeight: 700, color: 'var(--accent-rose)', marginBottom: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                  <ShieldAlert size={18} />
+                  Reset Database to Showroom Defaults
+                </h4>
+                <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', marginBottom: '1rem' }}>
+                  This action wipes all data (verified invoices, wallet ledgers, sales history, etc.) and resets stock inventory to campaign initial defaults.
+                </p>
+                <button className="btn btn-danger" onClick={handleResetDatabase} style={{ padding: '0.5rem 1rem', fontSize: '0.8rem', fontWeight: 700 }}>
+                  ⚠️ Factory Reset Database
+                </button>
+              </div>
             </div>
 
           </div>
