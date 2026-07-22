@@ -397,16 +397,16 @@ export function loadDatabase() {
         updatedStatus = true;
       }
 
-      // Auto-correct identical or inverted MRP and Clearance prices
-      if (mrpP <= specialP && specialP > 0) {
-        mrpP = Math.round(specialP / (1 - 0.40)); // Standard 40% margin calculation for MRP
-        updated.mrp = mrpP;
+      // Auto-correct corrupt clearance prices mistakenly saved as 5% incentive rate (e.g. 53, 389 when landing is 715, 5278)
+      if (updated.landingCost > 0 && updated.specialPrice > 0 && updated.specialPrice < (updated.landingCost * 0.4)) {
+        updated.specialPrice = updated.landingCost;
+        updated.mrp = Math.max(updated.mrp || 0, updated.landingCost);
         updatedStatus = true;
       }
 
-      // Ensure realistic Landing Cost (net cost price ~20% below clearance rate)
-      if (updated.landingCost === undefined || updated.landingCost >= specialP) {
-        updated.landingCost = Math.round(specialP * 0.8);
+      // Ensure landingCost is initialized
+      if (updated.landingCost === undefined || updated.landingCost <= 0) {
+        updated.landingCost = Math.round((updated.specialPrice || updated.mrp || 0) * 0.8);
         updatedStatus = true;
       }
       if (updated.stickerStatus === undefined) {

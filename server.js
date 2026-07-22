@@ -51,19 +51,28 @@ if (dbUrl) {
   }
 }
 
-// Helper to sanitize database products (only fix exact corruptions where product code digits were saved as MRP)
+// Helper to sanitize database products (only fix exact corruptions where product code digits were saved as MRP or clearance price was mistakenly read as 5% incentive)
 function sanitizeDatabase(data) {
   if (!data || !data.products) return { db: data, modified: false };
   let modified = false;
 
   const cleanedProducts = data.products.map(p => {
-    const specialP = p.specialPrice || 0;
+    let specP = p.specialPrice || 0;
     let mrpP = p.mrp || 0;
+    const landingP = p.landingCost || 0;
     const idDigits = (p.id || '').replace(/\D/g, '');
 
-    // Only fix if product code digits (e.g. 41560 from SA41560) were mistakenly saved as MRP
-    if (idDigits.length >= 4 && String(mrpP) === idDigits && specialP > 0 && mrpP > specialP * 4) {
-      mrpP = Math.round(specialP * 1.5);
+    // 1. Auto-correct corrupt clearance prices mistakenly saved as 5% incentive rate (e.g. 53, 389 when landing is 715, 5278)
+    if (landingP > 0 && specP > 0 && specP < (landingP * 0.4)) {
+      specP = landingP;
+      mrpP = Math.max(mrpP, specP);
+      modified = true;
+      return { ...p, specialPrice: specP, mrp: mrpP };
+    }
+
+    // 2. Only fix if product code digits (e.g. 41560 from SA41560) were mistakenly saved as MRP
+    if (idDigits.length >= 4 && String(mrpP) === idDigits && specP > 0 && mrpP > specP * 4) {
+      mrpP = Math.round(specP * 1.5);
       modified = true;
       return { ...p, mrp: mrpP };
     }

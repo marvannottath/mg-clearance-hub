@@ -946,16 +946,30 @@ function AdminPanel({
       const headersRow = parseCSVLine(lines[0]).map(h => h.toLowerCase().trim());
       
       const getIndex = (possibleNames, fallbackIndex) => {
+        const isPriceSearch = possibleNames.some(n => ['mrp', 'specialprice', 'clearanceprice', 'landingcost'].includes(n.replace(/[\s_-]/g, '').toLowerCase()));
+        
         // 1. Try exact cleaned match (ignoring spaces, underscores, dashes)
         for (const name of possibleNames) {
           const cleanName = name.replace(/[\s_-]/g, '').toLowerCase();
-          const idx = headersRow.findIndex(h => h.replace(/[\s_-]/g, '').toLowerCase() === cleanName);
+          const idx = headersRow.findIndex(h => {
+            const cleanH = h.replace(/[\s_-]/g, '').toLowerCase();
+            if (isPriceSearch && (cleanH.includes('incentive') || cleanH.includes('commission') || cleanH.includes('reward'))) {
+              return false;
+            }
+            return cleanH === cleanName;
+          });
           if (idx !== -1) return idx;
         }
         // 2. Try substring cleaned match
         for (const name of possibleNames) {
           const cleanName = name.replace(/[\s_-]/g, '').toLowerCase();
-          const idx = headersRow.findIndex(h => h.replace(/[\s_-]/g, '').toLowerCase().includes(cleanName));
+          const idx = headersRow.findIndex(h => {
+            const cleanH = h.replace(/[\s_-]/g, '').toLowerCase();
+            if (isPriceSearch && (cleanH.includes('incentive') || cleanH.includes('commission') || cleanH.includes('reward'))) {
+              return false;
+            }
+            return cleanH.includes(cleanName);
+          });
           if (idx !== -1) return idx;
         }
         return fallbackIndex;
@@ -968,9 +982,9 @@ function AdminPanel({
       const divIdx = getIndex(['division', 'dept', 'department'], 4);
       const descIdx = getIndex(['description', 'remarks', 'details'], 5);
       const stockIdx = getIndex(['stock', 'quantity', 'instock', 'in_stock', 'qty', 'stockqty', 'stock_qty'], 6);
-      const mrpIdx = getIndex(['mrp', 'mrprate', 'mrp_rate', 'price', 'msp', 'retailprice', 'retail_price'], 7);
+      const mrpIdx = getIndex(['mrp', 'mrprate', 'mrp_rate', 'msp', 'retailprice', 'retail_price'], 7);
       const mgPriceIdx = getIndex(['mgprice', 'mg_price', 'galleryprice', 'gallery_price'], 8);
-      const specIdx = getIndex(['specialprice', 'clearanceprice', 'clearance_price', 'special_price', 'clearancerate', 'clearance_rate', 'offerprice', 'offer_price', 'rate', 'specialrate', 'special_rate', 'netprice', 'net_price'], 9);
+      const specIdx = getIndex(['specialprice', 'clearanceprice', 'clearance_price', 'special_price', 'clearancerate', 'clearance_rate', 'offerprice', 'offer_price', 'specialrate', 'special_rate', 'netprice', 'net_price', 'dealprice', 'deal_price'], 9);
       const landingIdx = getIndex(['landingcost', 'landing_cost', 'cost', 'costprice', 'cost_price', 'purchaseprice', 'purchase_price'], 10);
       const sizeIdx = getIndex(['size', 'dimension'], 11);
       const finishIdx = getIndex(['finishing', 'finish', 'surface'], 12);
