@@ -700,13 +700,30 @@ function AdminPanel({
       true,
       "Factory Reset"
     )) {
-      safeLocalStorage.removeItem('mg_clearance_db_v7');
+      // Save a clean DB with productsInitialized:true so seed data doesn't reload
+      const cleanDb = {
+        products: [],
+        productsInitialized: true,
+        executives: (db.executives || []).map(exec => ({
+          ...exec,
+          cleared: 0,
+          salesCount: 0,
+          walletBalance: 0,
+          walletLedger: []
+        })),
+        salesLedger: [],
+        quotations: [],
+        notifications: [],
+        brands: db.brands || [],
+        weeklySpecials: []
+      };
+      if (onUpdateDb) onUpdateDb(cleanDb);
       try {
         await fetch('/api/reset-db', { method: 'POST' });
       } catch (e) {
         console.error("Failed to reset server database:", e);
       }
-      window.location.reload();
+      showToast('Factory reset complete. All products and history cleared.');
     }
   };
 
@@ -726,7 +743,8 @@ function AdminPanel({
       }));
       const updatedDb = { 
         ...db, 
-        products: [], 
+        products: [],
+        productsInitialized: true,  // Prevent seed data from reloading on next page load
         salesLedger: [], 
         quotations: [], 
         notifications: [],
@@ -950,11 +968,19 @@ function AdminPanel({
         return result.map(val => val.trim().replace(/^"|"$/g, '').replace(/""/g, '"'));
       };
 
+
       const safeParseInt = (val, fallback = 0) => {
         if (!val) return fallback;
         const clean = val.replace(/,/g, '').trim();
         const parsed = parseInt(clean, 10);
         return isNaN(parsed) ? fallback : parsed;
+      };
+
+      const safeParseFloat = (val, fallback = 0) => {
+        if (!val) return fallback;
+        const clean = String(val).replace(/,/g, '').trim();
+        const parsed = parseFloat(clean);
+        return isNaN(parsed) ? fallback : Math.round(parsed); // round to nearest rupee
       };
 
       const headersRow = parseCSVLine(lines[0]).map(h => h.toLowerCase().trim());
@@ -989,26 +1015,49 @@ function AdminPanel({
         return fallbackIndex;
       };
 
-      const idIdx = getIndex(['id', 'code', 'productcode', 'product_code', 'itemno', 'item_no', 'item_code'], 0);
+      // ── Column Index Detection ───────────────────────────────────────────
+      // Supports Watero/clearance spreadsheet format:
+      //   Item No. | Item Description | brand | In Stock | lc | mrp | selling rate(lc+25%) | 5% incentive
+      // and also generic CSV exports from the app itself.
+
+      const idIdx = getIndex(['id', 'code', 'productcode', 'product_code', 'itemno', 'item_no', 'item_code', 'itemno.', 'sno'], 0);
       const nameIdx = getIndex(['name', 'productname', 'product_name', 'itemname', 'item_name', 'itemdescription', 'item_description', 'description'], 1);
       const brandIdx = getIndex(['brand'], 2);
       const catIdx = getIndex(['category', 'product_category', 'division'], 3);
       const divIdx = getIndex(['division', 'dept', 'department'], 4);
       const descIdx = getIndex(['description', 'remarks', 'details'], 5);
-      const stockIdx = getIndex(['stock', 'quantity', 'instock', 'in_stock', 'qty', 'stockqty', 'stock_qty', 'available'], 6);
-      const mrpIdx = getIndex(['mrp', 'mrprate', 'mrp_rate', 'msp', 'retailprice', 'retail_price', '20%'], 7);
-      const mgPriceIdx = getIndex(['mgprice', 'mg_price', 'galleryprice', 'gallery_price'], 8);
-      const landingIdx = getIndex(['landingcost', 'landing_cost', 'cost', 'costprice', 'cost_price', 'purchaseprice', 'purchase_price', 'itemprice', 'item_price'], 10);
 
-      // Smart detection for user's Excel layout (where Column Q before 'inective' is Clearance Price)
-      let specIdx = getIndex(['specialprice', 'clearanceprice', 'clearance_price', 'special_price', 'clearancerate', 'clearance_rate', 'offerprice', 'offer_price', 'specialrate', 'special_rate', 'netprice', 'net_price', 'dealprice', 'deal_price', 'clearance', 'sellingprice', 'selling_price', 'saleprice', 'sale_price', 'finalprice', 'final_price', 'discountprice', 'discount_price', 'offer', 'offerrate', 'offer_rate', 'clearanceoffer', 'clearance_offer', 'finalrate', 'final_rate', 'salesprice', 'sales_price', 'clearanceval', 'clearanceamount'], -1);
-      
+      // 'In Stock' column — header may be 'In Stock', 'instock', 'stock', 'qty'
+      const stockIdx = getIndex(['instock', 'in_stock', 'stock', 'quantity', 'qty', 'stockqty', 'stock_qty', 'available'], 3);
+
+      // 'lc' = Landing Cost (column E in Watero sheet, index 4)
+      const landingIdx = getIndex(['lc', 'landingcost', 'landing_cost', 'cost', 'costprice', 'cost_price', 'purchaseprice', 'purchase_price', 'itemprice', 'item_price'], 4);
+
+      // 'mrp' column (column F in Watero sheet, index 5)
+      const mrpIdx = getIndex(['mrp', 'mrprate', 'mrp_rate', 'msp', 'retailprice', 'retail_price'], 5);
+
+      const mgPriceIdx = getIndex(['mgprice', 'mg_price', 'galleryprice', 'gallery_price'], -1);
+
+      // 'selling rate(lc +25%)' or 'sellingrate' = clearance/special price (column G, index 6)
+      let specIdx = getIndex([
+        'sellingrate', 'selling_rate', 'sellingprice', 'selling_price',
+        'specialprice', 'clearanceprice', 'clearance_price', 'special_price',
+        'clearancerate', 'clearance_rate', 'offerprice', 'offer_price',
+        'netprice', 'net_price', 'finalprice', 'final_price',
+        'saleprice', 'sale_price', 'clearance', 'offer'
+      ], -1);
+
       if (specIdx === -1) {
-        const inectiveIdx = headersRow.findIndex(h => h.replace(/[\s_-]/g, '').toLowerCase().includes('inective') || h.replace(/[\s_-]/g, '').toLowerCase().includes('incentive'));
-        if (inectiveIdx > 0) {
-          specIdx = inectiveIdx - 1; // Column Q right before inective/incentive is the Clearance Price!
+        // If header has 'lc+25%' or 'incentive' nearby, column before incentive = selling rate
+        const incentiveIdx = headersRow.findIndex(h => {
+          const n = h.replace(/[\s_\-().]/g, '').toLowerCase();
+          return n.includes('incentive') || n.includes('inective') || n.includes('%incentive');
+        });
+        if (incentiveIdx > 0) {
+          specIdx = incentiveIdx - 1;
         } else {
-          specIdx = 9;
+          // fallback: 7th column (index 6) = selling rate
+          specIdx = 6;
         }
       }
 
@@ -1056,10 +1105,16 @@ function AdminPanel({
 
         // 1. Extract exact numerical rates directly from CSV columns
         let mrpValue = safeParseInt(row[mrpIdx], 0);
-        let specValue = safeParseInt(row[specIdx], 0);
-        let landingValue = safeParseInt(row[landingIdx], 0);
+        let specValue = specIdx >= 0 ? safeParseInt(row[specIdx], 0) : 0;
+        let landingValue = landingIdx >= 0 ? safeParseFloat(row[landingIdx], 0) : 0;
 
-        // 2. Fallback only if values are completely missing in CSV row
+        // 2. KEY LOGIC: If lc (landing cost) is present, auto-calculate selling rate as lc * 1.25
+        //    This matches the Watero spreadsheet formula: selling rate = lc + 25%
+        if (landingValue > 0 && specValue <= 0) {
+          specValue = Math.round(landingValue * 1.25);
+        }
+
+        // 3. Fallback only if values are completely missing in CSV row
         if (specValue <= 0 || mrpValue <= 0) {
           const lineWithoutIds = line.replace(/[A-Z]{2,}\d+/gi, '');
           const linePrices = (lineWithoutIds.match(/\d+(?:\.\d+)?/g) || [])
@@ -1075,7 +1130,7 @@ function AdminPanel({
           }
         }
 
-        // Fallbacks for missing columns
+        // 4. Final fallbacks
         if (mrpValue <= 0 && specValue > 0) {
           mrpValue = Math.round(specValue * 1.5);
         }

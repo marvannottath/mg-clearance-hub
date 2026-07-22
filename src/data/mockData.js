@@ -322,8 +322,10 @@ export function loadDatabase() {
   }
 
   if (!db || typeof db !== 'object') {
+    // Fresh install — load seed data once
     db = {
       products: INITIAL_PRODUCTS,
+      productsInitialized: true,
       executives: INITIAL_EXECUTIVES,
       salesLedger: INITIAL_SALES_LEDGER,
       notifications: INITIAL_NOTIFICATIONS,
@@ -335,7 +337,19 @@ export function loadDatabase() {
   let migrated = false;
 
   // Ensure base collections exist and are valid arrays
-  if (!Array.isArray(db.products) || db.products.length === 0) db.products = INITIAL_PRODUCTS;
+  // IMPORTANT: Only seed INITIAL_PRODUCTS on a true fresh install (productsInitialized not set)
+  // If admin cleared products intentionally, productsInitialized will be true with products=[]
+  if (!db.productsInitialized) {
+    // First-ever load — apply seed data
+    if (!Array.isArray(db.products) || db.products.length === 0) {
+      db.products = INITIAL_PRODUCTS;
+    }
+    db.productsInitialized = true;
+    migrated = true;
+  } else {
+    // After first load: only ensure products is a valid array (can be empty if admin cleared)
+    if (!Array.isArray(db.products)) db.products = [];
+  }
   if (!Array.isArray(db.executives) || db.executives.length === 0) db.executives = INITIAL_EXECUTIVES;
   if (!Array.isArray(db.salesLedger)) db.salesLedger = INITIAL_SALES_LEDGER;
   if (!Array.isArray(db.notifications)) db.notifications = INITIAL_NOTIFICATIONS;
