@@ -6,7 +6,7 @@ import {
 
 function CheckerWorkspace({ currentUser, db, onUpdateDb }) {
   const [search, setSearch] = useState('');
-  const [filter, setFilter] = useState('UNBILLED'); // 'ALL' | 'UNBILLED' | 'BILLED'
+  const [filter, setFilter] = useState('ALL'); // 'ALL' | 'UNBILLED' | 'BILLED'
   
   // Salesforce Upload Modal State
   const [selectedQuote, setSelectedQuote] = useState(null);
@@ -313,6 +313,76 @@ function CheckerWorkspace({ currentUser, db, onUpdateDb }) {
             )}
           </tbody>
         </table>
+      </div>
+
+      {/* Responsive Mobile Quote Cards List (Visible on phones) */}
+      <div className="mobile-checker-cards-list" style={{ marginTop: '1rem' }}>
+        {filteredQuotes.length > 0 && (
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '1rem' }}>
+            {filteredQuotes.map(quote => {
+              const totalValue = quote.items.reduce((s,i) => s + (i.specialPrice * i.qty), 0);
+              const isBilled = Boolean(quote.invoiceNo);
+              return (
+                <div key={`mob-${quote.id}`} className="glass-panel" style={{ padding: '1rem', borderRadius: '14px', background: 'var(--bg-card)', border: '1px solid var(--border-color)' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.6rem' }}>
+                    <button 
+                      className="btn btn-secondary" 
+                      onClick={() => setSelectedQuoteDetail(quote)}
+                      style={{ padding: '0.25rem 0.6rem', fontSize: '0.75rem', fontWeight: 700, fontFamily: 'monospace', color: 'var(--accent-cyan)', display: 'inline-flex', alignItems: 'center', gap: '0.35rem' }}
+                    >
+                      <Eye size={12} />
+                      {quote.id}
+                    </button>
+                    <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>{new Date(quote.date).toLocaleDateString('en-IN')}</span>
+                  </div>
+
+                  <div style={{ fontSize: '0.9rem', fontWeight: 700, color: 'var(--text-primary)', marginBottom: '0.2rem' }}>
+                    {quote.customerName}
+                  </div>
+                  <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', marginBottom: '0.6rem' }}>
+                    📱 {quote.customerMobile} • Exec: <strong>{quote.executiveName}</strong>
+                    {(quote.customerLocation || quote.customerAddress) && (
+                      <div style={{ color: 'var(--accent-cyan)', fontSize: '0.7rem', marginTop: '0.15rem' }}>📍 {quote.customerLocation || quote.customerAddress}</div>
+                    )}
+                  </div>
+
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'rgba(255,255,255,0.02)', padding: '0.6rem 0.75rem', borderRadius: '8px', marginBottom: '0.75rem', border: '1px solid rgba(255,255,255,0.04)' }}>
+                    <div>
+                      <div style={{ fontSize: '0.65rem', color: 'var(--text-muted)' }}>QUOTED AMOUNT</div>
+                      <div style={{ fontWeight: 800, color: 'var(--accent-emerald)', fontSize: '1.05rem' }}>{formatRupee(totalValue)}</div>
+                    </div>
+                    <div>
+                      {isBilled ? (
+                        <span className="badge badge-emerald" style={{ fontSize: '0.7rem' }}>Invoice #{quote.invoiceNo}</span>
+                      ) : (
+                        <span className="badge badge-amber" style={{ fontSize: '0.7rem' }}>Pending Entry</span>
+                      )}
+                    </div>
+                  </div>
+
+                  <div style={{ display: 'flex', gap: '0.5rem' }}>
+                    <button className="btn btn-secondary" style={{ flex: 1, fontSize: '0.75rem', padding: '0.45rem 0' }} onClick={() => setSelectedQuoteDetail(quote)}>
+                      <Eye size={12} style={{ marginRight: '0.25rem' }} /> Inspect Items
+                    </button>
+                    {!isBilled && (
+                      <button 
+                        className="btn btn-emerald" 
+                        style={{ flex: 1, fontSize: '0.75rem', fontWeight: 700, padding: '0.45rem 0' }} 
+                        onClick={() => {
+                          setSelectedQuote(quote);
+                          setInvoiceNo('');
+                          setUploadedBill('');
+                        }}
+                      >
+                        <Upload size={12} style={{ marginRight: '0.25rem' }} /> Enter Salesforce
+                      </button>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
       </div>
 
       {/* Salesforce Billing Modal */}
