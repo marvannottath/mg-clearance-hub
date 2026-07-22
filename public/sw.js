@@ -1,4 +1,4 @@
-const CACHE_NAME = 'mg-clearance-v2';
+const CACHE_NAME = 'mg-clearance-v3-live';
 const urlsToCache = [
   '/',
   '/index.html',
@@ -6,9 +6,6 @@ const urlsToCache = [
 ];
 
 self.addEventListener('install', (event) => {
-  event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => cache.addAll(urlsToCache))
-  );
   self.skipWaiting();
 });
 
@@ -16,11 +13,7 @@ self.addEventListener('activate', (event) => {
   event.waitUntil(
     caches.keys().then((cacheNames) => {
       return Promise.all(
-        cacheNames.map((cache) => {
-          if (cache !== CACHE_NAME) {
-            return caches.delete(cache);
-          }
-        })
+        cacheNames.map((cache) => caches.delete(cache))
       );
     })
   );
@@ -28,18 +21,20 @@ self.addEventListener('activate', (event) => {
 });
 
 self.addEventListener('fetch', (event) => {
-  // Only cache GET requests for static assets
+  // Always fetch latest code from network first so phones update instantly
   if (event.request.method !== 'GET' || event.request.url.includes('/api/')) {
     return;
   }
 
-  if (event.request.mode === 'navigate') {
-    event.respondWith(
-      fetch(event.request).catch(() => caches.match('/index.html'))
-    );
-  } else {
-    event.respondWith(
-      caches.match(event.request).then((response) => response || fetch(event.request))
-    );
-  }
+  event.respondWith(
+    fetch(event.request)
+      .then((networkResponse) => {
+        if (networkResponse && networkResponse.status === 200 && event.request.url.startsWith(self.location.origin)) {
+          const responseClone = networkResponse.clone();
+          caches.open(CACHE_NAME).then((cache) => cache.put(event.request, responseClone));
+        }
+        return networkResponse;
+      })
+      .catch(() => caches.match(event.request))
+  );
 });
