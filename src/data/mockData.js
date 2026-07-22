@@ -332,6 +332,8 @@ export function loadDatabase() {
     };
   }
 
+  let migrated = false;
+
   // Ensure base collections exist and are valid arrays
   if (!Array.isArray(db.products) || db.products.length === 0) db.products = INITIAL_PRODUCTS;
   if (!Array.isArray(db.executives) || db.executives.length === 0) db.executives = INITIAL_EXECUTIVES;
