@@ -2121,7 +2121,7 @@ function AdminPanel({
                     id="csv-file-upload" 
                     accept=".csv"
                     style={{ display: 'none' }} 
-                    onChange={handleCSVUpload}
+                    onChange={handleCSVImport}
                   />
                 </div>
               </div>
