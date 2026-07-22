@@ -667,7 +667,8 @@ export async function syncProductsFromSAP() {
   return new Promise((resolve) => {
     setTimeout(() => {
       // Simulate real-time stock and price adjustments synced from SAP
-      const simulatedUpdates = INITIAL_PRODUCTS.map(p => {
+      const baseProducts = (products && products.length > 0) ? products : INITIAL_PRODUCTS;
+      const simulatedUpdates = baseProducts.map(p => {
         let updatedStock = p.stock;
         let updatedSpecialPrice = p.specialPrice;
         
@@ -685,7 +686,8 @@ export async function syncProductsFromSAP() {
         return {
           ...p,
           stock: updatedStock,
-          specialPrice: updatedSpecialPrice
+          specialPrice: updatedSpecialPrice,
+          image: p.image || ''
         };
       });
       resolve(simulatedUpdates);

@@ -310,8 +310,28 @@ function App() {
         .then(res => res.json())
         .then(result => {
           if (result && result.success && result.data && (Date.now() - lastLocalUpdateRef.current >= 8000)) {
-            setDb(result.data);
-            saveDatabase(result.data);
+            setDb(prevDb => {
+              const currentProducts = (prevDb && prevDb.products) ? prevDb.products : [];
+              const serverProducts = (result.data && result.data.products) ? result.data.products : [];
+
+              const mergedProducts = serverProducts.map(sp => {
+                const lp = currentProducts.find(p => p.id === sp.id);
+                return {
+                  ...sp,
+                  // PRESERVE UPLOADED PRODUCT IMAGE ON RELOAD & SYNC!
+                  image: (lp && lp.image && lp.image.trim() !== '') ? lp.image : (sp.image || '')
+                };
+              });
+
+              const localOnly = currentProducts.filter(lp => !serverProducts.some(sp => sp.id === lp.id));
+
+              const mergedDb = {
+                ...result.data,
+                products: [...localOnly, ...mergedProducts]
+              };
+              saveDatabase(mergedDb);
+              return mergedDb;
+            });
           }
         })
         .catch(() => {});
