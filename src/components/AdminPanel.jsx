@@ -953,7 +953,7 @@ function AdminPanel({
           const cleanName = name.replace(/[\s_-]/g, '').toLowerCase();
           const idx = headersRow.findIndex(h => {
             const cleanH = h.replace(/[\s_-]/g, '').toLowerCase();
-            if (isPriceSearch && (cleanH.includes('incentive') || cleanH.includes('commission') || cleanH.includes('reward'))) {
+            if (isPriceSearch && (cleanH.includes('incentive') || cleanH.includes('inective') || cleanH.includes('commission') || cleanH.includes('reward'))) {
               return false;
             }
             return cleanH === cleanName;
@@ -965,7 +965,7 @@ function AdminPanel({
           const cleanName = name.replace(/[\s_-]/g, '').toLowerCase();
           const idx = headersRow.findIndex(h => {
             const cleanH = h.replace(/[\s_-]/g, '').toLowerCase();
-            if (isPriceSearch && (cleanH.includes('incentive') || cleanH.includes('commission') || cleanH.includes('reward'))) {
+            if (isPriceSearch && (cleanH.includes('incentive') || cleanH.includes('inective') || cleanH.includes('commission') || cleanH.includes('reward'))) {
               return false;
             }
             return cleanH.includes(cleanName);
@@ -975,20 +975,32 @@ function AdminPanel({
         return fallbackIndex;
       };
 
-      const idIdx = getIndex(['id', 'code', 'productcode', 'product_code', 'itemno', 'item_no'], 0);
-      const nameIdx = getIndex(['name', 'productname', 'product_name', 'itemname', 'item_name'], 1);
+      const idIdx = getIndex(['id', 'code', 'productcode', 'product_code', 'itemno', 'item_no', 'item_code'], 0);
+      const nameIdx = getIndex(['name', 'productname', 'product_name', 'itemname', 'item_name', 'itemdescription', 'item_description', 'description'], 1);
       const brandIdx = getIndex(['brand'], 2);
       const catIdx = getIndex(['category', 'product_category', 'division'], 3);
       const divIdx = getIndex(['division', 'dept', 'department'], 4);
       const descIdx = getIndex(['description', 'remarks', 'details'], 5);
-      const stockIdx = getIndex(['stock', 'quantity', 'instock', 'in_stock', 'qty', 'stockqty', 'stock_qty'], 6);
-      const mrpIdx = getIndex(['mrp', 'mrprate', 'mrp_rate', 'msp', 'retailprice', 'retail_price'], 7);
+      const stockIdx = getIndex(['stock', 'quantity', 'instock', 'in_stock', 'qty', 'stockqty', 'stock_qty', 'available'], 6);
+      const mrpIdx = getIndex(['mrp', 'mrprate', 'mrp_rate', 'msp', 'retailprice', 'retail_price', '20%'], 7);
       const mgPriceIdx = getIndex(['mgprice', 'mg_price', 'galleryprice', 'gallery_price'], 8);
-      const specIdx = getIndex(['specialprice', 'clearanceprice', 'clearance_price', 'special_price', 'clearancerate', 'clearance_rate', 'offerprice', 'offer_price', 'specialrate', 'special_rate', 'netprice', 'net_price', 'dealprice', 'deal_price', 'clearance', 'sellingprice', 'selling_price', 'saleprice', 'sale_price', 'finalprice', 'final_price', 'discountprice', 'discount_price', 'offer', 'offerrate', 'offer_rate', 'clearanceoffer', 'clearance_offer', 'finalrate', 'final_rate', 'salesprice', 'sales_price', 'clearanceval', 'clearanceamount'], 9);
-      const landingIdx = getIndex(['landingcost', 'landing_cost', 'cost', 'costprice', 'cost_price', 'purchaseprice', 'purchase_price'], 10);
+      const landingIdx = getIndex(['landingcost', 'landing_cost', 'cost', 'costprice', 'cost_price', 'purchaseprice', 'purchase_price', 'itemprice', 'item_price'], 10);
+
+      // Smart detection for user's Excel layout (where Column Q before 'inective' is Clearance Price)
+      let specIdx = getIndex(['specialprice', 'clearanceprice', 'clearance_price', 'special_price', 'clearancerate', 'clearance_rate', 'offerprice', 'offer_price', 'specialrate', 'special_rate', 'netprice', 'net_price', 'dealprice', 'deal_price', 'clearance', 'sellingprice', 'selling_price', 'saleprice', 'sale_price', 'finalprice', 'final_price', 'discountprice', 'discount_price', 'offer', 'offerrate', 'offer_rate', 'clearanceoffer', 'clearance_offer', 'finalrate', 'final_rate', 'salesprice', 'sales_price', 'clearanceval', 'clearanceamount'], -1);
+      
+      if (specIdx === -1) {
+        const inectiveIdx = headersRow.findIndex(h => h.replace(/[\s_-]/g, '').toLowerCase().includes('inective') || h.replace(/[\s_-]/g, '').toLowerCase().includes('incentive'));
+        if (inectiveIdx > 0) {
+          specIdx = inectiveIdx - 1; // Column Q right before inective/incentive is the Clearance Price!
+        } else {
+          specIdx = 9;
+        }
+      }
+
       const sizeIdx = getIndex(['size', 'dimension'], 11);
       const finishIdx = getIndex(['finishing', 'finish', 'surface'], 12);
-      const locIdx = getIndex(['location', 'rack', 'pallet', 'bin'], 13);
+      const locIdx = getIndex(['location', 'rack', 'pallet', 'bin', 'firstbinloc'], 13);
       const sinceIdx = getIndex(['instocksince', 'in_stock_since', 'since', 'date'], 14);
       const imgIdx = getIndex(['image', 'img', 'photo'], 15);
 
