@@ -670,15 +670,29 @@ function AdminPanel({
   };
 
   const handleClearAllProducts = async () => {
-    if (confirm("⚠️ ARE YOU SURE YOU WANT TO CLEAR ALL CLEARANCE INVENTORY PRODUCTS?\nThis will erase all clearance products so you can upload your real showroom CSV inventory sheet from scratch. Exec accounts, sales ledger, and quotations will NOT be deleted.")) {
-      const updatedDb = { ...db, products: [] };
+    if (confirm("⚠️ ARE YOU SURE YOU WANT TO CLEAR ALL CLEARANCE INVENTORY PRODUCTS?\nThis will erase all clearance products and wipe all sales ledger, quotations, and executive incentives so you can start a fresh campaign from scratch.")) {
+      const updatedExecutives = (db.executives || []).map(exec => ({
+        ...exec,
+        cleared: 0,
+        salesCount: 0,
+        walletBalance: 0,
+        walletLedger: []
+      }));
+      const updatedDb = { 
+        ...db, 
+        products: [], 
+        salesLedger: [], 
+        quotations: [], 
+        notifications: [],
+        executives: updatedExecutives 
+      };
       if (onUpdateDb) onUpdateDb(updatedDb);
       try {
         await fetch('/api/reset-products', { method: 'POST' });
       } catch (e) {
         console.error("Failed to clear products on server:", e);
       }
-      showToast("All clearance products cleared! Ready for new CSV import.");
+      showToast("All clearance inventory and campaign history cleared! Ready for new CSV import.");
     }
   };
 

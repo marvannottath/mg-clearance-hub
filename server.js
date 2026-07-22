@@ -329,14 +329,26 @@ app.post('/api/db', async (req, res) => {
   res.json({ success: ok, engine: pgPool ? 'PostgreSQL' : 'DiskJSON' });
 });
 
-// POST /api/reset-products - Clear all sample products
+// POST /api/reset-products - Clear all products and reset campaign stats
 app.post('/api/reset-products', async (req, res) => {
   const db = await readDb();
   if (db) {
     db.products = [];
+    db.salesLedger = [];
+    db.quotations = [];
+    db.notifications = [];
+    if (db.executives) {
+      db.executives = db.executives.map(exec => ({
+        ...exec,
+        cleared: 0,
+        salesCount: 0,
+        walletBalance: 0,
+        walletLedger: []
+      }));
+    }
     await saveDb(db);
   }
-  res.json({ success: true, message: "All products cleared successfully" });
+  res.json({ success: true, message: "All products and campaign sales history cleared successfully" });
 });
 
 // POST /api/reset-db - Factory reset system database to campaign defaults
