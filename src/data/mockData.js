@@ -321,36 +321,23 @@ export function loadDatabase() {
     }
   }
 
-  if (!db) {
+  if (!db || typeof db !== 'object') {
     db = {
       products: INITIAL_PRODUCTS,
       executives: INITIAL_EXECUTIVES,
       salesLedger: INITIAL_SALES_LEDGER,
       notifications: INITIAL_NOTIFICATIONS,
+      quotations: INITIAL_QUOTATIONS,
       initialTargetValue: calculateStockValue(INITIAL_PRODUCTS)
     };
   }
 
-  // Perform Migrations for V5
-  let migrated = false;
-
-  // Ensure base collections exist
-  if (!db.products) {
-    db.products = INITIAL_PRODUCTS;
-    migrated = true;
-  }
-  if (!db.executives) {
-    db.executives = INITIAL_EXECUTIVES;
-    migrated = true;
-  }
-  if (!db.salesLedger) {
-    db.salesLedger = INITIAL_SALES_LEDGER;
-    migrated = true;
-  }
-  if (!db.notifications) {
-    db.notifications = INITIAL_NOTIFICATIONS;
-    migrated = true;
-  }
+  // Ensure base collections exist and are valid arrays
+  if (!Array.isArray(db.products) || db.products.length === 0) db.products = INITIAL_PRODUCTS;
+  if (!Array.isArray(db.executives) || db.executives.length === 0) db.executives = INITIAL_EXECUTIVES;
+  if (!Array.isArray(db.salesLedger)) db.salesLedger = INITIAL_SALES_LEDGER;
+  if (!Array.isArray(db.notifications)) db.notifications = INITIAL_NOTIFICATIONS;
+  if (!Array.isArray(db.quotations)) db.quotations = INITIAL_QUOTATIONS;
 
   // 1. Ensure executives have username/password, walletBalance, and walletLedger
   if (db.executives) {
