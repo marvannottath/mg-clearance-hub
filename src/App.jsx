@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { loadDatabase, saveDatabase, calculateStockValue, syncProductsFromSAP } from './data/mockData';
+import { loadDatabase, saveDatabase, calculateStockValue, syncProductsFromSAP, logSystemEvent } from './data/mockData';
 import MDDashboard from './components/MDDashboard';
 import ExecutiveWorkspace from './components/ExecutiveWorkspace';
 import AdminPanel from './components/AdminPanel';
@@ -129,7 +129,7 @@ function App() {
 
   const [isOffline, setIsOffline] = useState(!navigator.onLine);
 
-  // Track location and network status changes
+  // Track location, network status, and system error events
   useEffect(() => {
     const handleLocationChange = () => {
       setRoutePath(getNormalizedRoute());
@@ -140,20 +140,53 @@ function App() {
     };
     const goOffline = () => {
       setIsOffline(true);
+      setDb(prevDb => logSystemEvent(prevDb, {
+        level: 'WARNING',
+        category: 'NETWORK',
+        message: 'Device went offline. Working in offline mode.',
+        user: currentUser ? currentUser.name : 'System'
+      }));
+    };
+
+    const handleGlobalError = (event) => {
+      const errorMsg = event.error ? event.error.toString() : (event.message || 'Runtime Exception');
+      const details = event.error && event.error.stack ? event.error.stack : `At ${event.filename}:${event.lineno}`;
+      setDb(prevDb => logSystemEvent(prevDb, {
+        level: 'CRITICAL',
+        category: 'RUNTIME_ERROR',
+        message: errorMsg,
+        details: details,
+        user: currentUser ? currentUser.name : 'System'
+      }));
+    };
+
+    const handlePromiseRejection = (event) => {
+      const reason = event.reason ? (event.reason.message || String(event.reason)) : 'Promise Rejected';
+      setDb(prevDb => logSystemEvent(prevDb, {
+        level: 'WARNING',
+        category: 'API_FAILURE',
+        message: `Async Request Failed: ${reason}`,
+        details: event.reason && event.reason.stack ? event.reason.stack : 'Unhandled Rejection',
+        user: currentUser ? currentUser.name : 'System'
+      }));
     };
 
     window.addEventListener('popstate', handleLocationChange);
     window.addEventListener('hashchange', handleLocationChange);
     window.addEventListener('online', goOnline);
     window.addEventListener('offline', goOffline);
+    window.addEventListener('error', handleGlobalError);
+    window.addEventListener('unhandledrejection', handlePromiseRejection);
 
     return () => {
       window.removeEventListener('popstate', handleLocationChange);
       window.removeEventListener('hashchange', handleLocationChange);
       window.removeEventListener('online', goOnline);
       window.removeEventListener('offline', goOffline);
+      window.removeEventListener('error', handleGlobalError);
+      window.removeEventListener('unhandledrejection', handlePromiseRejection);
     };
-  }, []);
+  }, [currentUser]);
 
   // Root security wrapper to block devtools / inspect element / copy-paste source sniffing
   useEffect(() => {

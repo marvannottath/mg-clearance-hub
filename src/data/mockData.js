@@ -310,6 +310,53 @@ export const safeLocalStorage = (() => {
   };
 })();
 
+export const INITIAL_SYSTEM_LOGS = [
+  {
+    id: "LOG-1001",
+    timestamp: new Date().toISOString(),
+    level: "INFO",
+    category: "AUTH_EVENT",
+    message: "System Admin initialized campaign portal",
+    details: "System audit & error tracking active",
+    user: "System Admin"
+  },
+  {
+    id: "LOG-1002",
+    timestamp: new Date(Date.now() - 1800000).toISOString(),
+    level: "INFO",
+    category: "SYSTEM",
+    message: "Salesforce SAP Stock Sync service running clean",
+    details: "Endpoint: ClearanceStockAPI | Polling interval: active",
+    user: "System"
+  }
+];
+
+export function getProductActiveHoldQty(productId, quotations = []) {
+  if (!productId || !Array.isArray(quotations)) return 0;
+  return quotations
+    .filter(q => q.status === 'draft' || q.status === 'pending_verification')
+    .reduce((sum, q) => {
+      const item = (q.items || []).find(i => i.id === productId);
+      return sum + (item ? (item.qty || 1) : 0);
+    }, 0);
+}
+
+export function logSystemEvent(db, { level = 'INFO', category = 'RUNTIME_ERROR', message = '', details = '', user = 'System' }) {
+  if (!db) return db;
+  const newLog = {
+    id: `LOG-${Date.now().toString().slice(-6)}-${Math.floor(Math.random()*1000)}`,
+    timestamp: new Date().toISOString(),
+    level,
+    category,
+    message: String(message || 'System Event'),
+    details: String(details || ''),
+    user: user || 'Anonymous'
+  };
+  const currentLogs = Array.isArray(db.systemLogs) ? db.systemLogs : INITIAL_SYSTEM_LOGS;
+  const updatedLogs = [newLog, ...currentLogs].slice(0, 100);
+  return { ...db, systemLogs: updatedLogs };
+}
+
 export function loadDatabase() {
   const data = safeLocalStorage.getItem(LOCAL_STORAGE_KEY);
   let db = null;
@@ -330,6 +377,7 @@ export function loadDatabase() {
       salesLedger: INITIAL_SALES_LEDGER,
       notifications: INITIAL_NOTIFICATIONS,
       quotations: INITIAL_QUOTATIONS,
+      systemLogs: INITIAL_SYSTEM_LOGS,
       initialTargetValue: calculateStockValue(INITIAL_PRODUCTS)
     };
   }
@@ -337,22 +385,21 @@ export function loadDatabase() {
   let migrated = false;
 
   // Ensure base collections exist and are valid arrays
-  // IMPORTANT: Only seed INITIAL_PRODUCTS on a true fresh install (productsInitialized not set)
-  // If admin cleared products intentionally, productsInitialized will be true with products=[]
   if (!db.productsInitialized) {
-    // First-ever load — apply seed data
     if (!Array.isArray(db.products) || db.products.length === 0) {
       db.products = INITIAL_PRODUCTS;
     }
     db.productsInitialized = true;
     migrated = true;
   } else {
-    // After first load: only ensure products is a valid array (can be empty if admin cleared)
     if (!Array.isArray(db.products)) db.products = [];
   }
   if (!Array.isArray(db.executives) || db.executives.length === 0) db.executives = INITIAL_EXECUTIVES;
   if (!Array.isArray(db.salesLedger)) db.salesLedger = INITIAL_SALES_LEDGER;
   if (!Array.isArray(db.notifications)) db.notifications = INITIAL_NOTIFICATIONS;
+  if (!Array.isArray(db.quotations)) db.quotations = INITIAL_QUOTATIONS;
+  if (!Array.isArray(db.systemLogs)) db.systemLogs = INITIAL_SYSTEM_LOGS;
+
   if (!Array.isArray(db.quotations)) db.quotations = INITIAL_QUOTATIONS;
 
   // 1. Ensure executives have username/password, walletBalance, and walletLedger

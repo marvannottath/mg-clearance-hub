@@ -1626,4 +1626,76 @@ h1, h2, h3, h4, h5, h6 {
   transform: translateY(-1px);
 }
 
+/* Mobile Notification Drawer Cropping Fix */
+@media (max-width: 768px) {
+  #notification-drawer {
+    position: fixed !important;
+    top: 64px !important;
+    left: 4vw !important;
+    right: 4vw !important;
+    width: 92vw !important;
+    max-width: 420px !important;
+    max-height: 75vh !important;
+    margin: 0 auto !important;
+    z-index: 999999 !important;
+    box-shadow: 0 16px 40px rgba(0, 0, 0, 0.6) !important;
+  }
+}
+
+/* Enhanced Light & Dark Theme Text & Element Contrast Rules */
+:root[data-theme="light"] {
+  color-scheme: light;
+}
+
+:root[data-theme="light"] select option {
+  background-color: #ffffff !important;
+  color: #0f172a !important;
+}
+
+:root[data-theme="light"] input,
+:root[data-theme="light"] select,
+:root[data-theme="light"] textarea {
+  color: #0f172a !important;
+  border-color: #cbd5e1 !important;
+}
+
+:root[data-theme="light"] input::placeholder,
+:root[data-theme="light"] textarea::placeholder {
+  color: #64748b !important;
+}
+
+:root[data-theme="light"] .badge-warning {
+  background: #fef3c7 !important;
+  color: #92400e !important;
+  border: 1px solid #fde68a !important;
+}
+
+:root[data-theme="light"] .badge-success {
+  background: #d1fae5 !important;
+  color: #065f46 !important;
+  border: 1px solid #a7f3d0 !important;
+}
+
+:root[data-theme="light"] .badge-rose,
+:root[data-theme="light"] .badge-danger {
+  background: #ffe4e6 !important;
+  color: #9f1239 !important;
+  border: 1px solid #fecdd3 !important;
+}
+
+:root[data-theme="light"] .badge-cyan,
+:root[data-theme="light"] .badge-info {
+  background: #e0f2fe !important;
+  color: #075985 !important;
+  border: 1px solid #bae6fd !important;
+}
+
+:root[data-theme="light"] table {
+  color: #0f172a !important;
+}
+
+:root[data-theme="light"] table td {
+  color: #0f172a !important;
+}
+
 

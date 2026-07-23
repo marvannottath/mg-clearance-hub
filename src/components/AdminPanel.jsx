@@ -6,7 +6,7 @@ import {
   Volume2, RefreshCw, Eye, FileText, Zap, ShieldAlert, Globe, Database, KeyRound
 } from 'lucide-react';
 import MDDashboard from './MDDashboard';
-import { isWeeklySpecialActive, getLocalDateString, syncProductsFromSAP, getProductStockAgeMonths, getSapApiUrl, getSfClientId, getSfClientSecret } from '../data/mockData';
+import { isWeeklySpecialActive, getLocalDateString, syncProductsFromSAP, getProductStockAgeMonths, getSapApiUrl, getSfClientId, getSfClientSecret, getProductActiveHoldQty } from '../data/mockData';
 
 // Fail-safe wrapper to prevent security exceptions in Brave, Safari Private, and chrome Incognito mode
 const safeLocalStorage = (() => {
@@ -52,7 +52,9 @@ function AdminPanel({
   onBulkUpdateStock, onAddExecutive, onDeleteExecutive, onUpdateDb, db
 }) {
   const fileInputRef = useRef(null);
-  const [activeTab, setActiveTab] = useState(() => currentUser.role === 'manager' ? 'reports' : 'executives'); // 'reports' | 'inventory' | 'verify' | 'quotes_audit' | 'specials' | 'brands_margins' | 'import' | 'stickers' | 'executives'
+  const [activeTab, setActiveTab] = useState(() => currentUser.role === 'manager' ? 'reports' : 'executives');
+  const [logLevelFilter, setLogLevelFilter] = useState('ALL');
+  const [logSearchQuery, setLogSearchQuery] = useState('');
   const divisionsList = Array.from(new Set(products.map(p => p.division || 'Bathing')));
   const [isSyncing, setIsSyncing] = useState(false);
 
@@ -1347,9 +1349,24 @@ function AdminPanel({
                   <Database size={15} color="var(--accent-emerald)" />
                   <span>Database Reset & Backup</span>
                 </button>
+                <button 
+                  type="button"
+                  className={`sidebar-nav-btn ${activeTab === 'system_logs' ? 'active' : ''}`} 
+                  onClick={() => setActiveTab('system_logs')}
+                  style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}
+                >
+                  <ShieldAlert size={15} color="var(--accent-rose)" />
+                  <span>System Error & Security Logs</span>
+                  {((db.systemLogs || []).filter(l => l.level === 'CRITICAL' || l.level === 'SECURITY').length) > 0 && (
+                    <span className="badge badge-rose" style={{ marginLeft: 'auto', fontSize: '0.6rem', padding: '0.1rem 0.35rem', fontWeight: 800 }}>
+                      {(db.systemLogs || []).filter(l => l.level === 'CRITICAL' || l.level === 'SECURITY').length}
+                    </span>
+                  )}
+                </button>
               </div>
             </div>
           )}
+
 
         </aside>
 
@@ -2900,6 +2917,189 @@ function AdminPanel({
 
           </div>
         )}
+
+        {/* Tab: System Error & Security Logs */}
+        {activeTab === 'system_logs' && (
+          <div className="fade-in">
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem', flexWrap: 'wrap', gap: '0.75rem' }}>
+              <div>
+                <h3 style={{ fontSize: '1.2rem', fontWeight: 800, color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                  <ShieldAlert color="var(--accent-rose)" size={22} />
+                  System Error & Security Audit Tracker
+                </h3>
+                <p style={{ color: 'var(--text-secondary)', fontSize: '0.8rem', marginTop: '0.2rem' }}>
+                  Real-time system diagnostics, runtime error tracebacks, API failures, and security audit logs.
+                </p>
+              </div>
+
+              <div style={{ display: 'flex', gap: '0.5rem' }}>
+                <button 
+                  className="btn btn-secondary" 
+                  style={{ fontSize: '0.78rem', padding: '0.4rem 0.85rem' }}
+                  onClick={() => {
+                    const csvContent = "data:text/csv;charset=utf-8," + 
+                      ["ID,Timestamp,Level,Category,Message,User,Details"]
+                        .concat((db.systemLogs || []).map(l => `"${l.id}","${l.timestamp}","${l.level}","${l.category}","${(l.message||'').replace(/"/g, '""')}","${l.user||''}","${(l.details||'').replace(/"/g, '""')}"`))
+                        .join("\n");
+                    const encodedUri = encodeURI(csvContent);
+                    const link = document.createElement("a");
+                    link.setAttribute("href", encodedUri);
+                    link.setAttribute("download", `system_audit_logs_${new Date().toISOString().slice(0,10)}.csv`);
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+                  }}
+                >
+                  <Download size={14} /> Export Diagnostic CSV
+                </button>
+                <button 
+                  className="btn btn-danger" 
+                  style={{ fontSize: '0.78rem', padding: '0.4rem 0.85rem' }}
+                  onClick={async () => {
+                    if (await window.customConfirm("Clear System Logs", "Clear all system error & security audit logs?", true, "Clear Logs")) {
+                      onUpdateDb({ ...db, systemLogs: [] });
+                      showToast("System logs cleared successfully.");
+                    }
+                  }}
+                >
+                  <Trash2 size={14} /> Clear Logs
+                </button>
+              </div>
+            </div>
+
+            {/* Metrics cards */}
+            {(() => {
+              const logs = db.systemLogs || [];
+              const criticalCount = logs.filter(l => l.level === 'CRITICAL').length;
+              const securityCount = logs.filter(l => l.level === 'SECURITY').length;
+              const warningCount = logs.filter(l => l.level === 'WARNING').length;
+
+              return (
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem', marginBottom: '1.5rem' }}>
+                  <div className="glass-panel" style={{ padding: '1rem', borderLeft: '4px solid var(--accent-rose)' }}>
+                    <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>CRITICAL ERRORS</div>
+                    <div style={{ fontSize: '1.5rem', fontWeight: 800, color: criticalCount > 0 ? 'var(--accent-rose)' : 'var(--accent-emerald)' }}>
+                      {criticalCount}
+                    </div>
+                  </div>
+                  <div className="glass-panel" style={{ padding: '1rem', borderLeft: '4px solid var(--accent-amber)' }}>
+                    <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>SECURITY THREATS / ALERTS</div>
+                    <div style={{ fontSize: '1.5rem', fontWeight: 800, color: securityCount > 0 ? 'var(--accent-amber)' : 'var(--accent-emerald)' }}>
+                      {securityCount}
+                    </div>
+                  </div>
+                  <div className="glass-panel" style={{ padding: '1rem', borderLeft: '4px solid var(--accent-cyan)' }}>
+                    <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>WARNINGS & API ISSUES</div>
+                    <div style={{ fontSize: '1.5rem', fontWeight: 800, color: 'var(--accent-cyan)' }}>
+                      {warningCount}
+                    </div>
+                  </div>
+                  <div className="glass-panel" style={{ padding: '1rem', borderLeft: '4px solid var(--accent-emerald)' }}>
+                    <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>SYSTEM AUDIT STATUS</div>
+                    <div style={{ fontSize: '1.1rem', fontWeight: 800, color: 'var(--accent-emerald)', marginTop: '0.2rem' }}>
+                      {criticalCount === 0 ? '🟢 Operational' : '🔴 Action Needed'}
+                    </div>
+                  </div>
+                </div>
+              );
+            })()}
+
+            {/* Filters */}
+            <div className="glass-panel" style={{ padding: '1rem', marginBottom: '1.25rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.75rem' }}>
+              <div style={{ display: 'flex', gap: '0.4rem', flexWrap: 'wrap' }}>
+                {['ALL', 'CRITICAL', 'SECURITY', 'WARNING', 'INFO'].map(lvl => (
+                  <button
+                    key={lvl}
+                    className={`btn ${logLevelFilter === lvl ? 'btn-cyan' : 'btn-secondary'}`}
+                    style={{ padding: '0.25rem 0.75rem', fontSize: '0.75rem', borderRadius: '20px' }}
+                    onClick={() => setLogLevelFilter(lvl)}
+                  >
+                    {lvl}
+                  </button>
+                ))}
+              </div>
+
+              <div style={{ position: 'relative', width: '260px' }}>
+                <input
+                  type="text"
+                  className="form-input"
+                  placeholder="🔍 Search log messages, user..."
+                  value={logSearchQuery}
+                  onChange={e => setLogSearchQuery(e.target.value)}
+                  style={{ fontSize: '0.8rem', padding: '0.4rem 0.8rem' }}
+                />
+              </div>
+            </div>
+
+            {/* Log Table */}
+            <div className="custom-table-container">
+              <table className="custom-table" style={{ fontSize: '0.8rem' }}>
+                <thead>
+                  <tr>
+                    <th>Timestamp</th>
+                    <th>Level</th>
+                    <th>Category</th>
+                    <th>Message & Location</th>
+                    <th>User</th>
+                    <th>Technical Details</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {(() => {
+                    const logs = db.systemLogs || [];
+                    const filteredLogs = logs.filter(l => {
+                      const matchLevel = logLevelFilter === 'ALL' || l.level === logLevelFilter;
+                      const q = logSearchQuery.trim().toLowerCase();
+                      const matchQuery = !q || (l.message || '').toLowerCase().includes(q) || (l.details || '').toLowerCase().includes(q) || (l.user || '').toLowerCase().includes(q);
+                      return matchLevel && matchQuery;
+                    });
+
+                    if (filteredLogs.length === 0) {
+                      return (
+                        <tr>
+                          <td colSpan="6" style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-muted)' }}>
+                            No system error or security logs matching filter.
+                          </td>
+                        </tr>
+                      );
+                    }
+
+                    return filteredLogs.map(l => (
+                      <tr key={l.id}>
+                        <td style={{ fontSize: '0.72rem', whiteSpace: 'nowrap', color: 'var(--text-muted)' }}>
+                          {new Date(l.timestamp).toLocaleString()}
+                        </td>
+                        <td>
+                          <span className={`badge ${l.level === 'CRITICAL' ? 'badge-rose' : l.level === 'SECURITY' ? 'badge-warning' : l.level === 'WARNING' ? 'badge-info' : 'badge-success'}`} style={{ fontSize: '0.62rem', padding: '0.1rem 0.4rem' }}>
+                            {l.level}
+                          </span>
+                        </td>
+                        <td style={{ fontWeight: 700, fontSize: '0.75rem', color: 'var(--accent-cyan)' }}>
+                          {l.category}
+                        </td>
+                        <td style={{ fontWeight: 600, color: 'var(--text-primary)' }}>
+                          {l.message}
+                        </td>
+                        <td style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>
+                          {l.user || 'System'}
+                        </td>
+                        <td>
+                          <details style={{ cursor: 'pointer', fontSize: '0.7rem', color: 'var(--text-muted)' }}>
+                            <summary style={{ outline: 'none' }}>View Trace</summary>
+                            <pre style={{ background: 'rgba(0,0,0,0.3)', padding: '0.5rem', borderRadius: '4px', marginTop: '0.3rem', fontSize: '0.65rem', whiteSpace: 'pre-wrap', wordBreak: 'break-all' }}>
+                              {l.details || 'No detailed stack trace'}
+                            </pre>
+                          </details>
+                        </td>
+                      </tr>
+                    ));
+                  })()}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
+
 
 
         {/* Tab 8: Campaign Analytics MD dashboard */}

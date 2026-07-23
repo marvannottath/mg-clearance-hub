@@ -9,7 +9,7 @@ import {
 import { 
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell 
 } from 'recharts';
-import { isWeeklySpecialActive } from '../data/mockData';
+import { isWeeklySpecialActive, getProductActiveHoldQty } from '../data/mockData';
 
 // Fail-safe wrapper to prevent security exceptions in Brave, Safari Private, and chrome Incognito mode
 const safeLocalStorage = (() => {
@@ -96,7 +96,7 @@ function ExecutiveWorkspace({ products = [], activeExecutive = {}, db = {}, onUp
 
   useEffect(() => {
     const handleResize = () => {
-      setIsMobile(window.innerWidth <= 768);
+      setIsMobile(window.innerWidth <= 992);
     };
     handleResize();
     window.addEventListener('resize', handleResize);
@@ -2556,6 +2556,8 @@ function ExecutiveWorkspace({ products = [], activeExecutive = {}, db = {}, onUp
                             const finalPrice = getProductFinalPrice(p);
                             const isWeeklySpecial = isWeeklySpecialActive(p);
                             const cartItem = cart.find(i => i.id === p.id);
+                            const activeHoldQty = getProductActiveHoldQty(p.id, db.quotations);
+                            const netAvailable = Math.max(0, p.stock - activeHoldQty);
 
                             return (
                               <tr 
@@ -2600,8 +2602,18 @@ function ExecutiveWorkspace({ products = [], activeExecutive = {}, db = {}, onUp
                                     </div>
                                   )}
                                 </td>
-                                <td style={{ padding: '0.75rem 0.8rem', textAlign: 'center', fontWeight: 700, color: p.stock > 0 ? 'var(--accent-emerald)' : 'var(--accent-rose)' }}>
-                                  {p.stock > 0 ? `${p.stock} units` : 'Out of Stock'}
+                                <td style={{ padding: '0.75rem 0.8rem', textAlign: 'center' }}>
+                                  <div style={{ fontWeight: 700, color: p.stock > 0 ? 'var(--accent-emerald)' : 'var(--accent-rose)', fontSize: '0.85rem' }}>
+                                    {p.stock > 0 ? `${p.stock} units` : 'Out of Stock'}
+                                  </div>
+                                  {activeHoldQty > 0 && (
+                                    <span className="badge badge-warning" style={{ fontSize: '0.58rem', padding: '0.05rem 0.3rem', marginTop: '0.15rem', display: 'inline-block' }}>
+                                      {activeHoldQty} in active carts
+                                    </span>
+                                  )}
+                                  <div style={{ fontSize: '0.65rem', color: 'var(--accent-cyan)', fontWeight: 600, marginTop: '0.1rem' }}>
+                                    ({netAvailable} billable)
+                                  </div>
                                 </td>
                                 <td style={{ padding: '0.75rem 0.8rem', textAlign: 'right', textDecoration: 'line-through', color: 'var(--text-muted)' }}>
                                   {formatRupee(p.mrp)}
@@ -2646,6 +2658,9 @@ function ExecutiveWorkspace({ products = [], activeExecutive = {}, db = {}, onUp
                       const finalPrice = getProductFinalPrice(p);
                       const isWeeklySpecial = isWeeklySpecialActive(p);
                       const cartItem = cart.find(i => i.id === p.id);
+
+                      const activeHoldQty = getProductActiveHoldQty(p.id, db.quotations);
+                      const netAvailable = Math.max(0, p.stock - activeHoldQty);
 
                       return (
                         <div 
@@ -2704,18 +2719,29 @@ function ExecutiveWorkspace({ products = [], activeExecutive = {}, db = {}, onUp
                                 </div>
                               )}
 
-                              <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '0.5rem', alignItems: 'center' }}>
+                              <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '0.5rem', alignItems: 'center', flexWrap: 'wrap', gap: '0.4rem' }}>
                                 <div>
                                   <span style={{ fontSize: '0.95rem', fontWeight: 800, color: 'var(--accent-rose)' }}>{formatRupee(finalPrice)}</span>
                                   <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)', textDecoration: 'line-through', marginLeft: '0.4rem' }}>{formatRupee(p.mrp)}</span>
                                 </div>
                                 
-                                <span style={{ fontSize: '0.7rem', color: p.stock > 0 ? 'var(--accent-emerald)' : 'var(--accent-rose)', fontWeight: 600 }}>
-                                  {p.stock > 0 ? `${p.stock} in stock` : 'Out of Stock'}
-                                </span>
+                                <div style={{ textAlign: 'right' }}>
+                                  <div style={{ fontSize: '0.72rem', color: p.stock > 0 ? 'var(--accent-emerald)' : 'var(--accent-rose)', fontWeight: 700 }}>
+                                    {p.stock > 0 ? `${p.stock} stock` : 'Out of Stock'}
+                                  </div>
+                                  {activeHoldQty > 0 && (
+                                    <div style={{ fontSize: '0.6rem', color: 'var(--accent-amber)', fontWeight: 600 }}>
+                                      {activeHoldQty} in active carts
+                                    </div>
+                                  )}
+                                  <div style={{ fontSize: '0.62rem', color: 'var(--accent-cyan)', fontWeight: 600 }}>
+                                    ({netAvailable} billable)
+                                  </div>
+                                </div>
                               </div>
                             </div>
                           </div>
+
 
                           <div style={{ marginTop: '0.75rem', paddingTop: '0.5rem', borderTop: '1px dashed var(--border-color)', display: 'flex', justifyContent: 'flex-end' }} onClick={(e) => e.stopPropagation()}>
                             {cartItem ? (
