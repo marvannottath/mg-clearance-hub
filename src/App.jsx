@@ -106,6 +106,10 @@ export class ErrorBoundary extends React.Component {
 function App() {
   const [db, setDb] = useState(() => loadDatabase());
   const [theme, setTheme] = useState(() => safeLocalStorage.getItem('mg_clearance_theme') || 'dark');
+  const [currentUser, setCurrentUser] = useState(() => {
+    const session = safeLocalStorage.getItem('mg_clearance_session');
+    return session ? JSON.parse(session) : null;
+  });
   
   // Clean HTML5 Path Routing (No '#' in URL)
   const getNormalizedRoute = () => {
@@ -233,10 +237,6 @@ function App() {
     };
   }, []);
 
-  const [currentUser, setCurrentUser] = useState(() => {
-    const session = safeLocalStorage.getItem('mg_clearance_session');
-    return session ? JSON.parse(session) : null;
-  });
 
   const [isForgotModalOpen, setIsForgotModalOpen] = useState(false);
   const [forgotUser, setForgotUser] = useState('');
