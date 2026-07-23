@@ -1604,11 +1604,12 @@ function ExecutiveWorkspace({ products = [], activeExecutive = {}, db = {}, onUp
               </div>
             </div>
             
-            <button className="btn btn-emerald" style={{ padding: '0.35rem 0.75rem', fontSize: '0.7rem', fontWeight: 700, background: '#fff', color: '#0f172a', border: 'none', borderRadius: '8px' }} onClick={handleRequestPayout}>
-              Payout Cashout
-            </button>
+            <div style={{ fontSize: '0.7rem', opacity: 0.9, background: 'rgba(255,255,255,0.15)', padding: '0.25rem 0.6rem', borderRadius: '6px', fontWeight: 600 }}>
+              🔒 Processed by Manager & Accounts
+            </div>
           </div>
         </div>
+
 
         {/* Sub-tabs switch */}
         <div className="panel-tabs" style={{ background: 'var(--bg-secondary)', padding: '0.2rem', borderRadius: '8px', display: 'flex' }}>
@@ -2176,10 +2177,11 @@ function ExecutiveWorkspace({ products = [], activeExecutive = {}, db = {}, onUp
                     </h2>
                   </div>
                 </div>
-                <button className="btn btn-emerald" style={{ padding: '0.75rem 1.5rem', fontWeight: 700 }} onClick={handleRequestPayout}>
-                  Disburse Earnings Payout
-                </button>
+                <div style={{ fontSize: '0.75rem', color: 'var(--accent-emerald)', background: 'var(--accent-emerald-glow)', padding: '0.4rem 0.8rem', borderRadius: '8px', fontWeight: 700, border: '1px solid rgba(16,185,129,0.3)' }}>
+                  🔒 Disbursed Weekly by Manager & Accounts
+                </div>
               </div>
+
 
               <div className="glass-panel" style={{ padding: '1.5rem' }}>
                 <h3 style={{ fontSize: '1.1rem', fontWeight: 700, marginBottom: '1rem', display: 'flex', gap: '0.5rem', alignItems: 'center' }}>

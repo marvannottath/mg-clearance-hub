@@ -55,6 +55,14 @@ function AdminPanel({
   const [activeTab, setActiveTab] = useState(() => currentUser.role === 'manager' ? 'reports' : 'executives');
   const [logLevelFilter, setLogLevelFilter] = useState('ALL');
   const [logSearchQuery, setLogSearchQuery] = useState('');
+  
+  // Manager Accounts Payout Settlement Modal states
+  const [isPayoutModalOpen, setIsPayoutModalOpen] = useState(false);
+  const [payoutExecId, setPayoutExecId] = useState('ALL');
+  const [payoutUtrRef, setPayoutUtrRef] = useState('');
+  const [payoutProofFile, setPayoutProofFile] = useState('');
+  const [payoutNotes, setPayoutNotes] = useState('');
+
   const divisionsList = Array.from(new Set(products.map(p => p.division || 'Bathing')));
   const [isSyncing, setIsSyncing] = useState(false);
 
@@ -2603,12 +2611,89 @@ function AdminPanel({
 
             </div>
 
+            {/* Manager Consolidated Executive Wallet & Accounts Payout Settlement Card */}
+            <div className="glass-panel" style={{ padding: '1.5rem', borderRadius: '14px', marginBottom: '1.5rem', background: 'linear-gradient(135deg, rgba(16,185,129,0.08) 0%, var(--bg-card) 100%)', border: '1.5px solid rgba(16,185,129,0.25)' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
+                <div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                    <DollarSign size={22} color="var(--accent-emerald)" />
+                    <h4 style={{ fontSize: '1.1rem', fontWeight: 800, color: 'var(--text-primary)' }}>
+                      Executive Wallet & Accounts Payout Settlement
+                    </h4>
+                  </div>
+                  <p style={{ color: 'var(--text-secondary)', fontSize: '0.8rem', marginTop: '0.2rem' }}>
+                    Consolidated showroom team incentive balances. Export statements for Accounts team & settle payouts once credited.
+                  </p>
+                </div>
+
+                {(() => {
+                  const totalPendingWallet = (executives || []).reduce((sum, e) => sum + (e.walletBalance || 0), 0);
+                  const pendingExecsCount = (executives || []).filter(e => (e.walletBalance || 0) > 0).length;
+
+                  return (
+                    <div style={{ display: 'flex', gap: '1rem', alignItems: 'center', flexWrap: 'wrap' }}>
+                      <div style={{ background: 'rgba(0,0,0,0.2)', padding: '0.65rem 1.25rem', borderRadius: '10px', border: '1px solid var(--border-color)', textAlign: 'right' }}>
+                        <div style={{ fontSize: '0.65rem', color: 'var(--text-muted)', textTransform: 'uppercase' }}>Total Pending Wallet Balance</div>
+                        <div style={{ fontSize: '1.4rem', fontWeight: 800, color: 'var(--accent-emerald)' }}>
+                          {formatRupee(totalPendingWallet)}
+                        </div>
+                        <div style={{ fontSize: '0.62rem', color: 'var(--text-secondary)' }}>
+                          ({pendingExecsCount} executives pending)
+                        </div>
+                      </div>
+
+                      <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+                        <button
+                          type="button"
+                          className="btn btn-secondary"
+                          style={{ fontSize: '0.8rem', padding: '0.55rem 1rem' }}
+                          onClick={() => {
+                            const csvHeader = "Executive ID,Executive Name,Username,Email,Cleared Wallet Balance,Total Sales Count\n";
+                            const csvRows = (executives || []).map(e => 
+                              `"${e.id}","${e.name}","${e.username}","${e.email}",${e.walletBalance || 0},${e.salesCount || 0}`
+                            ).join("\n");
+                            const encodedUri = encodeURI("data:text/csv;charset=utf-8," + csvHeader + csvRows);
+                            const link = document.createElement("a");
+                            link.setAttribute("href", encodedUri);
+                            link.setAttribute("download", `accounts_payout_statement_${new Date().toISOString().slice(0,10)}.csv`);
+                            document.body.appendChild(link);
+                            link.click();
+                            document.body.removeChild(link);
+                            showToast("Accounts Payout Statement exported!");
+                          }}
+                        >
+                          <Download size={15} /> Export Accounts CSV
+                        </button>
+
+                        <button
+                          type="button"
+                          className="btn btn-emerald"
+                          style={{ fontSize: '0.8rem', padding: '0.55rem 1.15rem', fontWeight: 700 }}
+                          disabled={totalPendingWallet <= 0}
+                          onClick={() => {
+                            setPayoutExecId('ALL');
+                            setPayoutUtrRef('');
+                            setPayoutProofFile('');
+                            setPayoutNotes('');
+                            setIsPayoutModalOpen(true);
+                          }}
+                        >
+                          <CheckCircle size={15} /> Process & Credit Payout Batch
+                        </button>
+                      </div>
+                    </div>
+                  );
+                })()}
+              </div>
+            </div>
+
             {/* Sales Executive Accounts Table */}
             <div className="glass-panel" style={{ padding: '1.25rem', borderRadius: '12px' }}>
               <h4 style={{ fontSize: '1rem', fontWeight: 700, marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                 <Users size={18} color="var(--accent-cyan)" />
                 Active Sales Executive Team Accounts ({executives.length})
               </h4>
+
               <table className="data-table" style={{ width: '100%', fontSize: '0.8rem' }}>
                 <thead>
                   <tr>
@@ -3486,8 +3571,168 @@ function AdminPanel({
         </div>
       )}
 
+
+      {/* Manager Accounts Payout Settlement Modal */}
+      {isPayoutModalOpen && (
+
+        <div className="modal-overlay" onClick={() => setIsPayoutModalOpen(false)}>
+          <div className="glass-panel modal-content" onClick={e => e.stopPropagation()} style={{ maxWidth: '520px', width: '92%', padding: '1.75rem', borderRadius: '16px' }}>
+            <h3 style={{ fontSize: '1.2rem', fontWeight: 800, color: 'var(--accent-emerald)', borderBottom: '1px solid var(--border-color)', paddingBottom: '0.75rem', marginBottom: '1.25rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <span style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <CheckCircle size={20} /> Process Accounts Payout Settlement
+              </span>
+              <button className="close-btn" style={{ position: 'relative', top: 0, right: 0 }} onClick={() => setIsPayoutModalOpen(false)}>X</button>
+            </h3>
+
+            <form onSubmit={async (e) => {
+              e.preventDefault();
+              if (!payoutUtrRef.trim()) {
+                alert("Please enter Accounts Bank UTR / Transaction Reference ID.");
+                return;
+              }
+
+              const targetExecs = payoutExecId === 'ALL' 
+                ? (executives || []).filter(ex => (ex.walletBalance || 0) > 0)
+                : (executives || []).filter(ex => ex.id === payoutExecId && (ex.walletBalance || 0) > 0);
+
+              if (targetExecs.length === 0) {
+                alert("No pending wallet balances found for selected criteria.");
+                return;
+              }
+
+              const totalDisbursed = targetExecs.reduce((sum, ex) => sum + (ex.walletBalance || 0), 0);
+
+              if (!(await window.customConfirm(
+                "Confirm Accounts Payout Settlement",
+                `Confirm settlement of ${formatRupee(totalDisbursed)} across ${targetExecs.length} executive(s)? Wallet balances will be cleared and ledger updated.`,
+                true,
+                "Confirm Settlement"
+              ))) {
+                return;
+              }
+
+              const updatedExecutives = (executives || []).map(ex => {
+                const isTarget = payoutExecId === 'ALL' || ex.id === payoutExecId;
+                if (isTarget && (ex.walletBalance || 0) > 0) {
+                  const currentBal = ex.walletBalance || 0;
+                  const payoutTx = {
+                    id: `TX-PAY-${Date.now().toString().slice(-5)}`,
+                    type: 'payout',
+                    amount: -currentBal,
+                    description: `Cleared payout via Accounts (UTR: ${payoutUtrRef.trim()}) ${payoutNotes ? `- ${payoutNotes}` : ''}`,
+                    referenceId: payoutUtrRef.trim(),
+                    proofFile: payoutProofFile || '',
+                    date: new Date().toISOString()
+                  };
+                  return {
+                    ...ex,
+                    walletBalance: 0,
+                    walletLedger: [payoutTx, ...(ex.walletLedger || [])]
+                  };
+                }
+                return ex;
+              });
+
+              const updatedDb = {
+                ...db,
+                executives: updatedExecutives,
+                systemLogs: [
+                  {
+                    id: `LOG-${Date.now().toString().slice(-6)}`,
+                    timestamp: new Date().toISOString(),
+                    level: "INFO",
+                    category: "PAYOUT_DISBURSED",
+                    message: `Manager processed accounts payout batch of ${formatRupee(totalDisbursed)} (UTR: ${payoutUtrRef.trim()})`,
+                    details: `Disbursed to ${targetExecs.map(t => t.name).join(', ')}`,
+                    user: currentUser.username || "Manager"
+                  },
+                  ...(db.systemLogs || [])
+                ]
+              };
+
+              if (onUpdateDb) onUpdateDb(updatedDb);
+              setIsPayoutModalOpen(false);
+              showToast(`Payout settlement completed! ${formatRupee(totalDisbursed)} deducted from executive wallets.`);
+            }}>
+
+              <div className="form-group" style={{ marginBottom: '1rem' }}>
+                <label className="form-label">Target Executive Payout</label>
+                <select 
+                  className="form-input" 
+                  value={payoutExecId}
+                  onChange={e => setPayoutExecId(e.target.value)}
+                >
+                  <option value="ALL">All Executives with Pending Balance ({(executives || []).filter(ex => (ex.walletBalance || 0) > 0).length})</option>
+                  {(executives || []).map(ex => (
+                    <option key={ex.id} value={ex.id}>
+                      {ex.name} — Pending Wallet: {formatRupee(ex.walletBalance || 0)}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="form-group" style={{ marginBottom: '1rem' }}>
+                <label className="form-label">Accounts Bank UTR / Transaction Reference ID *</label>
+                <input
+                  type="text"
+                  className="form-input"
+                  placeholder="e.g. UTR-20260723-984201"
+                  value={payoutUtrRef}
+                  onChange={e => setPayoutUtrRef(e.target.value)}
+                  required
+                />
+              </div>
+
+              <div className="form-group" style={{ marginBottom: '1rem' }}>
+                <label className="form-label">Accounts Payment Receipt / Proof File (Optional)</label>
+                <input
+                  type="file"
+                  accept="image/*,application/pdf"
+                  onChange={e => {
+                    const file = e.target.files[0];
+                    if (file) {
+                      const reader = new FileReader();
+                      reader.onload = ev => setPayoutProofFile(ev.target.result);
+                      reader.readAsDataURL(file);
+                    }
+                  }}
+                  className="form-input"
+                  style={{ fontSize: '0.8rem' }}
+                />
+                {payoutProofFile && (
+                  <div style={{ color: 'var(--accent-emerald)', fontSize: '0.75rem', marginTop: '0.25rem', fontWeight: 600 }}>
+                    ✓ Payment proof attached
+                  </div>
+                )}
+              </div>
+
+              <div className="form-group" style={{ marginBottom: '1.5rem' }}>
+                <label className="form-label">Notes / Voucher Reference (Optional)</label>
+                <input
+                  type="text"
+                  className="form-input"
+                  placeholder="e.g. Weekly clearance incentive batch payout"
+                  value={payoutNotes}
+                  onChange={e => setPayoutNotes(e.target.value)}
+                />
+              </div>
+
+              <div style={{ display: 'flex', gap: '0.75rem', justifyContent: 'flex-end' }}>
+                <button type="button" className="btn btn-secondary" onClick={() => setIsPayoutModalOpen(false)}>
+                  Cancel
+                </button>
+                <button type="submit" className="btn btn-emerald" style={{ fontWeight: 700 }}>
+                  Confirm & Deduct Wallets
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
     </div>
   );
 }
+
 
 export default AdminPanel;
