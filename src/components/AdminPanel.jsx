@@ -52,10 +52,17 @@ function AdminPanel({
   onBulkUpdateStock, onAddExecutive, onDeleteExecutive, onUpdateDb, db
 }) {
   const fileInputRef = useRef(null);
-  const [activeTab, setActiveTab] = useState(() => currentUser.role === 'manager' ? 'reports' : 'executives');
-  const [logLevelFilter, setLogLevelFilter] = useState('ALL');
-  const [logSearchQuery, setLogSearchQuery] = useState('');
-  
+  // Listen for notification navigation events
+  useEffect(() => {
+    const handleAdminTabChange = (e) => {
+      if (e.detail) setActiveTab(e.detail);
+    };
+    window.addEventListener('mg_change_admin_tab', handleAdminTabChange);
+    return () => window.removeEventListener('mg_change_admin_tab', handleAdminTabChange);
+  }, []);
+
+  const [execIsNonSf, setExecIsNonSf] = useState(false);
+
   // Manager Accounts Payout Settlement Modal states
   const [isPayoutModalOpen, setIsPayoutModalOpen] = useState(false);
   const [payoutExecId, setPayoutExecId] = useState('ALL');
@@ -65,6 +72,7 @@ function AdminPanel({
 
   const divisionsList = Array.from(new Set(products.map(p => p.division || 'Bathing')));
   const [isSyncing, setIsSyncing] = useState(false);
+
 
   const handleSyncSAPStock = async () => {
     setIsSyncing(true);
@@ -425,6 +433,7 @@ function AdminPanel({
       username: execUsername.trim().toLowerCase(),
       password: execPassword.trim(),
       target: parseInt(execTarget) || 5000000,
+      isNonSalesforceUser: Boolean(execIsNonSf),
       walletBalance: 0,
       walletLedger: []
     });
@@ -433,7 +442,9 @@ function AdminPanel({
     setExecUsername('');
     setExecPassword('');
     setExecTarget(8000000);
+    setExecIsNonSf(false);
     showToast(`Account created successfully for ${execName}!`);
+
   };
 
   // Approve Salesforce Invoice Verification
@@ -2603,11 +2614,24 @@ function AdminPanel({
                     </div>
                   </div>
 
+                  <div className="form-group" style={{ marginTop: '0.75rem', marginBottom: '0.5rem' }}>
+                    <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer', fontSize: '0.8rem', color: 'var(--text-primary)', fontWeight: 600 }}>
+                      <input 
+                        type="checkbox"
+                        checked={execIsNonSf}
+                        onChange={e => setExecIsNonSf(e.target.checked)}
+                        style={{ width: '16px', height: '16px', accentColor: 'var(--accent-cyan)' }}
+                      />
+                      <span>☑️ Non-Salesforce Executive (Quotations require Checker Verification)</span>
+                    </label>
+                  </div>
+
                   <button type="submit" className="btn btn-primary" style={{ marginTop: '0.5rem', fontWeight: 700 }}>
                     + Register Executive Account
                   </button>
                 </form>
               </div>
+
 
             </div>
 

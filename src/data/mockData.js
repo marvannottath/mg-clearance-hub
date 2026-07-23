@@ -1,153 +1,13 @@
 // Pre-seeded database for Marble Gallery Clearance Sales Hub (MG Luxe Bath & Tile Clearance Hub)
 // Stores initial values and provides storage helper functions
 
+export const LEGACY_MOCK_IDS = [
+  'SA42322', 'SA42141', 'FT55648', 'FT55636', 'SA42140', 'SA41709', 
+  'KAJ-1200-2400', 'MONO-MUR-GRI', 'COLOR-OCEAN', 'SIM-1200-2400', 
+  'NIV-MAIN-ENT', 'SPAN-BATH-ACC'
+];
+
 export const INITIAL_PRODUCTS = [
-  // Bathing Division Items (From Almar & Toto web downloads history)
-  {
-    id: "SA42322",
-    name: "TOTO Washlet SW Bidet Seat",
-    brand: "TOTO",
-    category: "Intelligent Toilets",
-    description: "Premium bidet toilet seat featuring Actilight UV sanitation, ewater+ misting, heated seat, and auto flush.",
-    stock: 8,
-    mrp: 350000,
-    mgPrice: 280000,
-    specialPrice: 175000,
-    landingCost: 140000,
-    division: "Bathing",
-    inStockSince: "2025-01-15",
-    imageCode: "veil"
-  },
-  {
-    id: "SA42141",
-    name: "TOTO Wall Hung Toilet CW522",
-    brand: "TOTO",
-    category: "Toilets",
-    description: "Minimalist wall-hung toilet suite with CEFIONTECT glaze and Tornado flushing system.",
-    stock: 14,
-    mrp: 95000,
-    mgPrice: 76000,
-    specialPrice: 47500,
-    landingCost: 38000,
-    division: "Bathing",
-    inStockSince: "2025-03-20",
-    imageCode: "neorest"
-  },
-  {
-    id: "FT55648",
-    name: "Almar Temptation Velvet 500 Shower",
-    brand: "ALMAR",
-    category: "Showers",
-    description: "Ceiling shower head with velvet spray, chromotherapy LED lighting, and Italian polished nickel finish.",
-    stock: 5,
-    mrp: 290000,
-    mgPrice: 232000,
-    specialPrice: 145000,
-    landingCost: 116000,
-    division: "Bathing",
-    inStockSince: "2025-02-10",
-    imageCode: "euphoria"
-  },
-  {
-    id: "FT55636",
-    name: "Almar Temotion Mist Shower Column",
-    brand: "ALMAR",
-    category: "Showers",
-    description: "Designer freestanding thermostatic shower column featuring micro-mist jets and cascading waterfall.",
-    stock: 4,
-    mrp: 420000,
-    mgPrice: 336000,
-    specialPrice: 210000,
-    landingCost: 168000,
-    division: "Bathing",
-    inStockSince: "2025-05-18",
-    imageCode: "aquasymphony"
-  },
-  {
-    id: "SA42140",
-    name: "Reginox New York 1.5 Sink",
-    brand: "REGINOX",
-    category: "Sinks",
-    description: "Deep integrated kitchen sink featuring 1.5 bowls with sound dampening pads in brushed stainless steel.",
-    stock: 12,
-    mrp: 65000,
-    mgPrice: 52000,
-    specialPrice: 32500,
-    landingCost: 26000,
-    division: "Bathing",
-    inStockSince: "2025-10-05",
-    imageCode: "veil-tub"
-  },
-  {
-    id: "SA41709",
-    name: "Franke Turbo Elite TE-125 Disposer",
-    brand: "FRANKE",
-    category: "Kitchen Appliances",
-    description: "High-speed 1.25 HP food waste disposer with continuous feed and permanent magnet motor.",
-    stock: 20,
-    mrp: 48000,
-    mgPrice: 38400,
-    specialPrice: 24000,
-    landingCost: 19200,
-    division: "Bathing",
-    inStockSince: "2026-02-15",
-    imageCode: "linea"
-  },
-  // Tiles Division Items (From actual Salesforce import CSV)
-  {
-    id: "KAJ-1200-2400",
-    name: "Kajaria Premium Main Flooring Tile",
-    brand: "KAJARIA",
-    category: "Flooring Tiles",
-    description: "High-gloss vitrified tile 1200x2400 mm for luxury main living area flooring.",
-    stock: 60,
-    mrp: 1200,
-    mgPrice: 960,
-    specialPrice: 318,
-    landingCost: 250,
-    division: "Tiles",
-    size: "1200x2400 mm",
-    finishing: "High Gloss",
-    location: "Rack A-3",
-    inStockSince: "2025-01-10",
-    imageCode: "statuario"
-  },
-  {
-    id: "MONO-MUR-GRI",
-    name: "Monolith Murrano Grigio Floor Tile",
-    brand: "MONOLITH",
-    category: "Floor Tiles",
-    description: "Designer floor tile 800x1600 mm in Murrano Grigio finish.",
-    stock: 45,
-    mrp: 450,
-    mgPrice: 360,
-    specialPrice: 120,
-    landingCost: 95,
-    division: "Tiles",
-    size: "800x1600 mm",
-    finishing: "Matte",
-    location: "Pallet C-1",
-    inStockSince: "2025-02-15",
-    imageCode: "royaloak"
-  },
-  {
-    id: "COLOR-OCEAN",
-    name: "Colortile Oceanic Gris Glossy Wall Tile",
-    brand: "COLORTILE",
-    category: "Wall Tiles",
-    description: "Glossy wall highlighter tile 800x1600 mm in Oceanic Gris finish.",
-    stock: 80,
-    mrp: 400,
-    mgPrice: 320,
-    specialPrice: 108,
-    landingCost: 85,
-    division: "Tiles",
-    size: "800x1600 mm",
-    finishing: "Glossy",
-    location: "Rack B-2",
-    inStockSince: "2025-03-01",
-    imageCode: "slipshield"
-  },
   {
     id: "LANG-BOOST-SAGE",
     name: "Langrace Boost Sage Tile",
@@ -384,16 +244,23 @@ export function loadDatabase() {
 
   let migrated = false;
 
+  // Auto-purge any legacy sample mock items (Toto, Almar, Kajaria mock items)
+  if (Array.isArray(db.products)) {
+    db.products = db.products.filter(p => p && !LEGACY_MOCK_IDS.includes(p.id));
+  }
+  db.deletedProductIds = [...new Set([...(db.deletedProductIds || []), ...LEGACY_MOCK_IDS])];
+
   // Ensure base collections exist and are valid arrays
   if (!db.productsInitialized) {
     if (!Array.isArray(db.products) || db.products.length === 0) {
-      db.products = INITIAL_PRODUCTS;
+      db.products = INITIAL_PRODUCTS.filter(p => !LEGACY_MOCK_IDS.includes(p.id));
     }
     db.productsInitialized = true;
     migrated = true;
   } else {
     if (!Array.isArray(db.products)) db.products = [];
   }
+
   if (!Array.isArray(db.executives) || db.executives.length === 0) db.executives = INITIAL_EXECUTIVES;
   if (!Array.isArray(db.salesLedger)) db.salesLedger = INITIAL_SALES_LEDGER;
   if (!Array.isArray(db.notifications)) db.notifications = INITIAL_NOTIFICATIONS;

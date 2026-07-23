@@ -15,12 +15,15 @@ function CheckerWorkspace({ currentUser, db, onUpdateDb }) {
   const [uploadedBill, setUploadedBill] = useState('');
   const [toastMsg, setToastMsg] = useState('');
 
-  // Preview Receipt Modal
+  // Preview Receipt Modal & Fullscreen Lightbox
   const [previewQuote, setPreviewQuote] = useState(null);
+  const [activeLightboxQuote, setActiveLightboxQuote] = useState(null);
+  const [execTypeFilter, setExecTypeFilter] = useState('ALL'); // 'ALL' | 'NON_SF' | 'SF_EXECS'
 
   // Quote Inspection Modal State
   const [selectedQuoteDetail, setSelectedQuoteDetail] = useState(null);
   const [printableQuoteModal, setPrintableQuoteModal] = useState(null);
+
 
   const showToast = (msg) => {
     setToastMsg(msg);
@@ -44,15 +47,27 @@ function CheckerWorkspace({ currentUser, db, onUpdateDb }) {
       matchesFilter = isPending || isVerified || Boolean(q.invoiceNo);
     }
 
+    const execObj = (db.executives || []).find(e => e.id === q.executiveId || e.name === q.executiveName);
+    const isNonSf = execObj ? Boolean(execObj.isNonSalesforceUser) : false;
+
+    let matchesExecType = true;
+    if (execTypeFilter === 'NON_SF' || db.filterCheckerQueueForNonSfOnly) {
+      matchesExecType = isNonSf;
+    } else if (execTypeFilter === 'SF_EXECS') {
+      matchesExecType = !isNonSf;
+    }
+
     const searchStr = search.trim().toLowerCase();
     const matchesSearch = !searchStr || 
       (q.id || '').toLowerCase().includes(searchStr) ||
       (q.customerName || '').toLowerCase().includes(searchStr) ||
       (q.customerMobile || '').toLowerCase().includes(searchStr) ||
-      (q.executiveName || '').toLowerCase().includes(searchStr);
+      (q.executiveName || '').toLowerCase().includes(searchStr) ||
+      (q.invoiceNo || '').toLowerCase().includes(searchStr);
 
-    return matchesFilter && matchesSearch;
+    return matchesFilter && matchesExecType && matchesSearch;
   });
+
 
   // Handle File Upload to Base64
   const handleFileUpload = (e) => {
@@ -196,7 +211,19 @@ function CheckerWorkspace({ currentUser, db, onUpdateDb }) {
           >
             All Quotes ({quotations.length})
           </button>
+
+          <select
+            className="form-input"
+            value={execTypeFilter}
+            onChange={e => setExecTypeFilter(e.target.value)}
+            style={{ fontSize: '0.78rem', padding: '0.35rem 0.65rem', width: 'auto', background: 'rgba(255,255,255,0.06)', color: 'var(--accent-cyan)', border: '1px solid var(--border-color)', borderRadius: '8px', fontWeight: 700 }}
+          >
+            <option value="ALL">👥 All Executive Types</option>
+            <option value="NON_SF">☑️ Non-Salesforce Executives Only (Checker Queue)</option>
+            <option value="SF_EXECS">💼 Salesforce Executives Only</option>
+          </select>
         </div>
+
 
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
           {/* View Switcher Toggle */}
@@ -817,8 +844,79 @@ function CheckerWorkspace({ currentUser, db, onUpdateDb }) {
           </div>
         </div>
       )}
+
+      {/* Full-Screen HD Receipt Lightbox Overlay */}
+      {activeLightboxQuote && (
+        <div 
+          style={{ position: 'fixed', inset: 0, zIndex: 9999999, background: 'rgba(5, 8, 15, 0.96)', backdropFilter: 'blur(16px)', display: 'flex', flexDirection: 'column' }}
+          onClick={() => setActiveLightboxQuote(null)}
+        >
+          {/* Top Bar Header */}
+          <div style={{ padding: '0.85rem 1.5rem', background: 'rgba(15, 23, 42, 0.95)', borderBottom: '1px solid rgba(255,255,255,0.12)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }} onClick={e => e.stopPropagation()}>
+            <div>
+              <div style={{ fontSize: '1.15rem', fontWeight: 800, color: '#ffffff', display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+                <span>📄 Full HD Receipt View: <strong style={{ color: 'var(--accent-cyan)' }}>{activeLightboxQuote.id}</strong></span>
+                <span className={`badge ${activeLightboxQuote.status === 'verified' ? 'badge-success' : activeLightboxQuote.status === 'rejected' ? 'badge-rose' : 'badge-warning'}`} style={{ fontSize: '0.65rem' }}>
+                  {(activeLightboxQuote.status || 'PENDING').replace('_', ' ').toUpperCase()}
+                </span>
+              </div>
+              <div style={{ fontSize: '0.78rem', color: 'var(--text-secondary)', marginTop: '0.25rem', display: 'flex', gap: '1.25rem', flexWrap: 'wrap' }}>
+                <span>Executive: <strong style={{ color: '#ffffff' }}>{activeLightboxQuote.executiveName || 'Executive'}</strong></span>
+                <span>Client: <strong style={{ color: '#ffffff' }}>{activeLightboxQuote.customerName}</strong> ({activeLightboxQuote.customerMobile || 'N/A'})</span>
+                <span>Salesforce Invoice: <strong style={{ color: 'var(--accent-cyan)' }}>{activeLightboxQuote.invoiceNo || activeLightboxQuote.sapInvoiceNo || 'N/A'}</strong></span>
+                <span>Clearance Total: <strong style={{ color: 'var(--accent-rose)', fontSize: '0.9rem' }}>{formatRupee(activeLightboxQuote.items ? activeLightboxQuote.items.reduce((s,i) => s+(i.specialPrice*i.qty),0) : activeLightboxQuote.totalAmount)}</strong></span>
+                <span>Est. Incentive: <strong style={{ color: 'var(--accent-amber)' }}>{formatRupee(activeLightboxQuote.incentiveAmount)}</strong></span>
+              </div>
+            </div>
+
+            <div style={{ display: 'flex', gap: '0.6rem', alignItems: 'center' }}>
+              {(activeLightboxQuote.uploadedBill || activeLightboxQuote.receiptFile) && (
+                <button 
+                  type="button"
+                  className="btn btn-secondary" 
+                  style={{ fontSize: '0.78rem', padding: '0.4rem 0.85rem' }}
+                  onClick={() => {
+                    const src = activeLightboxQuote.uploadedBill || activeLightboxQuote.receiptFile;
+                    const win = window.open();
+                    if (win) {
+                      if (src.includes('application/pdf')) {
+                        win.document.write(`<iframe src="${src}" frameborder="0" style="border:0; top:0px; left:0px; bottom:0px; right:0px; width:100%; height:100%;" allowfullscreen></iframe>`);
+                      } else {
+                        win.document.write(`<img src="${src}" style="max-width:100%;" />`);
+                      }
+                    }
+                  }}
+                >
+                  <Eye size={14} /> Open Full HD / Print
+                </button>
+              )}
+
+              <button type="button" className="btn btn-secondary" style={{ padding: '0.4rem 0.85rem', fontSize: '0.85rem', fontWeight: 700 }} onClick={() => setActiveLightboxQuote(null)}>
+                ✕ Close Lightbox
+              </button>
+            </div>
+          </div>
+
+          {/* Main Full-Screen Display Body */}
+          <div style={{ flex: 1, overflow: 'auto', padding: '1.5rem', display: 'flex', alignItems: 'center', justifyContent: 'center' }} onClick={e => e.stopPropagation()}>
+            {(activeLightboxQuote.uploadedBill || activeLightboxQuote.receiptFile) ? (
+              (activeLightboxQuote.uploadedBill || activeLightboxQuote.receiptFile).includes('application/pdf') ? (
+                <iframe src={activeLightboxQuote.uploadedBill || activeLightboxQuote.receiptFile} style={{ width: '92vw', height: '82vh', border: 'none', borderRadius: '12px' }} title="Receipt Document" />
+              ) : (
+                <img src={activeLightboxQuote.uploadedBill || activeLightboxQuote.receiptFile} alt="Uploaded Receipt" style={{ maxWidth: '95vw', maxHeight: '84vh', objectFit: 'contain', borderRadius: '12px', boxShadow: '0 20px 60px rgba(0,0,0,0.95)', border: '1px solid var(--border-color)' }} />
+              )
+            ) : (
+              <div style={{ color: 'var(--text-muted)', fontSize: '1rem', textAlign: 'center', background: 'rgba(255,255,255,0.02)', padding: '3rem', borderRadius: '16px' }}>
+                📷 No invoice receipt image attached for this quote.
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
     </div>
   );
 }
+
 
 export default CheckerWorkspace;

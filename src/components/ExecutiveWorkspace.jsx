@@ -77,12 +77,29 @@ function ExecutiveWorkspace({ products = [], activeExecutive = {}, db = {}, onUp
   const [invoiceNumber, setInvoiceNumber] = useState('');
   const [receiptFile, setReceiptFile] = useState('');
 
-  // Quote detail modal
+  // Quote detail & Fullscreen Lightbox modal
   const [isQuoteDetailOpen, setIsQuoteDetailOpen] = useState(false);
   const [selectedQuoteDetail, setSelectedQuoteDetail] = useState(null);
+  const [activeLightboxQuote, setActiveLightboxQuote] = useState(null);
+  const [quoteSearchQuery, setQuoteSearchQuery] = useState('');
+  const [quoteStatusFilter, setQuoteStatusFilter] = useState('ALL');
+
+  // Listen for notification navigation events
+  useEffect(() => {
+    const handleTabChange = (e) => {
+      if (e.detail) {
+        setMobileTab(e.detail);
+        setActivePortalTab(e.detail);
+      }
+    };
+    window.addEventListener('mg_change_exec_tab', handleTabChange);
+    return () => window.removeEventListener('mg_change_exec_tab', handleTabChange);
+  }, []);
 
   // In-App Notification States
   const [inAppNotification, setInAppNotification] = useState(null);
+
+
   
   // Track currently edited quotation
   const [editingQuoteId, setEditingQuoteId] = useState(null);
@@ -1466,22 +1483,83 @@ function ExecutiveWorkspace({ products = [], activeExecutive = {}, db = {}, onUp
   };
 
   const renderMobileQuotes = () => {
-    const quotes = (db.quotations || []).filter(q => q.executiveId === activeExecutive.id);
+    const rawQuotes = (db.quotations || []).filter(q => q.executiveId === activeExecutive.id || q.executiveName === activeExecutive.name);
+
+    const filteredQuotes = rawQuotes.filter(q => {
+      let matchesStatus = true;
+      if (quoteStatusFilter !== 'ALL') {
+        if (quoteStatusFilter === 'DRAFT') matchesStatus = q.status === 'draft';
+        else if (quoteStatusFilter === 'PENDING') matchesStatus = q.status === 'pending_verification';
+        else if (quoteStatusFilter === 'VERIFIED') matchesStatus = q.status === 'verified';
+        else if (quoteStatusFilter === 'REJECTED') matchesStatus = q.status === 'rejected';
+      }
+
+      const query = quoteSearchQuery.trim().toLowerCase();
+      const matchesSearch = !query || 
+        (q.id || '').toLowerCase().includes(query) ||
+        (q.customerName || '').toLowerCase().includes(query) ||
+        (q.customerMobile || '').toLowerCase().includes(query) ||
+        (q.invoiceNo || q.sapInvoiceNo || '').toLowerCase().includes(query);
+
+      return matchesStatus && matchesSearch;
+    });
 
     return (
       <div className="fade-in" style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-        <h3 style={{ fontSize: '0.95rem', fontWeight: 700, marginBottom: '0.25rem' }}>
-          My Quotation Sheets ({quotes.length})
-        </h3>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <h3 style={{ fontSize: '0.95rem', fontWeight: 800 }}>
+            My Quotations ({filteredQuotes.length}/{rawQuotes.length})
+          </h3>
+        </div>
 
-        {quotes.length === 0 ? (
-          <div className="glass-panel" style={{ textAlign: 'center', padding: '3rem 1rem', color: 'var(--text-muted)' }}>
+        {/* Search & Filter bar for mobile */}
+        <div className="glass-panel" style={{ padding: '0.75rem', borderRadius: '10px', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+          <div style={{ display: 'flex', alignItems: 'center', background: 'rgba(255,255,255,0.04)', borderRadius: '8px', padding: '0.4rem 0.75rem', border: '1px solid var(--border-color)' }}>
+            <Search size={16} color="var(--text-muted)" style={{ marginRight: '0.5rem' }} />
+            <input 
+              type="text"
+              placeholder="Search Quote #, Client, Mobile or Invoice..."
+              value={quoteSearchQuery}
+              onChange={e => setQuoteSearchQuery(e.target.value)}
+              style={{ background: 'transparent', border: 'none', color: 'var(--text-primary)', fontSize: '0.8rem', width: '100%', outline: 'none' }}
+            />
+            {quoteSearchQuery && (
+              <button onClick={() => setQuoteSearchQuery('')} style={{ background: 'none', border: 'none', color: 'var(--text-muted)', fontSize: '0.75rem', cursor: 'pointer' }}>✕</button>
+            )}
+          </div>
+
+          <div style={{ display: 'flex', gap: '0.35rem', overflowX: 'auto', paddingBottom: '0.2rem' }}>
+            {['ALL', 'DRAFT', 'PENDING', 'VERIFIED', 'REJECTED'].map(st => (
+              <button
+                key={st}
+                type="button"
+                onClick={() => setQuoteStatusFilter(st)}
+                style={{
+                  fontSize: '0.62rem',
+                  fontWeight: 700,
+                  padding: '0.25rem 0.6rem',
+                  borderRadius: '6px',
+                  border: quoteStatusFilter === st ? '1px solid var(--accent-cyan)' : '1px solid var(--border-color)',
+                  background: quoteStatusFilter === st ? 'rgba(6, 182, 212, 0.15)' : 'rgba(255,255,255,0.02)',
+                  color: quoteStatusFilter === st ? 'var(--accent-cyan)' : 'var(--text-secondary)',
+                  whiteSpace: 'nowrap',
+                  cursor: 'pointer'
+                }}
+              >
+                {st}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {filteredQuotes.length === 0 ? (
+          <div className="glass-panel" style={{ textAlign: 'center', padding: '2.5rem 1rem', color: 'var(--text-muted)' }}>
             <FileText size={32} style={{ margin: '0 auto 0.75rem', opacity: 0.3 }} />
-            <p style={{ fontSize: '0.8rem' }}>No quotation sheets saved yet. Start customer session to build quotes.</p>
+            <p style={{ fontSize: '0.8rem' }}>No quotations matched your search/filter criteria.</p>
           </div>
         ) : (
-          quotes.map(q => {
-            const totalValue = q.items.reduce((s,i) => s + (i.specialPrice * i.qty), 0);
+          filteredQuotes.map(q => {
+            const totalValue = q.items ? q.items.reduce((s,i) => s + (i.specialPrice * i.qty), 0) : (q.totalAmount || 0);
             
             let statusColor = 'var(--text-secondary)';
             if (q.status === 'draft') statusColor = 'var(--accent-amber)';
@@ -1505,6 +1583,7 @@ function ExecutiveWorkspace({ products = [], activeExecutive = {}, db = {}, onUp
                     {q.status.replace('_', ' ').toUpperCase()}
                   </span>
                 </div>
+
 
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem', margin: '0.5rem 0', fontSize: '0.75rem', color: 'var(--text-secondary)' }}>
                   <div>
@@ -3259,12 +3338,24 @@ function ExecutiveWorkspace({ products = [], activeExecutive = {}, db = {}, onUp
 
             {selectedQuoteDetail.uploadedBill && (
               <div style={{ marginBottom: '1rem' }}>
-                <strong style={{ fontSize: '0.85rem', display: 'block', marginBottom: '0.4rem' }}>Uploaded Invoice Receipt:</strong>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.4rem' }}>
+                  <strong style={{ fontSize: '0.85rem' }}>Uploaded Invoice Receipt:</strong>
+                  <button
+                    type="button"
+                    className="btn btn-emerald"
+                    style={{ fontSize: '0.72rem', padding: '0.25rem 0.65rem', fontWeight: 700 }}
+                    onClick={() => setActiveLightboxQuote(selectedQuoteDetail)}
+                  >
+                    🔍 Expand Fullscreen HD Lightbox
+                  </button>
+                </div>
                 {selectedQuoteDetail.uploadedBill.startsWith('data:image/') ? (
                   <img 
                     src={selectedQuoteDetail.uploadedBill} 
                     alt="Uploaded Receipt" 
-                    style={{ width: '100%', maxHeight: '200px', objectFit: 'contain', border: '1px solid var(--border-color)', borderRadius: '4px' }} 
+                    onClick={() => setActiveLightboxQuote(selectedQuoteDetail)}
+                    title="Click for Full-Screen HD View"
+                    style={{ width: '100%', maxHeight: '220px', objectFit: 'contain', border: '1px solid var(--border-color)', borderRadius: '8px', cursor: 'pointer' }} 
                   />
                 ) : (
                   <div style={{ padding: '0.85rem', background: 'rgba(255,255,255,0.03)', border: '1px solid var(--accent-cyan)', borderRadius: '8px', fontSize: '0.82rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -3274,15 +3365,10 @@ function ExecutiveWorkspace({ products = [], activeExecutive = {}, db = {}, onUp
                     </div>
                     <button 
                       className="btn btn-cyan" 
-                      onClick={() => {
-                        const win = window.open();
-                        if (win) {
-                          win.document.write(`<iframe src="${selectedQuoteDetail.uploadedBill}" frameborder="0" style="border:0; top:0px; left:0px; bottom:0px; right:0px; width:100%; height:100%;" allowfullscreen></iframe>`);
-                        }
-                      }}
+                      onClick={() => setActiveLightboxQuote(selectedQuoteDetail)}
                       style={{ padding: '0.35rem 0.75rem', fontSize: '0.75rem', fontWeight: 700, display: 'inline-flex', alignItems: 'center', gap: '0.35rem' }}
                     >
-                      <Eye size={14} /> View PDF Receipt
+                      <Eye size={14} /> Fullscreen Lightbox
                     </button>
                   </div>
                 )}
@@ -3296,10 +3382,79 @@ function ExecutiveWorkspace({ products = [], activeExecutive = {}, db = {}, onUp
         </div>
       )}
 
+      {/* Full-Screen HD Receipt Lightbox Overlay */}
+      {activeLightboxQuote && (
+        <div 
+          style={{ position: 'fixed', inset: 0, zIndex: 9999999, background: 'rgba(5, 8, 15, 0.96)', backdropFilter: 'blur(16px)', display: 'flex', flexDirection: 'column' }}
+          onClick={() => setActiveLightboxQuote(null)}
+        >
+          {/* Top Bar Header */}
+          <div style={{ padding: '0.85rem 1.5rem', background: 'rgba(15, 23, 42, 0.95)', borderBottom: '1px solid rgba(255,255,255,0.12)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }} onClick={e => e.stopPropagation()}>
+            <div>
+              <div style={{ fontSize: '1.15rem', fontWeight: 800, color: '#ffffff', display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+                <span>📄 Full HD Receipt View: <strong style={{ color: 'var(--accent-cyan)' }}>{activeLightboxQuote.id}</strong></span>
+                <span className={`badge ${activeLightboxQuote.status === 'verified' ? 'badge-success' : activeLightboxQuote.status === 'rejected' ? 'badge-rose' : 'badge-warning'}`} style={{ fontSize: '0.65rem' }}>
+                  {(activeLightboxQuote.status || 'PENDING').replace('_', ' ').toUpperCase()}
+                </span>
+              </div>
+              <div style={{ fontSize: '0.78rem', color: 'var(--text-secondary)', marginTop: '0.25rem', display: 'flex', gap: '1.25rem', flexWrap: 'wrap' }}>
+                <span>Executive: <strong style={{ color: '#ffffff' }}>{activeLightboxQuote.executiveName || 'Executive'}</strong></span>
+                <span>Client: <strong style={{ color: '#ffffff' }}>{activeLightboxQuote.customerName}</strong> ({activeLightboxQuote.customerMobile || 'N/A'})</span>
+                <span>Salesforce Invoice: <strong style={{ color: 'var(--accent-cyan)' }}>{activeLightboxQuote.invoiceNo || activeLightboxQuote.sapInvoiceNo || 'N/A'}</strong></span>
+                <span>Clearance Total: <strong style={{ color: 'var(--accent-rose)', fontSize: '0.9rem' }}>{formatRupee(activeLightboxQuote.items ? activeLightboxQuote.items.reduce((s,i) => s+(i.specialPrice*i.qty),0) : activeLightboxQuote.totalAmount)}</strong></span>
+                <span>Est. Incentive: <strong style={{ color: 'var(--accent-amber)' }}>{formatRupee(activeLightboxQuote.incentiveAmount)}</strong></span>
+              </div>
+            </div>
+
+            <div style={{ display: 'flex', gap: '0.6rem', alignItems: 'center' }}>
+              {activeLightboxQuote.uploadedBill && (
+                <button 
+                  type="button"
+                  className="btn btn-secondary" 
+                  style={{ fontSize: '0.78rem', padding: '0.4rem 0.85rem' }}
+                  onClick={() => {
+                    const win = window.open();
+                    if (win) {
+                      if (activeLightboxQuote.uploadedBill.includes('application/pdf')) {
+                        win.document.write(`<iframe src="${activeLightboxQuote.uploadedBill}" frameborder="0" style="border:0; top:0px; left:0px; bottom:0px; right:0px; width:100%; height:100%;" allowfullscreen></iframe>`);
+                      } else {
+                        win.document.write(`<img src="${activeLightboxQuote.uploadedBill}" style="max-width:100%;" />`);
+                      }
+                    }
+                  }}
+                >
+                  <Eye size={14} /> Open Full HD / Print
+                </button>
+              )}
+
+              <button type="button" className="btn btn-secondary" style={{ padding: '0.4rem 0.85rem', fontSize: '0.85rem', fontWeight: 700 }} onClick={() => setActiveLightboxQuote(null)}>
+                ✕ Close Lightbox
+              </button>
+            </div>
+          </div>
+
+          {/* Main Full-Screen Display Body */}
+          <div style={{ flex: 1, overflow: 'auto', padding: '1.5rem', display: 'flex', alignItems: 'center', justifyContent: 'center' }} onClick={e => e.stopPropagation()}>
+            {activeLightboxQuote.uploadedBill ? (
+              activeLightboxQuote.uploadedBill.includes('application/pdf') ? (
+                <iframe src={activeLightboxQuote.uploadedBill} style={{ width: '92vw', height: '82vh', border: 'none', borderRadius: '12px' }} title="Receipt Document" />
+              ) : (
+                <img src={activeLightboxQuote.uploadedBill} alt="Uploaded Receipt" style={{ maxWidth: '95vw', maxHeight: '84vh', objectFit: 'contain', borderRadius: '12px', boxShadow: '0 20px 60px rgba(0,0,0,0.95)', border: '1px solid var(--border-color)' }} />
+              )
+            ) : (
+              <div style={{ color: 'var(--text-muted)', fontSize: '1rem', textAlign: 'center', background: 'rgba(255,255,255,0.02)', padding: '3rem', borderRadius: '16px' }}>
+                📷 No invoice receipt image attached for this quote.
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
         </div>
       )}
     </div>
   );
 }
+
 
 export default ExecutiveWorkspace;
