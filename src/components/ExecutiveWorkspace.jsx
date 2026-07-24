@@ -47,6 +47,10 @@ const safeLocalStorage = (() => {
 })();
 
 function ExecutiveWorkspace({ products = [], activeExecutive = {}, db = {}, onUpdateDb }) {
+  const safeProducts = products || [];
+  const safeExecutive = activeExecutive || { id: 'exec-001', name: 'Showroom Executive', target: 500000, walletBalance: 0, walletLedger: [] };
+  const activeExecutiveObj = safeExecutive.name ? safeExecutive : { id: 'exec-001', name: 'Showroom Executive', target: 500000, walletBalance: 0, walletLedger: [] };
+
   const isValidNameStr = (str) => {
     if (!str || typeof str !== 'string') return false;
     const cleaned = str.trim();
@@ -57,6 +61,7 @@ function ExecutiveWorkspace({ products = [], activeExecutive = {}, db = {}, onUp
   };
 
   const divisionsList = ['ALL', ...Array.from(new Set(safeProducts.map(p => p.division || 'Bathing').filter(isValidNameStr)))];
+
 
   const [isSessionActive, setIsSessionActive] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
