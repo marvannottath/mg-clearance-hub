@@ -103,7 +103,75 @@ export class ErrorBoundary extends React.Component {
   }
 }
 
+export function triggerSystemNotification(title, body) {
+
+  // 1. Play Web Audio Chime Sound
+  try {
+    const AudioContext = window.AudioContext || window.webkitAudioContext;
+    if (AudioContext) {
+      const ctx = new AudioContext();
+      const now = ctx.currentTime;
+      const playTone = (freq, startTime, duration) => {
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.frequency.setValueAtTime(freq, startTime);
+        gain.gain.setValueAtTime(0.25, startTime);
+        gain.gain.exponentialRampToValueAtTime(0.0001, startTime + duration);
+        osc.start(startTime);
+        osc.stop(startTime + duration);
+      };
+      playTone(523.25, now, 0.25);       // C5
+      playTone(659.25, now + 0.12, 0.25); // E5
+      playTone(783.99, now + 0.24, 0.25); // G5
+      playTone(1046.50, now + 0.36, 0.5);  // C6
+    }
+  } catch (e) {}
+
+  // 2. Trigger PWA System Lock Screen Notification via Service Worker
+  if ('serviceWorker' in navigator && typeof Notification !== 'undefined' && Notification.permission === 'granted') {
+    navigator.serviceWorker.ready.then(reg => {
+      if (reg && reg.active) {
+        reg.active.postMessage({
+          type: 'SHOW_NOTIFICATION',
+          title: title || 'MG Clearance Hub',
+          body: body || 'New clearance update from Showroom',
+          icon: '/icon-192.png'
+        });
+      } else if (reg && reg.showNotification) {
+        reg.showNotification(title || 'MG Clearance Hub', {
+          body: body || 'New clearance update from Showroom',
+          icon: '/icon-192.png',
+          badge: '/icon-192.png',
+          vibrate: [300, 100, 300, 100, 300],
+          requireInteraction: true
+        });
+      }
+    }).catch(() => {
+      try {
+        new Notification(title || 'MG Clearance Hub', {
+          body: body || 'New clearance update from Showroom',
+          icon: '/icon-192.png'
+        });
+      } catch (e) {}
+    });
+  } else if (typeof Notification !== 'undefined' && Notification.permission === 'granted') {
+    try {
+      new Notification(title || 'MG Clearance Hub', {
+        body: body || 'New clearance update from Showroom',
+        icon: '/icon-192.png'
+      });
+    } catch (e) {}
+  }
+}
+
+if (typeof window !== 'undefined') {
+  window.triggerSystemNotification = triggerSystemNotification;
+}
+
 function App() {
+
   const [db, setDb] = useState(() => loadDatabase());
   const [theme, setTheme] = useState(() => safeLocalStorage.getItem('mg_clearance_theme') || 'dark');
   const [currentUser, setCurrentUser] = useState(() => {
@@ -191,6 +259,14 @@ function App() {
       window.removeEventListener('unhandledrejection', handlePromiseRejection);
     };
   }, [currentUser]);
+
+  // Request Notification Permission on App Mount for Lock Screen PWA Notifications
+  useEffect(() => {
+    if ('Notification' in window && Notification.permission === 'default') {
+      Notification.requestPermission().catch(() => {});
+    }
+  }, []);
+
 
   // Root security wrapper to block devtools / inspect element / copy-paste source sniffing
   useEffect(() => {

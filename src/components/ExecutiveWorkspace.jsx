@@ -251,7 +251,13 @@ function ExecutiveWorkspace({ products = [], activeExecutive = {}, db = {}, onUp
       time: new Date().toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })
     });
     playNotificationChime();
+
+    // Trigger PWA Lock Screen Notification & Audio Chime
+    if (typeof window !== 'undefined' && window.triggerSystemNotification) {
+      window.triggerSystemNotification("MG Clearance Hub Notification", msg);
+    }
   };
+
 
   // Close toast notification after 8 seconds
   useEffect(() => {

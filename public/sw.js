@@ -1,9 +1,4 @@
-const CACHE_NAME = 'mg-clearance-v3-live';
-const urlsToCache = [
-  '/',
-  '/index.html',
-  '/manifest.json'
-];
+const CACHE_NAME = 'mg-clearance-v4-live';
 
 self.addEventListener('install', (event) => {
   self.skipWaiting();
@@ -20,8 +15,43 @@ self.addEventListener('activate', (event) => {
   self.clients.claim();
 });
 
+// Lock Screen System Notification Message Listener
+self.addEventListener('message', (event) => {
+  if (event.data && event.data.type === 'SHOW_NOTIFICATION') {
+    const { title, body, icon, tag, data } = event.data;
+    const options = {
+      body: body || 'New clearance update from Showroom',
+      icon: icon || '/icon-192.png',
+      badge: '/icon-192.png',
+      tag: tag || `mg-notif-${Date.now()}`,
+      renotify: true,
+      vibrate: [300, 100, 300, 100, 300], // Phone vibration pattern for lock screen
+      data: data || { url: '/' },
+      requireInteraction: true // Keeps notification on phone lock screen until tapped
+    };
+
+    self.registration.showNotification(title || 'MG Clearance Hub', options);
+  }
+});
+
+// Lock Screen Notification Click Handler (Opens PWA App)
+self.addEventListener('notificationclick', (event) => {
+  event.notification.close();
+  event.waitUntil(
+    clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clientList) => {
+      for (const client of clientList) {
+        if (client.url && 'focus' in client) {
+          return client.focus();
+        }
+      }
+      if (clients.openWindow) {
+        return clients.openWindow('/');
+      }
+    })
+  );
+});
+
 self.addEventListener('fetch', (event) => {
-  // Always fetch latest code from network first so phones update instantly
   if (event.request.method !== 'GET' || event.request.url.includes('/api/')) {
     return;
   }
@@ -38,3 +68,4 @@ self.addEventListener('fetch', (event) => {
       .catch(() => caches.match(event.request))
   );
 });
+
