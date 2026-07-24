@@ -433,10 +433,13 @@ function App() {
                   const lp = currentProducts.find(p => p.id === sp.id);
                   return {
                     ...sp,
-                    // PRESERVE UPLOADED PRODUCT IMAGE ON RELOAD & SYNC!
-                    image: (lp && lp.image && lp.image.trim() !== '') ? lp.image : (sp.image || '')
+                    // PRESERVE & SYNC UPLOADED PRODUCT IMAGE (Server image from Manager takes priority)
+                    image: (sp && sp.image && sp.image.trim() !== '') 
+                      ? sp.image 
+                      : ((lp && lp.image && lp.image.trim() !== '') ? lp.image : '')
                   };
                 });
+
 
               // Products that exist only on client (new local additions)
               const localOnly = currentProducts.filter(lp =>

@@ -3528,11 +3528,36 @@ function AdminPanel({
                         if (file) {
                           const reader = new FileReader();
                           reader.onload = (uploadEvent) => {
-                            setProductImage(uploadEvent.target.result);
+                            const img = new Image();
+                            img.onload = () => {
+                              const canvas = document.createElement('canvas');
+                              let width = img.width;
+                              let height = img.height;
+                              const MAX_SIZE = 600;
+                              if (width > height) {
+                                if (width > MAX_SIZE) {
+                                  height = Math.round((height * MAX_SIZE) / width);
+                                  width = MAX_SIZE;
+                                }
+                              } else {
+                                if (height > MAX_SIZE) {
+                                  width = Math.round((width * MAX_SIZE) / height);
+                                  height = MAX_SIZE;
+                                }
+                              }
+                              canvas.width = width;
+                              canvas.height = height;
+                              const ctx = canvas.getContext('2d');
+                              ctx.drawImage(img, 0, 0, width, height);
+                              const compressedBase64 = canvas.toDataURL('image/jpeg', 0.82);
+                              setProductImage(compressedBase64);
+                            };
+                            img.src = uploadEvent.target.result;
                           };
                           reader.readAsDataURL(file);
                         }
                       }}
+
                     />
                   </div>
                   {productImage && (
