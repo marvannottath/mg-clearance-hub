@@ -51,9 +51,11 @@ function AdminPanel({
   onUpdateStock, onAddProduct, onEditProduct, onDeleteProduct, 
   onBulkUpdateStock, onAddExecutive, onDeleteExecutive, onUpdateDb, db
 }) {
+  const fileInputRef = useRef(null);
   const [activeTab, setActiveTab] = useState(() => currentUser.role === 'manager' ? 'reports' : 'executives');
   const [logLevelFilter, setLogLevelFilter] = useState('ALL');
   const [logSearchQuery, setLogSearchQuery] = useState('');
+
 
   // Listen for notification navigation events
   useEffect(() => {
