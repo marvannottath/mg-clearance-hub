@@ -1,10 +1,11 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { 
   Plus, Edit, Trash2, Download, Upload, UploadCloud, 
-  Printer, Users, CheckCircle, FileSpreadsheet, PlusCircle, 
+  Printer, Users, UserCheck, CheckCircle, FileSpreadsheet, PlusCircle, 
   CheckSquare, Square, DollarSign, AlertCircle, Percent, Star, 
   Volume2, RefreshCw, Eye, FileText, Zap, ShieldAlert, Globe, Database, KeyRound
 } from 'lucide-react';
+
 import MDDashboard from './MDDashboard';
 import { isWeeklySpecialActive, getLocalDateString, syncProductsFromSAP, getProductStockAgeMonths, getSapApiUrl, getSfClientId, getSfClientSecret, getProductActiveHoldQty } from '../data/mockData';
 
