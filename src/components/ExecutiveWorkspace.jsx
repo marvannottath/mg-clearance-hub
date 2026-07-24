@@ -47,10 +47,17 @@ const safeLocalStorage = (() => {
 })();
 
 function ExecutiveWorkspace({ products = [], activeExecutive = {}, db = {}, onUpdateDb }) {
-  const safeProducts = products || [];
-  const safeExecutive = activeExecutive || { id: 'exec-001', name: 'Showroom Executive', target: 500000, walletBalance: 0, walletLedger: [] };
-  const activeExecutiveObj = safeExecutive.name ? safeExecutive : { id: 'exec-001', name: 'Showroom Executive', target: 500000, walletBalance: 0, walletLedger: [] };
-  const divisionsList = ['ALL', ...Array.from(new Set(safeProducts.map(p => p.division || 'Bathing')))];
+  const isValidNameStr = (str) => {
+    if (!str || typeof str !== 'string') return false;
+    const cleaned = str.trim();
+    if (!cleaned) return false;
+    if (!isNaN(Number(cleaned))) return false; // Purge raw numeric strings like 6228.5887
+    if (cleaned.length < 2) return false;
+    return true;
+  };
+
+  const divisionsList = ['ALL', ...Array.from(new Set(safeProducts.map(p => p.division || 'Bathing').filter(isValidNameStr)))];
+
   const [isSessionActive, setIsSessionActive] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState([]);
@@ -1061,7 +1068,8 @@ function ExecutiveWorkspace({ products = [], activeExecutive = {}, db = {}, onUp
   };
 
   const renderMobileCatalog = () => {
-    const brandsList = ['ALL', ...new Set(products.map(p => p.brand))];
+    const brandsList = ['ALL', ...Array.from(new Set(products.map(p => p.brand).filter(isValidNameStr)))];
+
     
     const activeProducts = products.filter(p => {
       const matchBrand = selectedCatalogBrand === 'ALL' || p.brand === selectedCatalogBrand;

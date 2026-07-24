@@ -2717,6 +2717,42 @@ function AdminPanel({
               </div>
             </div>
 
+            {/* Checker Queue Master Control Switch */}
+            <div className="glass-panel" style={{ padding: '1.25rem', borderRadius: '12px', marginBottom: '1.25rem', background: 'var(--bg-card)', border: '1px solid var(--border-color)' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
+                <div>
+                  <div style={{ fontSize: '0.95rem', fontWeight: 800, color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                    <UserCheck size={20} color="var(--accent-cyan)" />
+                    <span>Checker Queue System Management</span>
+                  </div>
+                  <p style={{ fontSize: '0.78rem', color: 'var(--text-secondary)', marginTop: '0.2rem' }}>
+                    Control how executive quotations are routed to the Checker verification queue. Toggle to restrict Checker queue to Non-Salesforce accounts.
+                  </p>
+                </div>
+
+                <label style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', cursor: 'pointer', background: 'rgba(255,255,255,0.04)', padding: '0.5rem 1rem', borderRadius: '20px', border: '1px solid var(--border-color)' }}>
+                  <input 
+                    type="checkbox"
+                    checked={Boolean(db.filterCheckerQueueForNonSfOnly)}
+                    onChange={e => {
+                      const val = e.target.checked;
+                      if (onUpdateDb) {
+                        onUpdateDb({
+                          ...db,
+                          filterCheckerQueueForNonSfOnly: val
+                        });
+                        showToast(val ? "☑️ Checker Queue restricted to Non-Salesforce Users!" : "👥 Checker Queue showing all quotations!");
+                      }
+                    }}
+                    style={{ width: '18px', height: '18px', accentColor: 'var(--accent-cyan)' }}
+                  />
+                  <span style={{ fontSize: '0.82rem', fontWeight: 700, color: 'var(--accent-cyan)' }}>
+                    {db.filterCheckerQueueForNonSfOnly ? '🔒 Checker Queue: Non-Salesforce Only' : '🌐 Checker Queue: Show All Quotes'}
+                  </span>
+                </label>
+              </div>
+            </div>
+
             {/* Sales Executive Accounts Table */}
             <div className="glass-panel" style={{ padding: '1.25rem', borderRadius: '12px' }}>
               <h4 style={{ fontSize: '1rem', fontWeight: 700, marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
@@ -2730,6 +2766,7 @@ function AdminPanel({
                     <th>Executive Name</th>
                     <th>Username</th>
                     <th>Email</th>
+                    <th>Checker Route Type</th>
                     <th>Target</th>
                     <th>Wallet Balance</th>
                     <th>Actions</th>
@@ -2741,6 +2778,34 @@ function AdminPanel({
                       <td style={{ fontWeight: 700 }}>{exec.name}</td>
                       <td><code style={{ background: 'rgba(255,255,255,0.05)', padding: '0.1rem 0.4rem', borderRadius: '4px' }}>{exec.username}</code></td>
                       <td style={{ color: 'var(--text-secondary)' }}>{exec.email}</td>
+                      <td>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const updatedExecs = executives.map(e => e.id === exec.id ? { ...e, isNonSalesforceUser: !e.isNonSalesforceUser } : e);
+                            if (onUpdateDb) {
+                              onUpdateDb({
+                                ...db,
+                                executives: updatedExecs
+                              });
+                              showToast(!exec.isNonSalesforceUser ? `☑️ ${exec.name} set as Non-Salesforce (Checker Active)` : `💼 ${exec.name} set as Standard Salesforce`);
+                            }
+                          }}
+                          style={{
+                            border: '1px solid var(--border-color)',
+                            background: exec.isNonSalesforceUser ? 'rgba(6, 182, 212, 0.12)' : 'rgba(255,255,255,0.04)',
+                            color: exec.isNonSalesforceUser ? 'var(--accent-cyan)' : 'var(--text-secondary)',
+                            padding: '0.2rem 0.6rem',
+                            borderRadius: '12px',
+                            fontSize: '0.72rem',
+                            fontWeight: 700,
+                            cursor: 'pointer'
+                          }}
+                          title="Click to toggle Non-Salesforce vs Salesforce status"
+                        >
+                          {exec.isNonSalesforceUser ? '☑️ Non-Salesforce (Checker)' : '💼 Salesforce Executive'}
+                        </button>
+                      </td>
                       <td>{formatRupee(exec.target || 8000000)}</td>
                       <td style={{ fontWeight: 700, color: 'var(--accent-emerald)' }}>{formatRupee(exec.walletBalance || 0)}</td>
                       <td>
@@ -2763,6 +2828,7 @@ function AdminPanel({
                       </td>
                     </tr>
                   ))}
+
                 </tbody>
               </table>
             </div>
