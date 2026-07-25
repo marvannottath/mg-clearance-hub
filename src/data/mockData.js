@@ -82,7 +82,19 @@ export const INITIAL_PRODUCTS = [
   }
 ];
 
+export const INITIAL_VISUAL_CATEGORIES = [
+  { id: 'ALL', name: 'All Products', division: 'ALL', iconName: 'Grid', image: 'https://images.unsplash.com/photo-1584622650111-993a426fbf0a?auto=format&fit=crop&w=600&q=80' },
+  { id: 'Faucets', name: 'Faucets & Mixers', division: 'Bathing', iconName: 'Droplets', image: 'https://images.unsplash.com/photo-1620626011761-996317b8d101?auto=format&fit=crop&w=600&q=80' },
+  { id: 'Washbasins', name: 'Washbasins & Bowls', division: 'Bathing', iconName: 'Sparkles', image: 'https://images.unsplash.com/photo-1584622650111-993a426fbf0a?auto=format&fit=crop&w=600&q=80' },
+  { id: 'Showers', name: 'Showers & Rain Systems', division: 'Bathing', iconName: 'CloudRain', image: 'https://images.unsplash.com/photo-1559825481-12a05cc00344?auto=format&fit=crop&w=600&q=80' },
+  { id: 'Sanitaryware', name: 'Sanitaryware & WCs', division: 'Bathing', iconName: 'Layers', image: 'https://images.unsplash.com/photo-1564540586988-aa4e53c3d799?auto=format&fit=crop&w=600&q=80' },
+  { id: 'Spouts', name: 'Spouts & Diverters', division: 'Bathing', iconName: 'Compass', image: 'https://images.unsplash.com/photo-1585771724684-38269d6639fd?auto=format&fit=crop&w=600&q=80' },
+  { id: 'Tiles', name: 'Vitrified & Wall Tiles', division: 'Tiles', iconName: 'Grid', image: 'https://images.unsplash.com/photo-1615873968403-89e068629265?auto=format&fit=crop&w=600&q=80' },
+  { id: 'Accessories', name: 'Bath Accessories', division: 'Bathing', iconName: 'Package', image: 'https://images.unsplash.com/photo-1600566753190-17f0baa2a6c3?auto=format&fit=crop&w=600&q=80' }
+];
+
 export const INITIAL_EXECUTIVES = [
+
   { id: "exec-001", name: "Rajesh Kumar", email: "rajesh.k@marblegallery.com", target: 8000000, cleared: 0, salesCount: 0, username: "rajesh", password: "rajesh123" },
   { id: "exec-002", name: "Anjali Menon", email: "anjali.m@marblegallery.com", target: 8000000, cleared: 0, salesCount: 0, username: "anjali", password: "anjali123" },
   { id: "exec-003", name: "Vikram Sethi", email: "vikram.s@marblegallery.com", target: 8000000, cleared: 0, salesCount: 0, username: "vikram", password: "vikram123" },
@@ -262,10 +274,12 @@ export function loadDatabase() {
   }
 
   if (!Array.isArray(db.executives) || db.executives.length === 0) db.executives = INITIAL_EXECUTIVES;
+  if (!Array.isArray(db.visualCategories) || db.visualCategories.length === 0) db.visualCategories = INITIAL_VISUAL_CATEGORIES;
   if (!Array.isArray(db.salesLedger)) db.salesLedger = INITIAL_SALES_LEDGER;
   if (!Array.isArray(db.notifications)) db.notifications = INITIAL_NOTIFICATIONS;
   if (!Array.isArray(db.quotations)) db.quotations = INITIAL_QUOTATIONS;
   if (!Array.isArray(db.systemLogs)) db.systemLogs = INITIAL_SYSTEM_LOGS;
+
 
   if (!Array.isArray(db.quotations)) db.quotations = INITIAL_QUOTATIONS;
 

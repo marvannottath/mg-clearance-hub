@@ -7,7 +7,8 @@ import {
 } from 'lucide-react';
 
 import MDDashboard from './MDDashboard';
-import { isWeeklySpecialActive, getLocalDateString, syncProductsFromSAP, getProductStockAgeMonths, getSapApiUrl, getSfClientId, getSfClientSecret, getProductActiveHoldQty } from '../data/mockData';
+import { isWeeklySpecialActive, getLocalDateString, syncProductsFromSAP, getProductStockAgeMonths, getSapApiUrl, getSfClientId, getSfClientSecret, getProductActiveHoldQty, INITIAL_VISUAL_CATEGORIES } from '../data/mockData';
+
 
 // Fail-safe wrapper to prevent security exceptions in Brave, Safari Private, and chrome Incognito mode
 const safeLocalStorage = (() => {
@@ -1336,8 +1337,16 @@ function AdminPanel({
                   >
                     Brand Setup & Margins
                   </button>
+                  <button 
+                    type="button"
+                    className={`sidebar-nav-btn ${activeTab === 'categories' ? 'active' : ''}`} 
+                    onClick={() => setActiveTab('categories')}
+                  >
+                    Category Cards & Cover Photos
+                  </button>
                 </div>
               </div>
+
             </>
           )}
 
@@ -2318,11 +2327,131 @@ function AdminPanel({
                       </tr>
                     );
                   })}
+
                 </tbody>
               </table>
             </div>
           </div>
         )}
+
+
+        {/* Tab 5: Category Cards & Cover Photos Manager */}
+        {activeTab === 'categories' && (
+          <div className="fade-in">
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem', flexWrap: 'wrap', gap: '0.75rem' }}>
+              <div>
+                <h3 className="panel-title" style={{ margin: 0, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                  <Layers size={20} color="var(--accent-cyan)" />
+                  Showroom Category Cards & Cover Photo Manager
+                </h3>
+                <p style={{ color: 'var(--text-secondary)', fontSize: '0.82rem', marginTop: '0.25rem', margin: 0 }}>
+                  Manage category cards and custom cover photos for Faucets, Washbasins, Showers, Sanitaryware, and Tiles.
+                </p>
+              </div>
+
+              <button 
+                className="btn btn-cyan" 
+                style={{ padding: '0.55rem 1.1rem', fontSize: '0.82rem', fontWeight: 700, borderRadius: '8px' }}
+                onClick={() => {
+                  const newCat = {
+                    id: `Cat-${Date.now().toString().slice(-4)}`,
+                    name: 'New Bath Category',
+                    division: 'Bathing',
+                    image: 'https://images.unsplash.com/photo-1584622650111-993a426fbf0a?auto=format&fit=crop&w=600&q=80'
+                  };
+                  const updated = [...(db.visualCategories || INITIAL_VISUAL_CATEGORIES), newCat];
+                  onUpdateDb({ visualCategories: updated });
+                }}
+              >
+                <Plus size={16} /> Add New Category
+              </button>
+            </div>
+
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '1.25rem' }}>
+              {(db.visualCategories || INITIAL_VISUAL_CATEGORIES).map((cat, idx) => (
+                <div key={cat.id || idx} className="glass-panel" style={{ padding: '1rem', borderRadius: '12px', background: 'var(--bg-card)', border: '1px solid var(--border-color)' }}>
+                  <div style={{ height: '140px', width: '100%', borderRadius: '8px', overflow: 'hidden', position: 'relative', marginBottom: '0.85rem', background: '#1e293b' }}>
+                    <img src={cat.image} alt={cat.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                    <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(0,0,0,0.85) 0%, transparent 60%)' }} />
+                    <span className="badge badge-cyan" style={{ position: 'absolute', top: '8px', left: '8px', fontSize: '0.65rem' }}>
+                      {cat.division || 'Bathing'}
+                    </span>
+                  </div>
+
+                  <div className="form-group" style={{ marginBottom: '0.65rem' }}>
+                    <label className="form-label">Category Name</label>
+                    <input
+                      type="text"
+                      className="form-input"
+                      value={cat.name}
+                      style={{ fontSize: '0.85rem', fontWeight: 700 }}
+                      onChange={e => {
+                        const updated = [...(db.visualCategories || INITIAL_VISUAL_CATEGORIES)];
+                        updated[idx] = { ...updated[idx], name: e.target.value };
+                        onUpdateDb({ visualCategories: updated });
+                      }}
+                    />
+                  </div>
+
+                  <div className="form-group" style={{ marginBottom: '0.85rem' }}>
+                    <label className="form-label">Upload Cover Photo</label>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      className="form-input"
+                      style={{ fontSize: '0.75rem', padding: '0.35rem' }}
+                      onChange={e => {
+                        const file = e.target.files[0];
+                        if (file) {
+                          const reader = new FileReader();
+                          reader.onload = ev => {
+                            const img = new Image();
+                            img.onload = () => {
+                              const canvas = document.createElement('canvas');
+                              const MAX_SIZE = 600;
+                              let width = img.width;
+                              let height = img.height;
+                              if (width > height) {
+                                if (width > MAX_SIZE) { height = Math.round((height * MAX_SIZE) / width); width = MAX_SIZE; }
+                              } else {
+                                if (height > MAX_SIZE) { width = Math.round((width * MAX_SIZE) / height); height = MAX_SIZE; }
+                              }
+                              canvas.width = width;
+                              canvas.height = height;
+                              const ctx = canvas.getContext('2d');
+                              ctx.drawImage(img, 0, 0, width, height);
+                              const b64 = canvas.toDataURL('image/jpeg', 0.82);
+                              const updated = [...(db.visualCategories || INITIAL_VISUAL_CATEGORIES)];
+                              updated[idx] = { ...updated[idx], image: b64 };
+                              onUpdateDb({ visualCategories: updated });
+                            };
+                            img.src = ev.target.result;
+                          };
+                          reader.readAsDataURL(file);
+                        }
+                      }}
+                    />
+                  </div>
+
+                  <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+                    <button
+                      type="button"
+                      className="btn btn-danger"
+                      style={{ padding: '0.25rem 0.65rem', fontSize: '0.7rem' }}
+                      onClick={() => {
+                        const updated = (db.visualCategories || INITIAL_VISUAL_CATEGORIES).filter((_, i) => i !== idx);
+                        onUpdateDb({ visualCategories: updated });
+                      }}
+                    >
+                      Delete
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
 
 
 

@@ -90,11 +90,12 @@ function ExecutiveWorkspace({ products = [], activeExecutive = {}, db = {}, onUp
   const [mobileTab, setMobileTab] = useState('overview'); // 'overview' | 'catalog' | 'cart' | 'quotes' | 'wallet'
 
   // Executive Dashboard Tab States
-  const [activePortalTab, setActivePortalTab] = useState('offers'); // 'offers' | 'dashboard' | 'quotes' | 'wallet' | 'reports'
+  const [activePortalTab, setActivePortalTab] = useState('dashboard'); // 'dashboard' | 'offers' | 'quotes' | 'wallet' | 'reports'
   const [selectedCatalogBrand, setSelectedCatalogBrand] = useState('ALL');
   const [selectedCatalogDivision, setSelectedCatalogDivision] = useState('Bathing');
   const [selectedVisualCategory, setSelectedVisualCategory] = useState('ALL');
   const [catalogViewMode, setCatalogViewMode] = useState('list'); // 'list' | 'grid'
+
 
 
   
@@ -1024,18 +1025,18 @@ function ExecutiveWorkspace({ products = [], activeExecutive = {}, db = {}, onUp
                         <img
                           src={p.image}
                           alt={p.name}
-                          style={{ width: '64px', height: '64px', objectFit: 'cover', borderRadius: '8px', border: '1px solid var(--border-color)', flexShrink: 0 }}
+                          style={{ width: '70px', height: '70px', objectFit: 'cover', borderRadius: '8px', border: '1px solid var(--border-color)', flexShrink: 0 }}
                         />
                       ) : (
                         <div style={{
-                          width: '64px', height: '64px', borderRadius: '8px', flexShrink: 0,
+                          width: '70px', height: '70px', borderRadius: '8px', flexShrink: 0,
                           background: 'linear-gradient(135deg, rgba(14,165,233,0.15), rgba(16,185,129,0.15))',
                           border: '1px dashed rgba(245,158,11,0.4)',
                           display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
                           fontSize: '0.55rem', color: 'var(--text-muted)', fontWeight: 700, gap: '0.15rem'
                         }}>
-                          <span style={{ fontSize: '1.1rem' }}>📷</span>
-                          <span style={{ fontSize: '0.5rem', textAlign: 'center', lineHeight: 1.2 }}>Add image<br/>in Admin</span>
+                          <span style={{ fontSize: '1rem', color: 'var(--accent-cyan)' }}>📷</span>
+                          <span style={{ fontSize: '0.5rem', textAlign: 'center', lineHeight: 1.2 }}>No Photo</span>
                         </div>
                       )}
 
@@ -1044,39 +1045,45 @@ function ExecutiveWorkspace({ products = [], activeExecutive = {}, db = {}, onUp
                         <div style={{ fontWeight: 700, fontSize: '0.85rem', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={p.name}>{p.name}</div>
                         <div style={{ fontSize: '0.65rem', color: 'var(--text-muted)', marginTop: '0.1rem' }}>Code: <strong style={{ color: 'var(--accent-cyan)' }}>{p.id}</strong> | Stock: {p.stock}</div>
                         
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '0.5rem' }}>
-                          <div style={{ display: 'flex', alignItems: 'baseline', gap: '0.4rem' }}>
-                            <span style={{ fontSize: '0.95rem', fontWeight: 800, color: 'var(--accent-rose)' }}>{formatRupee(finalPrice)}</span>
-                            <span style={{ fontSize: '0.7rem', textDecoration: 'line-through', color: 'var(--text-muted)' }}>{formatRupee(p.mrp)}</span>
+                        {/* 3-Tier Price Box: MRP -> Regular Price -> Special Offer Rate */}
+                        <div style={{ marginTop: '0.35rem', background: 'rgba(0,0,0,0.2)', padding: '0.45rem', borderRadius: '6px' }}>
+                          <div style={{ display: 'flex', gap: '0.5rem', fontSize: '0.62rem', color: 'var(--text-muted)', marginBottom: '0.15rem' }}>
+                            <span>MRP: <s style={{ opacity: 0.7 }}>{formatRupee(p.mrp)}</s></span>
+                            <span>Regular: <s style={{ opacity: 0.7 }}>{formatRupee(p.mgPrice || Math.round(p.mrp * 0.8))}</s></span>
                           </div>
-                          
-                          {isInCart ? (
-                            <span style={{ fontSize: '0.75rem', color: 'var(--accent-emerald)', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '0.2rem' }}>
-                              <CheckCircle size={14} /> Added
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                            <span style={{ fontSize: '0.95rem', fontWeight: 900, color: 'var(--accent-emerald)' }}>
+                              Special Offer: {formatRupee(finalPrice)}
                             </span>
-                          ) : (
-                            <button className="btn btn-emerald" style={{ padding: '0.35rem 0.75rem', fontSize: '0.7rem', fontWeight: 700, borderRadius: '6px' }} onClick={() => {
-                              if (!isSessionActive) {
-                                setIsSessionActive(true);
-                                setCustomerName('Walk-in Client');
-                                setCustomerMobile('N/A');
-                                showToast("Started session for Walk-in Client.");
-                              }
-                              addProductToCartDirect(p);
-                            }}>
-                              + Add to Cart
-                            </button>
-                          )}
+                            
+                            {isInCart ? (
+                              <span style={{ fontSize: '0.75rem', color: 'var(--accent-emerald)', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '0.2rem' }}>
+                                <CheckCircle size={14} /> Added
+                              </span>
+                            ) : (
+                              <button className="btn btn-emerald" style={{ padding: '0.3rem 0.65rem', fontSize: '0.7rem', fontWeight: 700, borderRadius: '6px' }} onClick={() => {
+                                if (!isSessionActive) {
+                                  setIsSessionActive(true);
+                                  setCustomerName('Walk-in Client');
+                                  setCustomerMobile('N/A');
+                                  showToast("Started session for Walk-in Client.");
+                                }
+                                addProductToCartDirect(p);
+                              }}>
+                                + Select
+                              </button>
+                            )}
+                          </div>
                         </div>
                       </div>
                     </div>
 
-                    {incentivePct > 0 && (
-                      <div style={{ marginTop: '0.5rem', paddingTop: '0.4rem', borderTop: '1px dashed rgba(245,158,11,0.2)', fontSize: '0.62rem', color: 'var(--accent-amber)', display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
-                        🏆 Executive Incentive: <strong>{incentivePct}% on clearance sale</strong>
-                      </div>
-                    )}
+                    <div style={{ marginTop: '0.5rem', paddingTop: '0.4rem', borderTop: '1px dashed rgba(245,158,11,0.2)', fontSize: '0.62rem', color: 'var(--accent-amber)', display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
+                      <Award size={12} color="var(--accent-amber)" />
+                      <span>Executive Incentive: <strong>{formatRupee(getProductIncentiveAmount(p, 1, db.brands))}/unit</strong></span>
+                    </div>
                   </div>
+
                 );
               })
             )}
@@ -1167,10 +1174,10 @@ function ExecutiveWorkspace({ products = [], activeExecutive = {}, db = {}, onUp
           </div>
         </div>
 
-        {/* Jaquar-Style Visual Category Cards Grid */}
+        {/* Showroom Visual Category Cards Grid */}
         <div>
           <div style={{ fontSize: '0.75rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.04em', color: 'var(--text-secondary)', marginBottom: '0.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <span>🖼️ Jaquar-Style Category Browser</span>
+            <span>Showroom Category Browser</span>
             {selectedVisualCategory !== 'ALL' && (
               <button 
                 style={{ border: 'none', background: 'transparent', color: 'var(--accent-cyan)', fontSize: '0.7rem', fontWeight: 700, cursor: 'pointer' }}
@@ -1182,7 +1189,8 @@ function ExecutiveWorkspace({ products = [], activeExecutive = {}, db = {}, onUp
           </div>
 
           <div style={{ display: 'flex', gap: '0.5rem', overflowX: 'auto', paddingBottom: '0.25rem' }} className="no-scrollbar">
-            {VISUAL_CATEGORIES.map(cat => {
+            {(db.visualCategories || INITIAL_VISUAL_CATEGORIES).map(cat => {
+
               const isSelected = selectedVisualCategory === cat.id;
               return (
                 <div
@@ -1308,22 +1316,24 @@ function ExecutiveWorkspace({ products = [], activeExecutive = {}, db = {}, onUp
                       </div>
                     </div>
 
-                    {/* Pricing Box */}
-                    <div style={{ background: 'rgba(0,0,0,0.2)', padding: '0.65rem', borderRadius: '8px', marginBottom: '0.75rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                      <div>
-                        <div style={{ fontSize: '0.62rem', color: 'var(--text-muted)' }}>Regular Selling Price</div>
-                        <div style={{ fontSize: '0.78rem', textDecoration: 'line-through', color: 'var(--text-muted)' }}>{formatRupee(p.mrp)}</div>
+                    {/* 3-Tier Pricing Box: MRP -> Regular Selling Price -> Special Offer Rate */}
+                    <div style={{ background: 'rgba(0,0,0,0.25)', padding: '0.65rem', borderRadius: '8px', marginBottom: '0.75rem' }}>
+                      <div style={{ display: 'flex', gap: '0.75rem', fontSize: '0.65rem', color: 'var(--text-muted)', marginBottom: '0.2rem' }}>
+                        <span>MRP: <s style={{ opacity: 0.7 }}>{formatRupee(p.mrp)}</s></span>
+                        <span>Regular Price: <s style={{ opacity: 0.7 }}>{formatRupee(p.mgPrice || Math.round(p.mrp * 0.8))}</s></span>
                       </div>
-                      <div style={{ textAlign: 'right' }}>
-                        <div style={{ fontSize: '0.62rem', color: 'var(--accent-emerald)', fontWeight: 700 }}>Special Offer Price</div>
-                        <div style={{ fontSize: '1.15rem', fontWeight: 800, color: 'var(--accent-emerald)' }}>{formatRupee(finalPrice)}</div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <span style={{ fontSize: '0.65rem', color: 'var(--accent-emerald)', fontWeight: 700 }}>Special Offer Rate</span>
+                        <span style={{ fontSize: '1.2rem', fontWeight: 900, color: 'var(--accent-emerald)' }}>{formatRupee(finalPrice)}</span>
                       </div>
                     </div>
 
-                    <div style={{ fontSize: '0.62rem', color: 'var(--accent-amber)', marginBottom: '0.75rem' }}>
-                      🏆 Executive Incentive: {incentivePct}% · 🤝 Helper Staff: 1%
+                    <div style={{ fontSize: '0.68rem', color: 'var(--accent-amber)', marginBottom: '0.75rem', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
+                      <Award size={14} color="var(--accent-amber)" />
+                      <span>Executive Incentive: <strong>{formatRupee(getProductIncentiveAmount(p, 1, db.brands))}/unit</strong></span>
                     </div>
                   </div>
+
 
                   {/* Add to Quote Cart Button */}
                   <button
@@ -1590,20 +1600,21 @@ function ExecutiveWorkspace({ products = [], activeExecutive = {}, db = {}, onUp
                           )}
                         </div>
 
-                        {/* Price Row: Selling Price (MRP) + Offer Price */}
-                        <div style={{ display: 'flex', alignItems: 'baseline', gap: '0.4rem', marginTop: '0.4rem', flexWrap: 'wrap' }}>
-                          <div>
-                            <span style={{ fontSize: '0.65rem', color: 'var(--text-muted)', display: 'block' }}>Regular Selling Price</span>
-                            <span style={{ fontSize: '0.75rem', textDecoration: 'line-through', color: 'var(--text-muted)' }}>{formatRupee(p.mrp)}</span>
+                        {/* 3-Tier Price Box: MRP -> Regular Selling Price -> Special Offer Rate */}
+                        <div style={{ marginTop: '0.35rem', background: 'rgba(0,0,0,0.2)', padding: '0.45rem', borderRadius: '6px' }}>
+                          <div style={{ display: 'flex', gap: '0.6rem', fontSize: '0.62rem', color: 'var(--text-muted)', marginBottom: '0.15rem' }}>
+                            <span>MRP: <s style={{ opacity: 0.7 }}>{formatRupee(p.mrp)}</s></span>
+                            <span>Regular: <s style={{ opacity: 0.7 }}>{formatRupee(p.mgPrice || Math.round(p.mrp * 0.8))}</s></span>
                           </div>
-                          <div>
-                            <span style={{ fontSize: '0.65rem', color: 'var(--accent-emerald)', fontWeight: 700, display: 'block' }}>Special Offer Price</span>
-                            <span style={{ fontSize: '1.05rem', fontWeight: 800, color: 'var(--accent-emerald)' }}>{formatRupee(finalPrice)}</span>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                            <span style={{ fontSize: '0.62rem', color: 'var(--accent-emerald)', fontWeight: 700 }}>Special Offer Rate</span>
+                            <span style={{ fontSize: '1.05rem', fontWeight: 900, color: 'var(--accent-emerald)' }}>{formatRupee(finalPrice)}</span>
                           </div>
                         </div>
 
-                        <div style={{ fontSize: '0.6rem', color: 'var(--accent-amber)', marginTop: '0.2rem' }}>
-                          🏆 Exec Incentive: {incentivePct}% · 🤝 Helper Staff: 1%
+                        <div style={{ fontSize: '0.62rem', color: 'var(--accent-amber)', marginTop: '0.3rem', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
+                          <Award size={12} color="var(--accent-amber)" />
+                          <span>Executive Incentive: <strong>{formatRupee(getProductIncentiveAmount(p, 1, db.brands))}/unit</strong></span>
                         </div>
                       </div>
                     </div>
