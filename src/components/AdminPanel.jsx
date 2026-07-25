@@ -287,6 +287,14 @@ function AdminPanel({
   const [editCustomerDiscount, setEditCustomerDiscount] = useState(50);
   const [editExecutiveIncentive, setEditExecutiveIncentive] = useState(5);
 
+  // New Brand Form States
+  const [isAddBrandOpen, setIsAddBrandOpen] = useState(false);
+  const [newBrandName, setNewBrandName] = useState('');
+  const [newMaxMargin, setNewMaxMargin] = useState('45');
+  const [newCustomerDiscount, setNewCustomerDiscount] = useState('40');
+  const [newExecutiveIncentive, setNewExecutiveIncentive] = useState('4');
+
+
   // Weekly specials adding states
   const [specSelectedId, setSpecSelectedId] = useState('');
   const [isSpecDropdownOpen, setIsSpecDropdownOpen] = useState(false);
@@ -634,6 +642,36 @@ function AdminPanel({
     setEditingBrandName(null);
     showToast(`Brand margins for ${brandName} updated.`);
   };
+
+  const handleAddBrandSubmit = (e) => {
+    e.preventDefault();
+    if (!newBrandName.trim()) return;
+    const nameUpper = newBrandName.trim().toUpperCase();
+    const existing = db.brands || [];
+    if (existing.some(b => b.name.toUpperCase() === nameUpper)) {
+      showToast("Brand already exists!");
+      return;
+    }
+    const newBrandObj = {
+      name: nameUpper,
+      maxMargin: Number(newMaxMargin) || 45,
+      customerDiscount: Number(newCustomerDiscount) || 40,
+      executiveIncentive: Number(newExecutiveIncentive) || 4
+    };
+    const updated = [...existing, newBrandObj];
+    onUpdateDb({ ...db, brands: updated });
+    setNewBrandName('');
+    setIsAddBrandOpen(false);
+    showToast(`Brand '${nameUpper}' created successfully!`);
+  };
+
+  const handleDeleteBrand = (brandName) => {
+    if (!window.confirm(`Are you sure you want to delete brand '${brandName}'?`)) return;
+    const updated = (db.brands || []).filter(b => b.name.toUpperCase() !== brandName.toUpperCase());
+    onUpdateDb({ ...db, brands: updated });
+    showToast(`Brand '${brandName}' deleted.`);
+  };
+
 
   // Weekly Special Pickers
   const handleAddWeeklySpecial = (e) => {
@@ -2246,23 +2284,103 @@ function AdminPanel({
         {/* Tab 4: Brands & Margins Setup */}
         {activeTab === 'brands_margins' && (
           <div className="fade-in">
-            <h3 className="panel-title" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-              <Percent size={20} color="var(--accent-cyan)" />
-              Showroom Brand Margins & Incentives Manager
-            </h3>
-            <p style={{ color: 'var(--text-secondary)', fontSize: '0.85rem', marginBottom: '1.25rem' }}>
-              Set margin baseline setups for each brand. Standard product incentives will default to these commission rates unless overridden by Weekly Special promotions.
-            </p>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem', flexWrap: 'wrap', gap: '0.75rem' }}>
+              <div>
+                <h3 className="panel-title" style={{ margin: 0, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                  <Percent size={20} color="var(--accent-cyan)" />
+                  Showroom Brand Setup & Margins Manager
+                </h3>
+                <p style={{ color: 'var(--text-secondary)', fontSize: '0.85rem', marginTop: '0.25rem', margin: 0 }}>
+                  Add showroom brands and set commission margins. Standard product incentives will default to these rates.
+                </p>
+              </div>
 
-            <div className="custom-table-container" style={{ maxWidth: '800px' }}>
+              <button 
+                className="btn btn-cyan" 
+                style={{ padding: '0.55rem 1.1rem', fontSize: '0.82rem', fontWeight: 700, borderRadius: '8px' }}
+                onClick={() => setIsAddBrandOpen(!isAddBrandOpen)}
+              >
+                <Plus size={16} /> {isAddBrandOpen ? 'Close Form' : 'Create New Brand'}
+              </button>
+            </div>
+
+            {/* Create New Brand Form Drawer */}
+            {isAddBrandOpen && (
+              <div className="glass-panel" style={{ padding: '1.25rem', marginBottom: '1.5rem', border: '1.5px solid var(--accent-cyan)', borderRadius: '12px' }}>
+                <h4 style={{ fontSize: '0.95rem', fontWeight: 800, marginBottom: '0.85rem', color: 'var(--text-primary)' }}>
+                  Add New Showroom Brand
+                </h4>
+                <form onSubmit={handleAddBrandSubmit} style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(170px, 1fr))', gap: '1rem', alignItems: 'flex-end' }}>
+                  <div className="form-group" style={{ marginBottom: 0 }}>
+                    <label className="form-label">Brand Name (e.g. TOTO, KOHLER)</label>
+                    <input 
+                      type="text" 
+                      className="form-input" 
+                      placeholder="e.g. KOHLER" 
+                      value={newBrandName} 
+                      onChange={e => setNewBrandName(e.target.value)} 
+                      style={{ textTransform: 'uppercase', height: '38px', fontSize: '0.85rem', fontWeight: 700 }}
+                      required 
+                    />
+                  </div>
+
+                  <div className="form-group" style={{ marginBottom: 0 }}>
+                    <label className="form-label">Max Margin % (Showroom)</label>
+                    <input 
+                      type="number" 
+                      className="form-input" 
+                      placeholder="e.g. 45" 
+                      value={newMaxMargin} 
+                      onChange={e => setNewMaxMargin(e.target.value)} 
+                      style={{ height: '38px', fontSize: '0.85rem' }}
+                      required 
+                    />
+                  </div>
+
+                  <div className="form-group" style={{ marginBottom: 0 }}>
+                    <label className="form-label">Customer Discount %</label>
+                    <input 
+                      type="number" 
+                      className="form-input" 
+                      placeholder="e.g. 40" 
+                      value={newCustomerDiscount} 
+                      onChange={e => setNewCustomerDiscount(e.target.value)} 
+                      style={{ height: '38px', fontSize: '0.85rem' }}
+                      required 
+                    />
+                  </div>
+
+                  <div className="form-group" style={{ marginBottom: 0 }}>
+                    <label className="form-label">Exec. Incentive %</label>
+                    <input 
+                      type="number" 
+                      className="form-input" 
+                      placeholder="e.g. 4" 
+                      value={newExecutiveIncentive} 
+                      onChange={e => setNewExecutiveIncentive(e.target.value)} 
+                      style={{ height: '38px', fontSize: '0.85rem' }}
+                      required 
+                    />
+                  </div>
+
+                  <div>
+                    <button type="submit" className="btn btn-emerald" style={{ width: '100%', padding: '0.6rem', fontWeight: 700, fontSize: '0.85rem' }}>
+                      Save Brand
+                    </button>
+                  </div>
+                </form>
+              </div>
+            )}
+
+            <div className="custom-table-container" style={{ maxWidth: '900px' }}>
               <table className="custom-table">
                 <thead>
                   <tr>
                     <th>Brand Name</th>
-                    <th>Max margin % (Showroom)</th>
+                    <th>Max Margin %</th>
                     <th>Customer Discount %</th>
                     <th>Executive Incentive %</th>
-                    <th>Actions</th>
+                    <th style={{ textAlign: 'right' }}>Actions</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -2312,16 +2430,21 @@ function AdminPanel({
                             `${brand.executiveIncentive}%`
                           )}
                         </td>
-                        <td>
+                        <td style={{ textAlign: 'right' }}>
                           {isEditing ? (
-                            <div style={{ display: 'flex', gap: '0.35rem' }}>
+                            <div style={{ display: 'flex', gap: '0.35rem', justifyContent: 'flex-end' }}>
                               <button className="btn btn-emerald" style={{ padding: '0.25rem 0.5rem', fontSize: '0.75rem' }} onClick={() => handleSaveBrandMargins(brand.name)}>Save</button>
                               <button className="btn btn-secondary" style={{ padding: '0.25rem 0.5rem', fontSize: '0.75rem' }} onClick={() => setEditingBrandName(null)}>Cancel</button>
                             </div>
                           ) : (
-                            <button className="btn btn-secondary" style={{ padding: '0.25rem 0.5rem', fontSize: '0.75rem' }} onClick={() => startEditingBrand(brand)}>
-                              Edit Margins
-                            </button>
+                            <div style={{ display: 'flex', gap: '0.35rem', justifyContent: 'flex-end' }}>
+                              <button className="btn btn-secondary" style={{ padding: '0.25rem 0.5rem', fontSize: '0.75rem' }} onClick={() => startEditingBrand(brand)}>
+                                Edit Margins
+                              </button>
+                              <button className="btn btn-danger" style={{ padding: '0.25rem 0.5rem', fontSize: '0.75rem' }} onClick={() => handleDeleteBrand(brand.name)}>
+                                Delete
+                              </button>
+                            </div>
                           )}
                         </td>
                       </tr>
@@ -2333,6 +2456,7 @@ function AdminPanel({
             </div>
           </div>
         )}
+
 
 
         {/* Tab 5: Category Cards & Cover Photos Manager */}
