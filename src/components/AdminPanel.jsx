@@ -3410,30 +3410,51 @@ function AdminPanel({
                   </div>
 
                   <div className="form-group" style={{ marginBottom: 0 }}>
-                    <label className="form-label">Tile Finishing (e.g. Matt)</label>
+                    <label className="form-label">Tile Finishing (e.g. Soft, Matt, Glossy)</label>
                     <input 
                       type="text" 
                       className="form-input" 
                       value={productFinishing}
                       onChange={(e) => setProductFinishing(e.target.value)}
-                      placeholder="e.g. Matt, Glossy"
+                      placeholder="e.g. Soft, Matt, Glossy, Satin, Carving"
                       required={productDivision === 'Tiles'}
                     />
-                  </div>
-
-                  <div className="form-group" style={{ marginBottom: 0 }}>
-                    <label className="form-label">Display Location / Casette</label>
-                    <input 
-                      type="text" 
-                      className="form-input" 
-                      value={productLocation}
-                      onChange={(e) => setProductLocation(e.target.value)}
-                      placeholder="e.g. Casette A-4"
-                      required={productDivision === 'Tiles'}
-                    />
+                    <div style={{ display: 'flex', gap: '0.3rem', flexWrap: 'wrap', marginTop: '0.3rem' }}>
+                      {['Soft', 'Matt', 'Glossy', 'Satin', 'Carving', 'High Gloss'].map(fin => (
+                        <button
+                          key={fin}
+                          type="button"
+                          onClick={() => setProductFinishing(fin)}
+                          style={{
+                            fontSize: '0.65rem',
+                            padding: '0.15rem 0.45rem',
+                            borderRadius: '10px',
+                            border: '1px solid var(--border-color)',
+                            background: productFinishing === fin ? 'var(--accent-cyan)' : 'rgba(255,255,255,0.04)',
+                            color: productFinishing === fin ? '#000' : 'var(--text-secondary)',
+                            fontWeight: 700,
+                            cursor: 'pointer'
+                          }}
+                        >
+                          {fin}
+                        </button>
+                      ))}
+                    </div>
                   </div>
                 </div>
               )}
+
+              <div className="form-group">
+                <label className="form-label">Showroom Display & Stock Location</label>
+                <input 
+                  type="text" 
+                  className="form-input" 
+                  value={productLocation}
+                  onChange={(e) => setProductLocation(e.target.value)}
+                  placeholder="e.g. Showroom Floor A, Casette C-4, Rack B-2"
+                />
+              </div>
+
 
               <div className="form-group">
                 <label className="form-label">Short Description</label>
@@ -3806,10 +3827,10 @@ function AdminPanel({
               </div>
 
               <div className="form-group" style={{ marginBottom: '1rem' }}>
-                <label className="form-label">Accounts Payment Receipt / Proof File (Optional)</label>
+                <label className="form-label">Accounts Payment Receipt Document (PDF Only)</label>
                 <input
                   type="file"
-                  accept="image/*,application/pdf"
+                  accept="application/pdf"
                   onChange={e => {
                     const file = e.target.files[0];
                     if (file) {
@@ -3821,6 +3842,7 @@ function AdminPanel({
                   className="form-input"
                   style={{ fontSize: '0.8rem' }}
                 />
+
                 {payoutProofFile && (
                   <div style={{ color: 'var(--accent-emerald)', fontSize: '0.75rem', marginTop: '0.25rem', fontWeight: 600 }}>
                     ✓ Payment proof attached

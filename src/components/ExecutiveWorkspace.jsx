@@ -46,6 +46,17 @@ const safeLocalStorage = (() => {
   };
 })();
 
+const VISUAL_CATEGORIES = [
+  { id: 'ALL', name: 'All Products', icon: '✨', image: 'https://images.unsplash.com/photo-1584622650111-993a426fbf0a?auto=format&fit=crop&w=600&q=80' },
+  { id: 'Faucets', name: 'Faucets & Mixers', icon: '🚰', image: 'https://images.unsplash.com/photo-1620626011761-996317b8d101?auto=format&fit=crop&w=600&q=80' },
+  { id: 'Washbasins', name: 'Washbasins & Bowls', icon: '🥣', image: 'https://images.unsplash.com/photo-1584622650111-993a426fbf0a?auto=format&fit=crop&w=600&q=80' },
+  { id: 'Showers', name: 'Showers & Cloud', icon: '🚿', image: 'https://images.unsplash.com/photo-1559825481-12a05cc00344?auto=format&fit=crop&w=600&q=80' },
+  { id: 'Sanitaryware', name: 'Sanitaryware & WCs', icon: '🚽', image: 'https://images.unsplash.com/photo-1564540586988-aa4e53c3d799?auto=format&fit=crop&w=600&q=80' },
+  { id: 'Spouts', name: 'Spouts & Diverters', icon: '💧', image: 'https://images.unsplash.com/photo-1585771724684-38269d6639fd?auto=format&fit=crop&w=600&q=80' },
+  { id: 'Tiles', name: 'Vitrified & Wall Tiles', icon: '🧱', image: 'https://images.unsplash.com/photo-1615873968403-89e068629265?auto=format&fit=crop&w=600&q=80' },
+  { id: 'Accessories', name: 'Bath Accessories', icon: '🧴', image: 'https://images.unsplash.com/photo-1600566753190-17f0baa2a6c3?auto=format&fit=crop&w=600&q=80' }
+];
+
 function ExecutiveWorkspace({ products = [], activeExecutive = {}, db = {}, onUpdateDb }) {
   const safeProducts = products || [];
   const safeExecutive = activeExecutive || { id: 'exec-001', name: 'Showroom Executive', target: 500000, walletBalance: 0, walletLedger: [] };
@@ -61,7 +72,6 @@ function ExecutiveWorkspace({ products = [], activeExecutive = {}, db = {}, onUp
   };
 
   const divisionsList = ['ALL', ...Array.from(new Set(safeProducts.map(p => p.division || 'Bathing').filter(isValidNameStr)))];
-
 
   const [isSessionActive, setIsSessionActive] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
@@ -81,7 +91,9 @@ function ExecutiveWorkspace({ products = [], activeExecutive = {}, db = {}, onUp
   const [activePortalTab, setActivePortalTab] = useState('dashboard');
   const [selectedCatalogBrand, setSelectedCatalogBrand] = useState('ALL');
   const [selectedCatalogDivision, setSelectedCatalogDivision] = useState('ALL');
+  const [selectedVisualCategory, setSelectedVisualCategory] = useState('ALL');
   const [catalogViewMode, setCatalogViewMode] = useState('list'); // 'list' | 'grid'
+
   
   // Salesforce Invoice Upload Modal States
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
@@ -1075,15 +1087,20 @@ function ExecutiveWorkspace({ products = [], activeExecutive = {}, db = {}, onUp
   const renderMobileCatalog = () => {
     const brandsList = ['ALL', ...Array.from(new Set(products.map(p => p.brand).filter(isValidNameStr)))];
 
-    
     const activeProducts = products.filter(p => {
       const matchBrand = selectedCatalogBrand === 'ALL' || p.brand === selectedCatalogBrand;
       const matchDivision = selectedCatalogDivision === 'ALL' || (p.division || 'Bathing').toLowerCase() === selectedCatalogDivision.toLowerCase();
+      const matchCategory = selectedVisualCategory === 'ALL' || (
+        (p.category || '').toLowerCase().includes(selectedVisualCategory.toLowerCase()) ||
+        (p.division || '').toLowerCase().includes(selectedVisualCategory.toLowerCase()) ||
+        (p.name || '').toLowerCase().includes(selectedVisualCategory.toLowerCase()) ||
+        (p.description || '').toLowerCase().includes(selectedVisualCategory.toLowerCase())
+      );
       const matchSearch = !searchQuery.trim() || 
         p.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
         p.id.toLowerCase().includes(searchQuery.toLowerCase()) || 
         p.brand.toLowerCase().includes(searchQuery.toLowerCase());
-      return matchBrand && matchDivision && matchSearch;
+      return matchBrand && matchDivision && matchCategory && matchSearch;
     });
 
     return (
@@ -1096,7 +1113,7 @@ function ExecutiveWorkspace({ products = [], activeExecutive = {}, db = {}, onUp
             <input 
               type="text" 
               className="form-input" 
-              placeholder="Search by code, brand..." 
+              placeholder="Search code, brand, category..." 
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               style={{ paddingLeft: '2rem', height: '40px', fontSize: '0.85rem' }}
@@ -1111,6 +1128,59 @@ function ExecutiveWorkspace({ products = [], activeExecutive = {}, db = {}, onUp
           <button className="btn btn-emerald" style={{ padding: '0', width: '40px', height: '40px', minWidth: '40px', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '8px' }} onClick={() => setIsScannerOpen(true)}>
             <QrCode size={20} />
           </button>
+        </div>
+
+        {/* Jaquar-Style Visual Category Navigation Cards */}
+        <div>
+          <div style={{ fontSize: '0.75rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.04em', color: 'var(--text-secondary)', marginBottom: '0.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <span>🖼️ Showroom Visual Categories</span>
+            {selectedVisualCategory !== 'ALL' && (
+              <button 
+                style={{ border: 'none', background: 'transparent', color: 'var(--accent-cyan)', fontSize: '0.7rem', fontWeight: 700, cursor: 'pointer' }}
+                onClick={() => setSelectedVisualCategory('ALL')}
+              >
+                Reset Filter
+              </button>
+            )}
+          </div>
+
+          <div style={{ display: 'flex', gap: '0.5rem', overflowX: 'auto', paddingBottom: '0.25rem' }} className="no-scrollbar">
+            {VISUAL_CATEGORIES.map(cat => {
+              const isSelected = selectedVisualCategory === cat.id;
+              return (
+                <div
+                  key={cat.id}
+                  onClick={() => setSelectedVisualCategory(cat.id)}
+                  style={{
+                    flexShrink: 0,
+                    width: '100px',
+                    cursor: 'pointer',
+                    borderRadius: '10px',
+                    overflow: 'hidden',
+                    border: isSelected ? '2px solid var(--accent-cyan)' : '1px solid var(--border-color)',
+                    background: 'var(--bg-card)',
+                    boxShadow: isSelected ? '0 0 12px rgba(6,182,212,0.35)' : 'none',
+                    position: 'relative'
+                  }}
+                >
+                  <div style={{ height: '54px', width: '100%', position: 'relative', overflow: 'hidden', background: '#1e293b' }}>
+                    <img 
+                      src={cat.image} 
+                      alt={cat.name}
+                      style={{ width: '100%', height: '100%', objectFit: 'cover', opacity: 0.85 }}
+                    />
+                    <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(15,23,42,0.9) 0%, transparent 70%)' }} />
+                    <span style={{ position: 'absolute', top: '4px', left: '4px', fontSize: '0.85rem' }}>{cat.icon}</span>
+                  </div>
+                  <div style={{ padding: '0.25rem 0.2rem', textAlign: 'center' }}>
+                    <div style={{ fontSize: '0.62rem', fontWeight: isSelected ? 800 : 600, color: isSelected ? 'var(--accent-cyan)' : 'var(--text-primary)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                      {cat.name}
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
         </div>
 
         {/* Division Selector */}
@@ -1131,7 +1201,7 @@ function ExecutiveWorkspace({ products = [], activeExecutive = {}, db = {}, onUp
               }}
               onClick={() => setSelectedCatalogDivision(divOpt)}
             >
-              {divOpt === 'ALL' ? 'All' : divOpt}
+              {divOpt === 'ALL' ? 'All Divisions' : divOpt}
             </button>
           ))}
         </div>
@@ -1175,14 +1245,15 @@ function ExecutiveWorkspace({ products = [], activeExecutive = {}, db = {}, onUp
 
         {/* Product Catalog list */}
         <div>
-          <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', marginBottom: '0.5rem' }}>
-            Showing {activeProducts.length} showroom clearance items
+          <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', marginBottom: '0.5rem', display: 'flex', justifyContent: 'space-between' }}>
+            <span>Showing {activeProducts.length} showroom promotion items</span>
+            {selectedVisualCategory !== 'ALL' && <span style={{ color: 'var(--accent-cyan)', fontWeight: 700 }}>Category: {selectedVisualCategory}</span>}
           </div>
           
           <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
             {activeProducts.length === 0 ? (
               <div className="glass-panel" style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-muted)', fontSize: '0.8rem' }}>
-                No matching clearance products found.
+                No matching promotion products found for this category/brand filter.
               </div>
             ) : (
               activeProducts.map(p => {
@@ -1201,10 +1272,10 @@ function ExecutiveWorkspace({ products = [], activeExecutive = {}, db = {}, onUp
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.6rem' }}>
                       <span className={`brand-pill ${p.brand.toLowerCase()}`} style={{ fontSize: '0.6rem' }}>{p.brand}</span>
                       <div style={{ display: 'flex', gap: '0.35rem', alignItems: 'center' }}>
-                        {isWeeklyOffer && <span className="badge badge-warning" style={{ fontSize: '0.5rem', padding: '0.08rem 0.3rem' }}>⚡ Offer</span>}
-                        {cartItem && <span className="badge badge-success" style={{ fontSize: '0.5rem', padding: '0.08rem 0.3rem' }}>✓ In Cart</span>}
+                        {isWeeklyOffer && <span className="badge badge-warning" style={{ fontSize: '0.5rem', padding: '0.08rem 0.3rem' }}>⚡ Special Offer</span>}
+                        {cartItem && <span className="badge badge-success" style={{ fontSize: '0.5rem', padding: '0.08rem 0.3rem' }}>✓ In Quote</span>}
                         <span style={{ fontSize: '0.65rem', color: p.stock > 0 ? 'var(--accent-emerald)' : 'var(--accent-rose)', fontWeight: 600 }}>
-                          {p.stock > 0 ? `${p.stock} pcs` : 'Out'}
+                          {p.stock > 0 ? `${p.stock} pcs` : 'Out of Stock'}
                         </span>
                       </div>
                     </div>
@@ -1240,21 +1311,32 @@ function ExecutiveWorkspace({ products = [], activeExecutive = {}, db = {}, onUp
                         <div style={{ fontSize: '0.65rem', color: 'var(--text-muted)' }}>
                           Code: <strong style={{ color: 'var(--accent-cyan)' }}>{p.id}</strong>
                         </div>
-                        {p.division === 'Tiles' && (
-                          <div style={{ fontSize: '0.62rem', color: 'var(--text-secondary)', display: 'flex', flexWrap: 'wrap', gap: '0.3rem', marginTop: '0.2rem' }}>
-                            <span>📏 {p.size || 'N/A'}</span>
-                            <span>✨ {p.finishing || 'N/A'}</span>
-                            <span style={{ color: 'var(--accent-cyan)' }}>📍 {p.location || 'N/A'}</span>
-                          </div>
-                        )}
 
-                        {/* Price Row */}
-                        <div style={{ display: 'flex', alignItems: 'baseline', gap: '0.4rem', marginTop: '0.4rem' }}>
-                          <span style={{ fontSize: '1rem', fontWeight: 800, color: 'var(--accent-rose)' }}>{formatRupee(finalPrice)}</span>
-                          <span style={{ fontSize: '0.68rem', textDecoration: 'line-through', color: 'var(--text-muted)' }}>{formatRupee(p.mrp)}</span>
+                        {/* Display & Stock Location */}
+                        <div style={{ fontSize: '0.62rem', color: 'var(--text-secondary)', display: 'flex', flexWrap: 'wrap', gap: '0.3rem', marginTop: '0.2rem' }}>
+                          <span style={{ color: 'var(--accent-cyan)', fontWeight: 600 }}>📍 Location: {p.location || 'Showroom Display'}</span>
+                          {p.division === 'Tiles' && (
+                            <>
+                              <span>📏 {p.size || '60x120 cm'}</span>
+                              <span>✨ Finish: {p.finishing || 'Soft'}</span>
+                            </>
+                          )}
                         </div>
-                        <div style={{ fontSize: '0.6rem', color: 'var(--accent-amber)', marginTop: '0.1rem' }}>
-                          🏆 {incentivePct}% incentive · {formatRupee(getProductIncentiveAmount(p, 1, db.brands))}/unit
+
+                        {/* Price Row: Selling Price (MRP) + Offer Price */}
+                        <div style={{ display: 'flex', alignItems: 'baseline', gap: '0.4rem', marginTop: '0.4rem', flexWrap: 'wrap' }}>
+                          <div>
+                            <span style={{ fontSize: '0.65rem', color: 'var(--text-muted)', display: 'block' }}>Regular Selling Price</span>
+                            <span style={{ fontSize: '0.75rem', textDecoration: 'line-through', color: 'var(--text-muted)' }}>{formatRupee(p.mrp)}</span>
+                          </div>
+                          <div>
+                            <span style={{ fontSize: '0.65rem', color: 'var(--accent-emerald)', fontWeight: 700, display: 'block' }}>Special Offer Price</span>
+                            <span style={{ fontSize: '1.05rem', fontWeight: 800, color: 'var(--accent-emerald)' }}>{formatRupee(finalPrice)}</span>
+                          </div>
+                        </div>
+
+                        <div style={{ fontSize: '0.6rem', color: 'var(--accent-amber)', marginTop: '0.2rem' }}>
+                          🏆 Exec Incentive: {incentivePct}% · 🤝 Helper Staff: 1%
                         </div>
                       </div>
                     </div>
@@ -1276,7 +1358,7 @@ function ExecutiveWorkspace({ products = [], activeExecutive = {}, db = {}, onUp
                       ) : (
                         <button
                           className="btn btn-cyan"
-                          style={{ padding: '0.4rem 1.1rem', fontSize: '0.78rem', fontWeight: 700, borderRadius: '8px', width: '100%' }}
+                          style={{ padding: '0.45rem 1.1rem', fontSize: '0.78rem', fontWeight: 700, borderRadius: '8px', width: '100%' }}
                           disabled={p.stock === 0}
                           onClick={() => {
                             if (!isSessionActive) {
@@ -1287,7 +1369,7 @@ function ExecutiveWorkspace({ products = [], activeExecutive = {}, db = {}, onUp
                             }
                             addProductToCartDirect(p);
                           }}>
-                          {p.stock === 0 ? 'Out of Stock' : '+ Add to Selection List'}
+                          {p.stock === 0 ? 'Out of Stock' : '+ Select & Add to Quote'}
                         </button>
                       )}
                     </div>
@@ -1303,6 +1385,7 @@ function ExecutiveWorkspace({ products = [], activeExecutive = {}, db = {}, onUp
   };
 
   const renderMobileCart = () => {
+
     const totalIncentive = cart.reduce((sum, item) => sum + getProductIncentiveAmount(item, item.qty, db.brands), 0);
 
     return (
@@ -1823,11 +1906,12 @@ function ExecutiveWorkspace({ products = [], activeExecutive = {}, db = {}, onUp
                 </div>
 
                 <div className="form-group" style={{ marginBottom: '1.5rem' }}>
-                  <label className="form-label">Upload Receipt/Invoice Image *</label>
+                  <label className="form-label">Upload Salesforce Quotation Document (PDF Only) *</label>
                   <input 
                     type="file" 
-                    accept="image/*,application/pdf"
+                    accept="application/pdf"
                     required
+
                     onChange={(e) => {
                       const file = e.target.files[0];
                       if (file) {
@@ -3265,11 +3349,12 @@ function ExecutiveWorkspace({ products = [], activeExecutive = {}, db = {}, onUp
               </div>
 
               <div className="form-group" style={{ marginBottom: '1.5rem' }}>
-                <label className="form-label">Upload Customer Invoice / Bank Receipt *</label>
+                <label className="form-label">Upload Salesforce Quotation Document (PDF Only) *</label>
                 <input 
                   type="file" 
-                  accept="image/*,application/pdf"
+                  accept="application/pdf"
                   required
+
                   onChange={(e) => {
                     const file = e.target.files[0];
                     if (file) {

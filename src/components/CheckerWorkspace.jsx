@@ -493,30 +493,32 @@ function CheckerWorkspace({ currentUser, db, onUpdateDb }) {
             <form onSubmit={handleSaveSalesforceEntry} style={{ display: 'flex', flexDirection: 'column', gap: '1.1rem' }}>
               <div className="form-group">
                 <label className="form-label" style={{ fontWeight: 700 }}>
-                  Salesforce Invoice Number *
+                  Salesforce Quotation Number *
                 </label>
                 <input 
                   type="text" 
                   className="form-input"
-                  placeholder="e.g. INV-SF-2026-8890"
+                  placeholder="e.g. QT-SF-2026-8890"
                   value={invoiceNo}
                   onChange={(e) => setInvoiceNo(e.target.value)}
                   required
                 />
               </div>
 
+
               <div className="form-group">
                 <label className="form-label" style={{ fontWeight: 700 }}>
-                  Upload Downloaded Receipt PDF / Image (Optional)
+                  Upload Downloaded Salesforce Quotation Document (PDF Only)
                 </label>
                 <input 
                   type="file" 
-                  accept="image/*,application/pdf"
+                  accept="application/pdf"
                   onChange={handleFileUpload}
                   className="form-input"
                   style={{ fontSize: '0.8rem', padding: '0.5rem' }}
                 />
               </div>
+
 
               <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.75rem', marginTop: '0.5rem' }}>
                 <button 
