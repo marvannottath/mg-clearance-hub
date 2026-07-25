@@ -71,7 +71,9 @@ function ExecutiveWorkspace({ products = [], activeExecutive = {}, db = {}, onUp
     return true;
   };
 
-  const divisionsList = ['ALL', ...Array.from(new Set(safeProducts.map(p => p.division || 'Bathing').filter(isValidNameStr)))];
+  const rawDivs = Array.from(new Set(safeProducts.map(p => p.division || 'Bathing').filter(isValidNameStr)));
+  const divisionsList = ['Bathing', ...rawDivs.filter(d => d.toLowerCase() !== 'bathing'), 'ALL'];
+
 
   const [isSessionActive, setIsSessionActive] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
@@ -88,11 +90,12 @@ function ExecutiveWorkspace({ products = [], activeExecutive = {}, db = {}, onUp
   const [mobileTab, setMobileTab] = useState('overview'); // 'overview' | 'catalog' | 'cart' | 'quotes' | 'wallet'
 
   // Executive Dashboard Tab States
-  const [activePortalTab, setActivePortalTab] = useState('dashboard');
+  const [activePortalTab, setActivePortalTab] = useState('offers'); // 'offers' | 'dashboard' | 'quotes' | 'wallet' | 'reports'
   const [selectedCatalogBrand, setSelectedCatalogBrand] = useState('ALL');
-  const [selectedCatalogDivision, setSelectedCatalogDivision] = useState('ALL');
+  const [selectedCatalogDivision, setSelectedCatalogDivision] = useState('Bathing');
   const [selectedVisualCategory, setSelectedVisualCategory] = useState('ALL');
   const [catalogViewMode, setCatalogViewMode] = useState('list'); // 'list' | 'grid'
+
 
   
   // Salesforce Invoice Upload Modal States
@@ -1084,6 +1087,270 @@ function ExecutiveWorkspace({ products = [], activeExecutive = {}, db = {}, onUp
     );
   };
 
+  const renderOffersShowcase = () => {
+    const bathingProducts = safeProducts.filter(p => (p.division || 'Bathing').toLowerCase() === 'bathing');
+    const displayProducts = selectedCatalogDivision === 'Tiles' ? safeProducts.filter(p => p.division === 'Tiles') : bathingProducts;
+
+    const activeOfferProducts = displayProducts.filter(p => {
+      const matchBrand = selectedCatalogBrand === 'ALL' || p.brand === selectedCatalogBrand;
+      const matchCategory = selectedVisualCategory === 'ALL' || (
+        (p.category || '').toLowerCase().includes(selectedVisualCategory.toLowerCase()) ||
+        (p.name || '').toLowerCase().includes(selectedVisualCategory.toLowerCase()) ||
+        (p.description || '').toLowerCase().includes(selectedVisualCategory.toLowerCase())
+      );
+      const matchSearch = !searchQuery.trim() || 
+        p.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
+        p.id.toLowerCase().includes(searchQuery.toLowerCase()) || 
+        p.brand.toLowerCase().includes(searchQuery.toLowerCase());
+      return matchBrand && matchCategory && matchSearch;
+    });
+
+    const activeBrands = ['ALL', ...Array.from(new Set(displayProducts.map(p => p.brand).filter(isValidNameStr)))];
+
+    return (
+      <div className="fade-in" style={{ display: 'flex', flexDirection: 'column', gap: '1.2rem' }}>
+        {/* Showcase Banner */}
+        <div className="glass-panel" style={{
+          padding: '1.15rem',
+          background: 'linear-gradient(135deg, rgba(6,182,212,0.14) 0%, rgba(16,185,129,0.14) 100%)',
+          border: '1.5px solid var(--accent-cyan)',
+          borderRadius: '16px'
+        }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.75rem' }}>
+            <div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.25rem' }}>
+                <span className="badge badge-warning" style={{ fontSize: '0.7rem', fontWeight: 800 }}>🔥 Active Showroom Offers</span>
+                <span style={{ fontSize: '0.7rem', color: 'var(--accent-cyan)', fontWeight: 700 }}>Priority: Bathing Division</span>
+              </div>
+              <h2 style={{ fontSize: '1.25rem', fontWeight: 800, color: 'var(--text-primary)', margin: 0 }}>
+                Offers & Promotions Showcase
+              </h2>
+              <p style={{ fontSize: '0.78rem', color: 'var(--text-secondary)', marginTop: '0.25rem', margin: 0 }}>
+                Explore clearance items, faucets, sanitaryware, and rain showers with special offer prices and stock locations.
+              </p>
+            </div>
+
+            <div style={{ display: 'flex', gap: '0.5rem' }}>
+              <button 
+                className={`brand-pill ${selectedCatalogDivision === 'Bathing' ? 'active' : ''}`}
+                style={{
+                  padding: '0.4rem 1rem',
+                  fontSize: '0.75rem',
+                  fontWeight: 700,
+                  borderRadius: '20px',
+                  background: selectedCatalogDivision === 'Bathing' ? 'var(--accent-cyan)' : 'var(--bg-card)',
+                  color: selectedCatalogDivision === 'Bathing' ? '#000' : 'var(--text-primary)',
+                  border: '1px solid var(--border-color)',
+                  cursor: 'pointer'
+                }}
+                onClick={() => setSelectedCatalogDivision('Bathing')}
+              >
+                🛁 Bathing Items ({bathingProducts.length})
+              </button>
+              <button 
+                className={`brand-pill ${selectedCatalogDivision === 'Tiles' ? 'active' : ''}`}
+                style={{
+                  padding: '0.4rem 1rem',
+                  fontSize: '0.75rem',
+                  fontWeight: 700,
+                  borderRadius: '20px',
+                  background: selectedCatalogDivision === 'Tiles' ? 'var(--accent-cyan)' : 'var(--bg-card)',
+                  color: selectedCatalogDivision === 'Tiles' ? '#000' : 'var(--text-primary)',
+                  border: '1px solid var(--border-color)',
+                  cursor: 'pointer'
+                }}
+                onClick={() => setSelectedCatalogDivision('Tiles')}
+              >
+                🧱 Tiles Division ({safeProducts.filter(p => p.division === 'Tiles').length})
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {/* Jaquar-Style Visual Category Cards Grid */}
+        <div>
+          <div style={{ fontSize: '0.75rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.04em', color: 'var(--text-secondary)', marginBottom: '0.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <span>🖼️ Jaquar-Style Category Browser</span>
+            {selectedVisualCategory !== 'ALL' && (
+              <button 
+                style={{ border: 'none', background: 'transparent', color: 'var(--accent-cyan)', fontSize: '0.7rem', fontWeight: 700, cursor: 'pointer' }}
+                onClick={() => setSelectedVisualCategory('ALL')}
+              >
+                Reset Category
+              </button>
+            )}
+          </div>
+
+          <div style={{ display: 'flex', gap: '0.5rem', overflowX: 'auto', paddingBottom: '0.25rem' }} className="no-scrollbar">
+            {VISUAL_CATEGORIES.map(cat => {
+              const isSelected = selectedVisualCategory === cat.id;
+              return (
+                <div
+                  key={cat.id}
+                  onClick={() => setSelectedVisualCategory(cat.id)}
+                  style={{
+                    flexShrink: 0,
+                    width: '105px',
+                    cursor: 'pointer',
+                    borderRadius: '12px',
+                    overflow: 'hidden',
+                    border: isSelected ? '2px solid var(--accent-cyan)' : '1px solid var(--border-color)',
+                    background: 'var(--bg-card)',
+                    boxShadow: isSelected ? '0 0 14px rgba(6,182,212,0.35)' : 'none',
+                    position: 'relative'
+                  }}
+                >
+                  <div style={{ height: '56px', width: '100%', position: 'relative', overflow: 'hidden', background: '#1e293b' }}>
+                    <img 
+                      src={cat.image} 
+                      alt={cat.name}
+                      style={{ width: '100%', height: '100%', objectFit: 'cover', opacity: 0.85 }}
+                    />
+                    <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(15,23,42,0.9) 0%, transparent 60%)' }} />
+                    <span style={{ position: 'absolute', top: '4px', left: '4px', fontSize: '0.85rem' }}>{cat.icon}</span>
+                  </div>
+                  <div style={{ padding: '0.25rem 0.2rem', textAlign: 'center' }}>
+                    <div style={{ fontSize: '0.62rem', fontWeight: isSelected ? 800 : 600, color: isSelected ? 'var(--accent-cyan)' : 'var(--text-primary)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                      {cat.name}
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Search & Brand Filter Bar */}
+        <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', alignItems: 'center' }}>
+          <div style={{ position: 'relative', flex: 1, minWidth: '200px' }}>
+            <Search size={16} style={{ position: 'absolute', left: '10px', top: '11px', color: 'var(--text-muted)' }} />
+            <input 
+              type="text" 
+              className="form-input" 
+              placeholder="Search code, name, brand..." 
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              style={{ paddingLeft: '2rem', height: '38px', fontSize: '0.82rem' }}
+            />
+          </div>
+
+          <div style={{ display: 'flex', gap: '0.35rem', overflowX: 'auto' }} className="no-scrollbar">
+            {activeBrands.map(b => (
+              <button 
+                key={b} 
+                className={`brand-pill ${b.toLowerCase()} ${selectedCatalogBrand === b ? 'active' : ''}`}
+                style={{ 
+                  flexShrink: 0, 
+                  fontSize: '0.7rem', 
+                  padding: '0.3rem 0.65rem', 
+                  border: '1px solid var(--border-color)',
+                  background: selectedCatalogBrand === b ? 'var(--accent-cyan-glow)' : 'var(--bg-card)',
+                  color: selectedCatalogBrand === b ? 'var(--accent-cyan)' : 'var(--text-secondary)',
+                  fontWeight: selectedCatalogBrand === b ? 700 : 500,
+                  borderRadius: '20px',
+                  cursor: 'pointer'
+                }}
+                onClick={() => setSelectedCatalogBrand(b)}
+              >
+                {b}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Product Cards Grid */}
+        <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(3, 1fr)', gap: '1rem' }}>
+          {activeOfferProducts.length === 0 ? (
+            <div className="glass-panel" style={{ gridColumn: '1 / -1', textAlign: 'center', padding: '2.5rem', color: 'var(--text-muted)' }}>
+              No matching active offer products found for this filter.
+            </div>
+          ) : (
+            activeOfferProducts.map(p => {
+              const finalPrice = getProductFinalPrice(p);
+              const incentivePct = getProductIncentivePct(p, db.brands);
+              const cartItem = cart.find(item => item.id === p.id);
+
+              return (
+                <div key={p.id} className="glass-panel" style={{
+                  padding: '1rem',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  justify: 'space-between',
+                  background: cartItem ? 'rgba(16,185,129,0.06)' : 'var(--bg-card)',
+                  border: cartItem ? '1.5px solid var(--accent-emerald)' : '1px solid var(--border-color)',
+                  borderRadius: '14px'
+                }}>
+                  <div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.6rem' }}>
+                      <span className={`brand-pill ${p.brand.toLowerCase()}`} style={{ fontSize: '0.62rem' }}>{p.brand}</span>
+                      <span style={{ fontSize: '0.68rem', color: p.stock > 0 ? 'var(--accent-emerald)' : 'var(--accent-rose)', fontWeight: 700 }}>
+                        {p.stock > 0 ? `${p.stock} units in stock` : 'Out of stock'}
+                      </span>
+                    </div>
+
+                    <div style={{ display: 'flex', gap: '0.85rem', marginBottom: '0.75rem' }}>
+                      {p.image ? (
+                        <img src={p.image} alt={p.name} style={{ width: '90px', height: '90px', objectFit: 'cover', borderRadius: '10px', border: '1px solid var(--border-color)' }} />
+                      ) : (
+                        <div style={{ width: '90px', height: '90px', borderRadius: '10px', background: 'rgba(255,255,255,0.03)', border: '1px dashed var(--border-color)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.8rem' }}>
+                          📷
+                        </div>
+                      )}
+
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <h4 style={{ fontSize: '0.88rem', fontWeight: 800, color: 'var(--text-primary)', margin: '0 0 0.25rem 0', lineHeight: 1.3 }}>{p.name}</h4>
+                        <div style={{ fontSize: '0.68rem', color: 'var(--text-muted)', marginBottom: '0.3rem' }}>
+                          Code: <strong style={{ color: 'var(--accent-cyan)' }}>{p.id}</strong>
+                        </div>
+                        <div style={{ fontSize: '0.68rem', color: 'var(--accent-cyan)', fontWeight: 600 }}>
+                          📍 Location: {p.location || 'Showroom Display'}
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Pricing Box */}
+                    <div style={{ background: 'rgba(0,0,0,0.2)', padding: '0.65rem', borderRadius: '8px', marginBottom: '0.75rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <div>
+                        <div style={{ fontSize: '0.62rem', color: 'var(--text-muted)' }}>Regular Selling Price</div>
+                        <div style={{ fontSize: '0.78rem', textDecoration: 'line-through', color: 'var(--text-muted)' }}>{formatRupee(p.mrp)}</div>
+                      </div>
+                      <div style={{ textAlign: 'right' }}>
+                        <div style={{ fontSize: '0.62rem', color: 'var(--accent-emerald)', fontWeight: 700 }}>Special Offer Price</div>
+                        <div style={{ fontSize: '1.15rem', fontWeight: 800, color: 'var(--accent-emerald)' }}>{formatRupee(finalPrice)}</div>
+                      </div>
+                    </div>
+
+                    <div style={{ fontSize: '0.62rem', color: 'var(--accent-amber)', marginBottom: '0.75rem' }}>
+                      🏆 Executive Incentive: {incentivePct}% · 🤝 Helper Staff: 1%
+                    </div>
+                  </div>
+
+                  {/* Add to Quote Cart Button */}
+                  <button
+                    className="btn btn-cyan"
+                    style={{ width: '100%', padding: '0.55rem', fontWeight: 700, fontSize: '0.8rem', borderRadius: '8px' }}
+                    disabled={p.stock === 0}
+                    onClick={() => {
+                      if (!isSessionActive) {
+                        setIsSessionActive(true);
+                        setCustomerName('Walk-in Client');
+                        setCustomerMobile('N/A');
+                        showToast("Started session for Walk-in Client.");
+                      }
+                      addProductToCartDirect(p);
+                    }}
+                  >
+                    {cartItem ? `✓ Added (${cartItem.qty} in Quote)` : '+ Select & Add to Quote'}
+                  </button>
+                </div>
+              );
+            })
+          )}
+        </div>
+      </div>
+    );
+  };
+
   const renderMobileCatalog = () => {
     const brandsList = ['ALL', ...Array.from(new Set(products.map(p => p.brand).filter(isValidNameStr)))];
 
@@ -2050,6 +2317,7 @@ function ExecutiveWorkspace({ products = [], activeExecutive = {}, db = {}, onUp
       {isMobile ? (
         <div className="mobile-app-layout" style={{ paddingBottom: '80px' }}>
           <main style={{ padding: '0.75rem 0.75rem 2rem 0.75rem' }}>
+            {mobileTab === 'offers' && renderOffersShowcase()}
             {mobileTab === 'overview' && renderMobileOverview()}
             {mobileTab === 'catalog' && renderMobileCatalog()}
             {mobileTab === 'cart' && renderMobileCart()}
@@ -2058,9 +2326,9 @@ function ExecutiveWorkspace({ products = [], activeExecutive = {}, db = {}, onUp
           </main>
 
           <nav className="mobile-bottom-nav">
-            <button className={`mobile-bottom-nav-item ${mobileTab === 'overview' ? 'active' : ''}`} onClick={() => setMobileTab('overview')}>
+            <button className={`mobile-bottom-nav-item ${mobileTab === 'offers' ? 'active' : ''}`} onClick={() => setMobileTab('offers')}>
               <Award size={20} />
-              <span>Overview</span>
+              <span>Offers</span>
             </button>
             <button className={`mobile-bottom-nav-item ${mobileTab === 'catalog' ? 'active' : ''}`} onClick={() => setMobileTab('catalog')}>
               <Search size={20} />
@@ -2100,7 +2368,7 @@ function ExecutiveWorkspace({ products = [], activeExecutive = {}, db = {}, onUp
                   Good day, {activeExecutive.name.split(' ')[0]}!
                 </h2>
                 <p style={{ color: 'var(--text-secondary)', fontSize: '0.85rem', marginTop: '0.2' }}>
-                  Thank you for your support. Today we planned special clearance items. Let's hit the showroom floor!
+                  Welcome back! Explore active bathing offers and clearance items below.
                 </p>
               </div>
             </div>
@@ -2112,6 +2380,10 @@ function ExecutiveWorkspace({ products = [], activeExecutive = {}, db = {}, onUp
 
           {/* Portal Sub-Navigation Tabs */}
           <div className="panel-tabs">
+            <button className={`panel-tab ${activePortalTab === 'offers' ? 'active' : ''}`} onClick={() => setActivePortalTab('offers')}>
+              <Award size={14} style={{ marginRight: '0.25rem' }} />
+              🔥 Showroom Offers & Promotions
+            </button>
             <button className={`panel-tab ${activePortalTab === 'dashboard' ? 'active' : ''}`} onClick={() => setActivePortalTab('dashboard')}>
               <Bell size={14} style={{ marginRight: '0.25rem' }} />
               Overview Dashboard
@@ -2129,6 +2401,10 @@ function ExecutiveWorkspace({ products = [], activeExecutive = {}, db = {}, onUp
               Brand Performance
             </button>
           </div>
+
+          {/* Tab 0: Offers Showcase */}
+          {activePortalTab === 'offers' && renderOffersShowcase()}
+
 
           {/* Tab 1: Overview Dashboard */}
           {activePortalTab === 'dashboard' && (
