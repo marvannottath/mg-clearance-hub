@@ -9,7 +9,9 @@ import {
 import { 
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell 
 } from 'recharts';
-import { isWeeklySpecialActive, getProductActiveHoldQty } from '../data/mockData';
+import { isWeeklySpecialActive, getProductActiveHoldQty, INITIAL_VISUAL_CATEGORIES } from '../data/mockData';
+
+
 
 // Fail-safe wrapper to prevent security exceptions in Brave, Safari Private, and chrome Incognito mode
 const safeLocalStorage = (() => {
