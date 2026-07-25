@@ -2921,8 +2921,9 @@ function ExecutiveWorkspace({ products = [], activeExecutive = {}, db = {}, onUp
                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
                       <h3 style={{ fontSize: '1.1rem', fontWeight: 800, margin: 0, color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                         <Sliders size={20} color="var(--accent-cyan)" />
-                        Showroom Clearance Catalog
+                        Showroom Promotions Catalog
                       </h3>
+
                       <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', background: 'rgba(255,255,255,0.05)', padding: '0.2rem 0.6rem', borderRadius: '20px', fontWeight: 600 }}>
                         {filteredProducts.length} Items Available
                       </span>
@@ -3009,24 +3010,26 @@ function ExecutiveWorkspace({ products = [], activeExecutive = {}, db = {}, onUp
                       <thead>
                         <tr style={{ background: 'rgba(255,255,255,0.03)', borderBottom: '1px solid var(--border-color)', color: 'var(--text-muted)', fontSize: '0.75rem', textAlign: 'left' }}>
                           <th style={{ padding: '0.65rem 0.8rem' }}>Product & Code</th>
-                          <th style={{ padding: '0.65rem 0.8rem' }}>Brand / Specs</th>
-                          <th style={{ padding: '0.65rem 0.8rem', textAlign: 'center' }}>Stock</th>
+                          <th style={{ padding: '0.65rem 0.8rem' }}>Brand / Location</th>
+                          <th style={{ padding: '0.65rem 0.8rem', textAlign: 'center' }}>Stock Status</th>
                           <th style={{ padding: '0.65rem 0.8rem', textAlign: 'right' }}>MRP</th>
-                          <th style={{ padding: '0.65rem 0.8rem', textAlign: 'right' }}>Clearance Price</th>
+                          <th style={{ padding: '0.65rem 0.8rem', textAlign: 'right' }}>Regular Selling Price</th>
+                          <th style={{ padding: '0.65rem 0.8rem', textAlign: 'right' }}>Special Offer Rate</th>
                           <th style={{ padding: '0.65rem 0.8rem', textAlign: 'center' }}>Cart Action</th>
                         </tr>
                       </thead>
                       <tbody>
                         {filteredProducts.length === 0 ? (
                           <tr>
-                            <td colSpan="6" style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-muted)' }}>
-                              No clearance products matching criteria.
+                            <td colSpan="7" style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-muted)' }}>
+                              No products matching search criteria.
                             </td>
                           </tr>
                         ) : (
                           filteredProducts.map(p => {
                             const isOutOfStock = p.stock === 0;
                             const finalPrice = getProductFinalPrice(p);
+                            const regularPrice = p.mgPrice || Math.round(p.mrp * 0.8);
                             const isWeeklySpecial = isWeeklySpecialActive(p);
                             const cartItem = cart.find(i => i.id === p.id);
                             const activeHoldQty = getProductActiveHoldQty(p.id, db.quotations);
@@ -3061,7 +3064,7 @@ function ExecutiveWorkspace({ products = [], activeExecutive = {}, db = {}, onUp
                                       <div style={{ fontWeight: 700, color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '0.4rem', fontSize: '0.85rem' }}>
                                         {p.name}
                                         {isWeeklySpecial && <span className="badge badge-warning" style={{ fontSize: '0.55rem', padding: '0.05rem 0.3rem' }}>⚡ Offer</span>}
-                                        {cartItem && <span className="badge badge-success" style={{ fontSize: '0.55rem', padding: '0.05rem 0.35rem' }}>In Cart ({cartItem.qty})</span>}
+                                        {cartItem && <span className="badge badge-success" style={{ fontSize: '0.55rem', padding: '0.05rem 0.35rem' }}>In Quote ({cartItem.qty})</span>}
                                       </div>
                                       <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', marginTop: '0.1rem' }}>Code: <strong style={{ color: 'var(--accent-cyan)' }}>{p.id}</strong></div>
                                     </div>
@@ -3069,9 +3072,12 @@ function ExecutiveWorkspace({ products = [], activeExecutive = {}, db = {}, onUp
                                 </td>
                                 <td style={{ padding: '0.75rem 0.8rem' }}>
                                   <span className={`brand-pill ${p.brand.toLowerCase()}`} style={{ fontSize: '0.62rem', padding: '0.15rem 0.5rem' }}>{p.brand}</span>
+                                  <div style={{ fontSize: '0.7rem', color: 'var(--accent-cyan)', marginTop: '0.2rem', fontWeight: 600 }}>
+                                    📍 {p.location || 'Showroom Floor'}
+                                  </div>
                                   {p.division === 'Tiles' && (
-                                    <div style={{ fontSize: '0.7rem', color: 'var(--text-secondary)', marginTop: '0.25rem' }}>
-                                      <span>📏 {p.size || 'N/A'}</span> • <span>✨ {p.finishing || 'N/A'}</span> • <span style={{ color: 'var(--accent-cyan)' }}>📍 {p.location || 'N/A'}</span>
+                                    <div style={{ fontSize: '0.68rem', color: 'var(--text-secondary)', marginTop: '0.15rem' }}>
+                                      <span>📏 {p.size || '60x120 cm'}</span> • <span>✨ {p.finishing || 'Soft'}</span> • <span style={{ color: 'var(--accent-emerald)', fontWeight: 700 }}>📐 {p.coverageSqFt || '15.5'} Sq.Ft/Box</span>
                                     </div>
                                   )}
                                 </td>
@@ -3081,7 +3087,7 @@ function ExecutiveWorkspace({ products = [], activeExecutive = {}, db = {}, onUp
                                   </div>
                                   {activeHoldQty > 0 && (
                                     <span className="badge badge-warning" style={{ fontSize: '0.58rem', padding: '0.05rem 0.3rem', marginTop: '0.15rem', display: 'inline-block' }}>
-                                      {activeHoldQty} in active carts
+                                      {activeHoldQty} in active quotes
                                     </span>
                                   )}
                                   <div style={{ fontSize: '0.65rem', color: 'var(--accent-cyan)', fontWeight: 600, marginTop: '0.1rem' }}>
@@ -3091,9 +3097,18 @@ function ExecutiveWorkspace({ products = [], activeExecutive = {}, db = {}, onUp
                                 <td style={{ padding: '0.75rem 0.8rem', textAlign: 'right', textDecoration: 'line-through', color: 'var(--text-muted)' }}>
                                   {formatRupee(p.mrp)}
                                 </td>
-                                <td style={{ padding: '0.75rem 0.8rem', textAlign: 'right', fontWeight: 800, color: 'var(--accent-rose)', fontSize: '0.95rem' }}>
-                                  {formatRupee(finalPrice)}
+                                <td style={{ padding: '0.75rem 0.8rem', textAlign: 'right', textDecoration: 'line-through', color: 'var(--text-muted)', fontWeight: 600 }}>
+                                  {formatRupee(regularPrice)}
                                 </td>
+                                <td style={{ padding: '0.75rem 0.8rem', textAlign: 'right', fontWeight: 900, color: 'var(--accent-emerald)', fontSize: '1rem' }}>
+                                  {formatRupee(finalPrice)}
+                                  {p.division === 'Tiles' && (
+                                    <div style={{ fontSize: '0.65rem', color: 'var(--accent-cyan)', fontWeight: 700, marginTop: '0.1rem' }}>
+                                      ₹{Math.round(finalPrice / (p.coverageSqFt || 15.5))}/Sq.Ft
+                                    </div>
+                                  )}
+                                </td>
+
                                 <td style={{ padding: '0.75rem 0.8rem', textAlign: 'center' }} onClick={(e) => e.stopPropagation()}>
                                   {cartItem ? (
                                     <div style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem', background: 'rgba(16,185,129,0.12)', padding: '0.3rem 0.75rem', borderRadius: '20px', border: '1px solid var(--accent-emerald)' }}>
@@ -3342,10 +3357,11 @@ function ExecutiveWorkspace({ products = [], activeExecutive = {}, db = {}, onUp
                       <span>MRP Total:</span>
                       <span style={{ textDecoration: 'line-through', color: 'var(--text-muted)' }}>{formatRupee(cartTotalMrp)}</span>
                     </div>
-                    <div className="cart-total-row" style={{ fontSize: '1.05rem', fontWeight: 700, display: 'flex', justifyContent: 'space-between', marginBottom: '0.25rem' }}>
-                      <span>Clearance Total:</span>
+                    <div className="cart-total-row" style={{ fontSize: '1.05rem', fontWeight: 800, display: 'flex', justifyContent: 'space-between', marginBottom: '0.25rem' }}>
+                      <span>Total Quote Value:</span>
                       <span style={{ color: 'var(--accent-emerald)' }}>{formatRupee(cartTotalPaid)}</span>
                     </div>
+
                     <div className="cart-total-row cart-savings" style={{ fontSize: '0.75rem', display: 'flex', justifyContent: 'space-between', color: 'var(--accent-rose)' }}>
                       <span>Net Savings:</span>
                       <span>{formatRupee(totalSavings)} ({((totalSavings / cartTotalMrp)*100).toFixed(0)}% Off)</span>

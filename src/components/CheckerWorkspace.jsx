@@ -620,7 +620,8 @@ function CheckerWorkspace({ currentUser, db, onUpdateDb }) {
                     <th>Brand</th>
                     <th style={{ textAlign: 'center' }}>Qty</th>
                     <th style={{ textAlign: 'right' }}>MRP</th>
-                    <th style={{ textAlign: 'right' }}>Clearance Price</th>
+                    <th style={{ textAlign: 'right' }}>Special Offer Rate</th>
+
                     <th style={{ textAlign: 'right' }}>Subtotal</th>
                   </tr>
                 </thead>
@@ -866,7 +867,8 @@ function CheckerWorkspace({ currentUser, db, onUpdateDb }) {
                 <span>Executive: <strong style={{ color: '#ffffff' }}>{activeLightboxQuote.executiveName || 'Executive'}</strong></span>
                 <span>Client: <strong style={{ color: '#ffffff' }}>{activeLightboxQuote.customerName}</strong> ({activeLightboxQuote.customerMobile || 'N/A'})</span>
                 <span>Salesforce Invoice: <strong style={{ color: 'var(--accent-cyan)' }}>{activeLightboxQuote.invoiceNo || activeLightboxQuote.sapInvoiceNo || 'N/A'}</strong></span>
-                <span>Clearance Total: <strong style={{ color: 'var(--accent-rose)', fontSize: '0.9rem' }}>{formatRupee(activeLightboxQuote.items ? activeLightboxQuote.items.reduce((s,i) => s+(i.specialPrice*i.qty),0) : activeLightboxQuote.totalAmount)}</strong></span>
+                <span>Total Offer Value: <strong style={{ color: 'var(--accent-rose)', fontSize: '0.9rem' }}>{formatRupee(activeLightboxQuote.items ? activeLightboxQuote.items.reduce((s,i) => s+(i.specialPrice*i.qty),0) : activeLightboxQuote.totalAmount)}</strong></span>
+
                 <span>Est. Incentive: <strong style={{ color: 'var(--accent-amber)' }}>{formatRupee(activeLightboxQuote.incentiveAmount)}</strong></span>
               </div>
             </div>

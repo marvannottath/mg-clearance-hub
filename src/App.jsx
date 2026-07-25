@@ -842,7 +842,8 @@ function App() {
               MG
             </div>
             <div>
-              <h1 className="logo-text" style={{ fontSize: '1.1rem', margin: 0, letterSpacing: '0.02em' }}>MG CLEARANCE</h1>
+              <h1 className="logo-text" style={{ fontSize: '1.1rem', margin: 0, letterSpacing: '0.02em' }}>MG PROMOTIONS</h1>
+
               <span style={{ fontSize: '0.62rem', color: 'var(--text-muted)', fontWeight: 600, letterSpacing: '0.12em', textTransform: 'uppercase', display: 'block' }}>
                 BATH & TILE DIVISION
               </span>
