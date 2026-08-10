@@ -498,18 +498,18 @@ function App() {
       }
     }
   }, [routePath, currentUser]);
-
   const toggleTheme = () => {
     setTheme(prev => prev === 'dark' ? 'light' : 'dark');
   };
 
   // Login authentication handler
   const handleLoginSubmit = (user, pass) => {
-    user = user.trim().toLowerCase();
+    const userClean = (user || '').trim().toLowerCase();
+    const passClean = (pass || '').trim();
 
     // 1. Check Managing Director (MD) Credentials
     const storedMdPass = safeLocalStorage.getItem('mg_md_password') || 'md123';
-    if ((user === 'md' || user === 'director' || user === 'managingdirector') && (pass === storedMdPass || pass === 'md123' || pass === 'md')) {
+    if ((userClean === 'md' || userClean === 'director' || userClean === 'managingdirector') && (passClean === storedMdPass || passClean === 'md123' || passClean === 'md')) {
       const mdSession = { name: "Managing Director", role: "md", username: "md", email: "md@marblegallery.com" };
       setCurrentUser(mdSession);
       safeLocalStorage.setItem('mg_clearance_session', JSON.stringify(mdSession));
@@ -519,7 +519,7 @@ function App() {
 
     // 2. Check Showroom Manager Credentials
     const storedMgrPass = safeLocalStorage.getItem('mg_manager_password') || 'manager123';
-    if ((user === 'manager' || user === 'showroom') && (pass === storedMgrPass || pass === 'manager123' || pass === 'manager')) {
+    if ((userClean === 'manager' || userClean === 'showroom') && (passClean === storedMgrPass || passClean === 'manager123' || passClean === 'manager')) {
       const managerSession = { name: "Showroom Manager", role: "manager", username: "manager", email: "manager@marblegallery.com" };
       setCurrentUser(managerSession);
       safeLocalStorage.setItem('mg_clearance_session', JSON.stringify(managerSession));
@@ -529,7 +529,7 @@ function App() {
 
     // 3. Check Checker Credentials
     const storedCheckerPass = safeLocalStorage.getItem('mg_checker_password') || 'checker123';
-    if ((user === 'checker' || user === 'billing') && (pass === storedCheckerPass || pass === 'checker123' || pass === 'checker')) {
+    if ((userClean === 'checker' || userClean === 'billing') && (passClean === storedCheckerPass || passClean === 'checker123' || passClean === 'checker')) {
       const checkerSession = { name: "Salesforce Billing Checker", role: "checker", username: "checker", email: "checker@marblegallery.com" };
       setCurrentUser(checkerSession);
       safeLocalStorage.setItem('mg_clearance_session', JSON.stringify(checkerSession));
@@ -539,7 +539,7 @@ function App() {
 
     // 4. Check Admin Credentials
     const storedAdminPass = safeLocalStorage.getItem('mg_admin_password') || 'admin123';
-    if (user === 'admin' && (pass === storedAdminPass || pass === 'admin123')) {
+    if (userClean === 'admin' && (passClean === storedAdminPass || passClean === 'admin123')) {
       const adminSession = { name: "System Admin", role: "admin", username: "admin", email: "admin@marblegallery.com" };
       setCurrentUser(adminSession);
       safeLocalStorage.setItem('mg_clearance_session', JSON.stringify(adminSession));
@@ -547,11 +547,26 @@ function App() {
       return { success: true };
     }
 
-    // 4. Check Executive Credentials from dynamic DB
-    const matchedExec = db.executives.find(e => 
-      e.username?.toLowerCase() === user && 
-      e.password === pass
-    );
+    // 5. Check Executive Credentials from dynamic DB (Supports username, full name, email, or exec ID)
+    const matchedExec = (db.executives || []).find(e => {
+      if (!e) return false;
+      const uName = (e.username || '').trim().toLowerCase();
+      const nameStr = (e.name || '').trim().toLowerCase();
+      const emailStr = (e.email || '').trim().toLowerCase();
+      const idStr = (e.id || '').trim().toLowerCase();
+      const ePass = (e.password || '').trim();
+
+      const isUserMatch = (
+        uName === userClean || 
+        nameStr === userClean || 
+        nameStr.split(' ')[0] === userClean ||
+        emailStr === userClean || 
+        idStr === userClean
+      );
+      
+      const isPassMatch = (ePass === passClean || ePass === pass);
+      return isUserMatch && isPassMatch;
+    });
 
     if (matchedExec) {
       const execSession = { 
