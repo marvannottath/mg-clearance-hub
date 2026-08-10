@@ -1319,7 +1319,8 @@ function AdminPanel({
                     className={`sidebar-nav-btn ${activeTab === 'inventory' ? 'active' : ''}`} 
                     onClick={() => setActiveTab('inventory')}
                   >
-                    Clearance Stock Inventory
+                    Promotions Stock Inventory
+
                   </button>
                   <button 
                     type="button"
@@ -1475,7 +1476,8 @@ function AdminPanel({
           <div className="fade-in">
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem', flexWrap: 'wrap', gap: '0.75rem' }}>
               <h3 className="panel-title" style={{ marginBottom: 0 }}>
-                Showroom Clearance Inventory ({products.length} Products)
+                Showroom Promotions Inventory ({products.length} Products)
+
               </h3>
               
               <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center', flexWrap: 'wrap' }}>
@@ -1589,7 +1591,8 @@ function AdminPanel({
                     <th>Brand</th>
                     <th>Stock</th>
                     <th>MRP Rate</th>
-                    <th>Minimum Selling Price</th>
+                    <th>Maximum Rate</th>
+                    <th>MSP</th>
                     <th>Weekly Special</th>
                     <th>Actions</th>
                   </tr>
@@ -1597,52 +1600,58 @@ function AdminPanel({
                 <tbody>
                   {paginatedInventoryProducts.length === 0 ? (
                     <tr>
-                      <td colSpan="10" style={{ textAlign: 'center', padding: '3rem', color: 'var(--text-muted)' }}>
+                      <td colSpan="11" style={{ textAlign: 'center', padding: '3rem', color: 'var(--text-muted)' }}>
                         No products found matching the selected search or filters.
                       </td>
                     </tr>
                   ) : (
-                    paginatedInventoryProducts.map((p, index) => (
-                      <tr key={p.id}>
-                        <td style={{ fontWeight: 'bold', color: 'var(--text-muted)', fontSize: '0.85rem' }}>
-                          {(currentPage - 1) * itemsPerPage + index + 1}
-                        </td>
-                        <td style={{ fontWeight: 'bold', fontFamily: 'monospace' }}>{p.id}</td>
-                        <td>
-                          {p.image ? (
-                            <img src={p.image} alt={p.name} style={{ width: '45px', height: '45px', objectFit: 'cover', borderRadius: '4px', border: '1px solid var(--border-color)' }} />
-                          ) : (
-                            <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>No Image</span>
-                          )}
-                        </td>
-                        <td>
-                          <div style={{ fontWeight: 600 }}>{p.name}</div>
-                          <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{p.description?.slice(0, 60)}...</div>
-                          <div style={{ display: 'flex', gap: '0.4rem', marginTop: '0.25rem', fontSize: '0.65rem', flexWrap: 'wrap' }}>
-                            <span className="badge" style={{ background: 'rgba(255,255,255,0.06)', color: 'var(--text-secondary)', padding: '0.1rem 0.3rem', borderRadius: '4px' }}>
-                              {p.division || 'Bathing'}
-                            </span>
-                            {p.division === 'Tiles' && (
-                              <>
-                                <span style={{ color: 'var(--text-muted)' }}>Size: {p.size || 'N/A'}</span>
-                                <span style={{ color: 'var(--text-muted)' }}>Finish: {p.finishing || 'N/A'}</span>
-                                <span style={{ color: 'var(--accent-cyan)' }}>Loc: {p.location || 'N/A'}</span>
-                              </>
+                    paginatedInventoryProducts.map((p, index) => {
+                      const brandObj = (brands || []).find(b => b.name.toUpperCase() === (p.brand || '').toUpperCase());
+                      const maxRate = p.maxSellingPrice || (brandObj && brandObj.maxSellingPrice ? Math.round(p.mrp * (1 - brandObj.maxSellingPrice / 100)) : Math.round(p.mrp * 0.9));
+
+                      return (
+                        <tr key={p.id}>
+                          <td style={{ fontWeight: 'bold', color: 'var(--text-muted)', fontSize: '0.85rem' }}>
+                            {(currentPage - 1) * itemsPerPage + index + 1}
+                          </td>
+                          <td style={{ fontWeight: 'bold', fontFamily: 'monospace' }}>{p.id}</td>
+                          <td>
+                            {p.image ? (
+                              <img src={p.image} alt={p.name} style={{ width: '45px', height: '45px', objectFit: 'cover', borderRadius: '4px', border: '1px solid var(--border-color)' }} />
+                            ) : (
+                              <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>No Image</span>
                             )}
-                          </div>
-                        </td>
-                        <td><span className={`brand-pill ${p.brand.toLowerCase()}`}>{p.brand}</span></td>
-                        <td>
-                          <input 
-                            type="number" 
-                            className="form-input" 
-                            value={p.stock} 
-                            onChange={(e) => onUpdateStock(p.id, e.target.value)}
-                            style={{ width: '65px', padding: '0.25rem 0.5rem', textAlign: 'center', background: 'rgba(255,255,255,0.01)' }}
-                          />
-                        </td>
-                        <td style={{ textDecoration: 'line-through', color: 'var(--text-muted)' }}>{formatRupee(p.mrp)}</td>
-                        <td style={{ fontWeight: 'bold', color: 'var(--accent-rose)' }}>{formatRupee(p.specialPrice)}</td>
+                          </td>
+                          <td>
+                            <div style={{ fontWeight: 600 }}>{p.name}</div>
+                            <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{p.description?.slice(0, 60)}...</div>
+                            <div style={{ display: 'flex', gap: '0.4rem', marginTop: '0.25rem', fontSize: '0.65rem', flexWrap: 'wrap' }}>
+                              <span className="badge" style={{ background: 'rgba(255,255,255,0.06)', color: 'var(--text-secondary)', padding: '0.1rem 0.3rem', borderRadius: '4px' }}>
+                                {p.division || 'Bathing'}
+                              </span>
+                              {p.division === 'Tiles' && (
+                                <>
+                                  <span style={{ color: 'var(--text-muted)' }}>Size: {p.size || 'N/A'}</span>
+                                  <span style={{ color: 'var(--text-muted)' }}>Finish: {p.finishing || 'N/A'}</span>
+                                  <span style={{ color: 'var(--accent-cyan)' }}>Loc: {p.location || 'N/A'}</span>
+                                </>
+                              )}
+                            </div>
+                          </td>
+                          <td><span className={`brand-pill ${p.brand.toLowerCase()}`}>{p.brand}</span></td>
+                          <td>
+                            <input 
+                              type="number" 
+                              className="form-input" 
+                              value={p.stock} 
+                              onChange={(e) => onUpdateStock(p.id, e.target.value)}
+                              style={{ width: '65px', padding: '0.25rem 0.5rem', textAlign: 'center', background: 'rgba(255,255,255,0.01)' }}
+                            />
+                          </td>
+                          <td style={{ textDecoration: 'line-through', color: 'var(--text-muted)' }}>{formatRupee(p.mrp)}</td>
+                          <td style={{ fontWeight: 600, color: 'var(--accent-amber)' }}>{formatRupee(maxRate)}</td>
+                          <td style={{ fontWeight: 'bold', color: 'var(--accent-rose)' }}>{formatRupee(p.specialPrice)}</td>
+
 
                         <td>
                           {isWeeklySpecialActive(p) ? (
@@ -1664,8 +1673,10 @@ function AdminPanel({
                           </div>
                         </td>
                       </tr>
-                    ))
-                  )}
+                    );
+                  })
+                )}
+
                 </tbody>
               </table>
             </div>

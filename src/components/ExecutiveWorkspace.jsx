@@ -193,10 +193,28 @@ function ExecutiveWorkspace({ products = [], activeExecutive = {}, db = {}, onUp
   };
 
   const getProductIncentiveAmount = (product, qty, brandsTable = []) => {
-    const price = getProductFinalPrice(product);
-    const pct = getProductIncentivePct(product, brandsTable);
-    return Math.round(qty * price * (pct / 100));
+    if (!product) return 0;
+    const qtyNum = Number(qty) || 1;
+    const msp = Number(product.specialPrice || product.minSellingPrice || product.mrp || 0);
+    const quotedUnitPrice = product.unitPrice !== undefined ? Number(product.unitPrice) : (product.pricePaid !== undefined ? Number(product.pricePaid) : msp);
+    
+    // 1. Base Incentive Amount at MSP (from Brand rules or percentage)
+    const brandObj = (brandsTable || []).find(b => b && b.name && b.name.toUpperCase() === (product.brand || '').toUpperCase());
+    let baseIncentivePerUnit = 0;
+    if (brandObj && brandObj.calcMode === 'rate') {
+      baseIncentivePerUnit = Number(brandObj.executiveIncentive) || 0;
+    } else {
+      const pct = brandObj ? Number(brandObj.executiveIncentive) : 4;
+      baseIncentivePerUnit = Math.round(msp * (pct / 100));
+    }
+
+    // 2. Full Upside Incentive (100% of any amount charged above MSP up to MRP goes to Executive)
+    const upsidePerUnit = Math.max(0, quotedUnitPrice - msp);
+
+    const totalIncentivePerUnit = baseIncentivePerUnit + upsidePerUnit;
+    return Math.round(qtyNum * totalIncentivePerUnit);
   };
+
 
   // Perform autocomplete search as user types
   useEffect(() => {
