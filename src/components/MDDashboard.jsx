@@ -57,24 +57,18 @@ function MDDashboard({
     };
   }).filter(Boolean);
 
-  // Brand specific calculations (Landing Cost focus)
-  const stuckLandingCost = filteredProducts.reduce((sum, p) => sum + ((p.landingCost || Math.round(p.specialPrice * 0.8)) * p.stock), 0);
+  // Brand specific calculations (MRP & Promotional Selling Price focus)
+  const totalStockMrp = filteredProducts.reduce((sum, p) => sum + ((p.mrp || 0) * (p.stock || 0)), 0);
+  const totalStockPromoValue = filteredProducts.reduce((sum, p) => sum + ((p.specialPrice || 0) * (p.stock || 0)), 0);
   
-  const soldLandingCost = filteredSalesLedger.reduce((sum, sale) => {
-    return sum + (sale.items || []).reduce((itemSum, item) => {
-      const prod = products.find(p => p.id === item.productId);
-      const itemLanding = prod ? (prod.landingCost || Math.round(prod.specialPrice * 0.8)) : Math.round(item.pricePaid * 0.8);
-      return itemSum + (itemLanding * item.qty);
-    }, 0);
-  }, 0);
+  const clearedRevenue = filteredSalesLedger.reduce((sum, sale) => sum + (sale.totalPaid || 0), 0);
+  const clearedMrp = filteredSalesLedger.reduce((sum, sale) => sum + (sale.totalMrp || 0), 0);
+  const totalClientSavings = Math.max(0, clearedMrp - clearedRevenue);
 
-
-  const targetLandingCost = stuckLandingCost + soldLandingCost;
-  const clearedRevenue = filteredSalesLedger.reduce((sum, sale) => sum + sale.totalPaid, 0);
-  const recoveryMargin = clearedRevenue - soldLandingCost; // Revenue vs Cost
-
-  const completionPercentage = targetLandingCost > 0 ? ((soldLandingCost / targetLandingCost) * 100).toFixed(1) : '0.0';
+  const totalInventoryTarget = totalStockPromoValue + clearedRevenue;
+  const completionPercentage = totalInventoryTarget > 0 ? ((clearedRevenue / totalInventoryTarget) * 100).toFixed(1) : '0.0';
   const remainingPercentage = (100 - parseFloat(completionPercentage)).toFixed(1);
+
 
   // 1. Data Prep: Cumulative Clearance Progress (Timeline)
   const getTimelineData = () => {
@@ -263,23 +257,23 @@ function MDDashboard({
       <div className="stat-grid">
         <div className="glass-panel stat-card cyan">
           <div className="stat-header">
-            <span>Campaign Stock Landing Cost</span>
+            <span>Total Promotional Stock Value</span>
             <IndianRupee className="stat-icon" size={18} />
           </div>
-          <div className="stat-value">{formatRupee(targetLandingCost)}</div>
+          <div className="stat-value">{formatRupee(totalStockPromoValue)}</div>
           <div className="stat-subtext">
-            <span>Baseline cost of liquidated items</span>
+            <span>Special promo value of active inventory</span>
           </div>
         </div>
 
         <div className="glass-panel stat-card emerald">
           <div className="stat-header">
-            <span>Clearance Revenue Generated</span>
+            <span>Promotional Sales Revenue</span>
             <TrendingUp className="stat-icon" size={18} />
           </div>
           <div className="stat-value">{formatRupee(clearedRevenue)}</div>
           <div className="stat-subtext">
-            <span style={{ color: 'var(--accent-emerald)', fontWeight: 600 }}>{completionPercentage}% of cost cleared</span>
+            <span style={{ color: 'var(--accent-emerald)', fontWeight: 600 }}>{completionPercentage}% target revenue cleared</span>
           </div>
           <div className="progress-container">
             <div className="progress-bar emerald" style={{ width: `${completionPercentage}%` }}></div>
@@ -288,31 +282,29 @@ function MDDashboard({
 
         <div className="glass-panel stat-card rose">
           <div className="stat-header">
-            <span>Stuck Stock Landing Cost</span>
+            <span>Total Stock MRP Value</span>
             <ShoppingBag className="stat-icon" size={18} />
           </div>
-          <div className="stat-value">{formatRupee(stuckLandingCost)}</div>
+          <div className="stat-value">{formatRupee(totalStockMrp)}</div>
           <div className="stat-subtext">
-            <span style={{ color: 'var(--accent-rose)', fontWeight: 600 }}>{remainingPercentage}% stuck value</span>
-          </div>
-          <div className="progress-container">
-            <div className="progress-bar cyan" style={{ width: `${remainingPercentage}%` }}></div>
+            <span style={{ color: 'var(--accent-rose)', fontWeight: 600 }}>Standard retail value on hand</span>
           </div>
         </div>
 
-        <div className="glass-panel stat-card" style={{ borderLeft: `4px solid ${recoveryMargin >= 0 ? 'var(--accent-emerald)' : 'var(--accent-rose)'}` }}>
+        <div className="glass-panel stat-card" style={{ borderLeft: `4px solid var(--accent-emerald)` }}>
           <div className="stat-header">
-            <span>Net Recovery Margin</span>
-            <IndianRupee className="stat-icon" size={18} style={{ color: recoveryMargin >= 0 ? 'var(--accent-emerald)' : 'var(--accent-rose)' }} />
+            <span>Total Client Savings Delivered</span>
+            <IndianRupee className="stat-icon" size={18} style={{ color: 'var(--accent-emerald)' }} />
           </div>
-          <div className="stat-value" style={{ color: recoveryMargin >= 0 ? 'var(--accent-emerald)' : 'var(--accent-rose)' }}>
-            {formatRupee(recoveryMargin)}
+          <div className="stat-value" style={{ color: 'var(--accent-emerald)' }}>
+            {formatRupee(totalClientSavings)}
           </div>
           <div className="stat-subtext">
-            <span>{recoveryMargin >= 0 ? 'Surplus above landing cost' : 'Campaign liquidation loss'}</span>
+            <span>Client discounts generated from MRP</span>
           </div>
         </div>
       </div>
+
 
       {/* Detail Analysis Tabs */}
       <div className="glass-panel dashboard-panel">

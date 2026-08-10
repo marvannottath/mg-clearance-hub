@@ -283,18 +283,25 @@ function AdminPanel({
     showToast(`Executive account details & password updated for ${editExecName}!`);
   };
   
-  // Brand Margin Form / Editing States
+  // Brand Margin Form / Editing States (Per Manager Handwritten Note: MRP, Max Selling, Min Selling, Incentive, Normal Selling, % or Rate)
   const [editingBrandName, setEditingBrandName] = useState(null);
-  const [editMaxMargin, setEditMaxMargin] = useState(55);
-  const [editCustomerDiscount, setEditCustomerDiscount] = useState(50);
-  const [editExecutiveIncentive, setEditExecutiveIncentive] = useState(5);
+  const [editMaxMargin, setEditMaxMargin] = useState(45);
+  const [editMaxSellingPrice, setEditMaxSellingPrice] = useState(40);
+  const [editMinSellingPrice, setEditMinSellingPrice] = useState(35);
+  const [editExecutiveIncentive, setEditExecutiveIncentive] = useState(4);
+  const [editNormalSellingPrice, setEditNormalSellingPrice] = useState(50);
+  const [editCalcMode, setEditCalcMode] = useState('percent'); // 'percent' (%) or 'rate' (₹ Rate)
 
   // New Brand Form States
   const [isAddBrandOpen, setIsAddBrandOpen] = useState(false);
   const [newBrandName, setNewBrandName] = useState('');
   const [newMaxMargin, setNewMaxMargin] = useState('45');
-  const [newCustomerDiscount, setNewCustomerDiscount] = useState('40');
+  const [newMaxSellingPrice, setNewMaxSellingPrice] = useState('40');
+  const [newMinSellingPrice, setNewMinSellingPrice] = useState('35');
   const [newExecutiveIncentive, setNewExecutiveIncentive] = useState('4');
+  const [newNormalSellingPrice, setNewNormalSellingPrice] = useState('50');
+  const [newCalcMode, setNewCalcMode] = useState('percent');
+
 
 
   // Weekly specials adding states
@@ -620,22 +627,29 @@ function AdminPanel({
     setSelectedInvoiceDetail(null);
   };
 
-  // Brand Margin Setup updates
+  // Brand Margin Setup updates (Per Manager Handwritten Note)
   const startEditingBrand = (brand) => {
     setEditingBrandName(brand.name);
-    setEditMaxMargin(brand.maxMargin);
-    setEditCustomerDiscount(brand.customerDiscount);
-    setEditExecutiveIncentive(brand.executiveIncentive);
+    setEditMaxMargin(brand.maxMargin ?? 45);
+    setEditMaxSellingPrice(brand.maxSellingPrice ?? brand.customerDiscount ?? 40);
+    setEditMinSellingPrice(brand.minSellingPrice ?? 35);
+    setEditExecutiveIncentive(brand.executiveIncentive ?? 4);
+    setEditNormalSellingPrice(brand.normalSellingPrice ?? 50);
+    setEditCalcMode(brand.calcMode || 'percent');
   };
 
   const handleSaveBrandMargins = (brandName) => {
-    const updatedBrands = db.brands.map(b => {
+    const updatedBrands = (db.brands || []).map(b => {
       if (b.name === brandName) {
         return {
           ...b,
-          maxMargin: parseInt(editMaxMargin) || 0,
-          customerDiscount: parseInt(editCustomerDiscount) || 0,
-          executiveIncentive: parseInt(editExecutiveIncentive) || 0
+          maxMargin: parseFloat(editMaxMargin) || 0,
+          maxSellingPrice: parseFloat(editMaxSellingPrice) || 0,
+          customerDiscount: parseFloat(editMaxSellingPrice) || 0,
+          minSellingPrice: parseFloat(editMinSellingPrice) || 0,
+          executiveIncentive: parseFloat(editExecutiveIncentive) || 0,
+          normalSellingPrice: parseFloat(editNormalSellingPrice) || 0,
+          calcMode: editCalcMode
         };
       }
       return b;
@@ -643,7 +657,7 @@ function AdminPanel({
 
     onUpdateDb({ ...db, brands: updatedBrands });
     setEditingBrandName(null);
-    showToast(`Brand margins for ${brandName} updated.`);
+    showToast(`Brand pricing rules for ${brandName} updated successfully.`);
   };
 
   const handleAddBrandSubmit = (e) => {
@@ -658,8 +672,12 @@ function AdminPanel({
     const newBrandObj = {
       name: nameUpper,
       maxMargin: Number(newMaxMargin) || 45,
-      customerDiscount: Number(newCustomerDiscount) || 40,
-      executiveIncentive: Number(newExecutiveIncentive) || 4
+      maxSellingPrice: Number(newMaxSellingPrice) || 40,
+      customerDiscount: Number(newMaxSellingPrice) || 40,
+      minSellingPrice: Number(newMinSellingPrice) || 35,
+      executiveIncentive: Number(newExecutiveIncentive) || 4,
+      normalSellingPrice: Number(newNormalSellingPrice) || 50,
+      calcMode: newCalcMode
     };
     const updated = [...existing, newBrandObj];
     onUpdateDb({ ...db, brands: updated });
@@ -667,6 +685,7 @@ function AdminPanel({
     setIsAddBrandOpen(false);
     showToast(`Brand '${nameUpper}' created successfully!`);
   };
+
 
   const handleDeleteBrand = (brandName) => {
     if (!window.confirm(`Are you sure you want to delete brand '${brandName}'?`)) return;
@@ -1569,9 +1588,8 @@ function AdminPanel({
                     <th>Product Details</th>
                     <th>Brand</th>
                     <th>Stock</th>
-                    <th>Landing Cost</th>
                     <th>MRP Rate</th>
-                    <th>Clearance Price</th>
+                    <th>Minimum Selling Price</th>
                     <th>Weekly Special</th>
                     <th>Actions</th>
                   </tr>
@@ -1579,8 +1597,8 @@ function AdminPanel({
                 <tbody>
                   {paginatedInventoryProducts.length === 0 ? (
                     <tr>
-                      <td colSpan="11" style={{ textAlign: 'center', padding: '3rem', color: 'var(--text-muted)' }}>
-                        No clearance products found matching the selected search or filters.
+                      <td colSpan="10" style={{ textAlign: 'center', padding: '3rem', color: 'var(--text-muted)' }}>
+                        No products found matching the selected search or filters.
                       </td>
                     </tr>
                   ) : (
@@ -1623,9 +1641,9 @@ function AdminPanel({
                             style={{ width: '65px', padding: '0.25rem 0.5rem', textAlign: 'center', background: 'rgba(255,255,255,0.01)' }}
                           />
                         </td>
-                        <td>{formatRupee(p.landingCost || Math.round(p.specialPrice * 0.8))}</td>
                         <td style={{ textDecoration: 'line-through', color: 'var(--text-muted)' }}>{formatRupee(p.mrp)}</td>
                         <td style={{ fontWeight: 'bold', color: 'var(--accent-rose)' }}>{formatRupee(p.specialPrice)}</td>
+
                         <td>
                           {isWeeklySpecialActive(p) ? (
                             <span className="badge badge-warning" title={p.weeklySpecialUntil ? `Valid until ${p.weeklySpecialUntil}` : 'Indefinite duration'}>Special</span>
@@ -2314,93 +2332,155 @@ function AdminPanel({
               </button>
             </div>
 
-            {/* Create New Brand Form Drawer */}
+            {/* Create New Brand Form Drawer (Per Manager Handwritten Note) */}
             {isAddBrandOpen && (
               <div className="glass-panel" style={{ padding: '1.25rem', marginBottom: '1.5rem', border: '1.5px solid var(--accent-cyan)', borderRadius: '12px' }}>
-                <h4 style={{ fontSize: '0.95rem', fontWeight: 800, marginBottom: '0.85rem', color: 'var(--text-primary)' }}>
-                  Add New Showroom Brand
-                </h4>
-                <form onSubmit={handleAddBrandSubmit} style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(170px, 1fr))', gap: '1rem', alignItems: 'flex-end' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem', flexWrap: 'wrap', gap: '0.5rem' }}>
+                  <h4 style={{ fontSize: '0.95rem', fontWeight: 800, margin: 0, color: 'var(--text-primary)' }}>
+                    Add New Showroom Brand & Pricing Rules
+                  </h4>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', background: 'rgba(255,255,255,0.05)', padding: '0.25rem 0.6rem', borderRadius: '6px' }}>
+                    <span style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--text-secondary)' }}>Calculation Mode:</span>
+                    <select 
+                      value={newCalcMode} 
+                      onChange={e => setNewCalcMode(e.target.value)}
+                      style={{ padding: '0.2rem 0.5rem', fontSize: '0.75rem', fontWeight: 700, borderRadius: '4px', background: 'var(--bg-secondary)', color: 'var(--accent-cyan)', border: '1px solid var(--border-color)' }}
+                    >
+                      <option value="percent">% Percentage Mode</option>
+                      <option value="rate">₹ Fixed Rate Mode</option>
+                    </select>
+                  </div>
+                </div>
+
+                <form onSubmit={handleAddBrandSubmit} style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: '0.85rem', alignItems: 'flex-end' }}>
                   <div className="form-group" style={{ marginBottom: 0 }}>
-                    <label className="form-label">Brand Name (e.g. TOTO, KOHLER)</label>
+                    <label className="form-label">Brand Name</label>
                     <input 
                       type="text" 
                       className="form-input" 
                       placeholder="e.g. KOHLER" 
                       value={newBrandName} 
                       onChange={e => setNewBrandName(e.target.value)} 
-                      style={{ textTransform: 'uppercase', height: '38px', fontSize: '0.85rem', fontWeight: 700 }}
+                      style={{ textTransform: 'uppercase', height: '36px', fontSize: '0.85rem', fontWeight: 700 }}
                       required 
                     />
                   </div>
 
                   <div className="form-group" style={{ marginBottom: 0 }}>
-                    <label className="form-label">Max Margin % (Showroom)</label>
+                    <label className="form-label">Max Margin {newCalcMode === 'rate' ? '(₹)' : '(%)'}</label>
                     <input 
                       type="number" 
                       className="form-input" 
-                      placeholder="e.g. 45" 
+                      placeholder={newCalcMode === 'rate' ? 'e.g. 500' : 'e.g. 45'} 
                       value={newMaxMargin} 
                       onChange={e => setNewMaxMargin(e.target.value)} 
-                      style={{ height: '38px', fontSize: '0.85rem' }}
+                      style={{ height: '36px', fontSize: '0.85rem' }}
                       required 
                     />
                   </div>
 
                   <div className="form-group" style={{ marginBottom: 0 }}>
-                    <label className="form-label">Customer Discount %</label>
+                    <label className="form-label">Max Selling Price {newCalcMode === 'rate' ? '(₹)' : '(%)'}</label>
                     <input 
                       type="number" 
                       className="form-input" 
-                      placeholder="e.g. 40" 
-                      value={newCustomerDiscount} 
-                      onChange={e => setNewCustomerDiscount(e.target.value)} 
-                      style={{ height: '38px', fontSize: '0.85rem' }}
+                      placeholder={newCalcMode === 'rate' ? 'e.g. 400' : 'e.g. 40'} 
+                      value={newMaxSellingPrice} 
+                      onChange={e => setNewMaxSellingPrice(e.target.value)} 
+                      style={{ height: '36px', fontSize: '0.85rem' }}
                       required 
                     />
                   </div>
 
                   <div className="form-group" style={{ marginBottom: 0 }}>
-                    <label className="form-label">Exec. Incentive %</label>
+                    <label className="form-label">Min Selling Price {newCalcMode === 'rate' ? '(₹)' : '(%)'}</label>
                     <input 
                       type="number" 
                       className="form-input" 
-                      placeholder="e.g. 4" 
+                      placeholder={newCalcMode === 'rate' ? 'e.g. 350' : 'e.g. 35'} 
+                      value={newMinSellingPrice} 
+                      onChange={e => setNewMinSellingPrice(e.target.value)} 
+                      style={{ height: '36px', fontSize: '0.85rem' }}
+                      required 
+                    />
+                  </div>
+
+                  <div className="form-group" style={{ marginBottom: 0 }}>
+                    <label className="form-label">Normal Selling (Imports) {newCalcMode === 'rate' ? '(₹)' : '(%)'}</label>
+                    <input 
+                      type="number" 
+                      className="form-input" 
+                      placeholder={newCalcMode === 'rate' ? 'e.g. 450' : 'e.g. 50'} 
+                      value={newNormalSellingPrice} 
+                      onChange={e => setNewNormalSellingPrice(e.target.value)} 
+                      style={{ height: '36px', fontSize: '0.85rem' }}
+                      required 
+                    />
+                  </div>
+
+                  <div className="form-group" style={{ marginBottom: 0 }}>
+                    <label className="form-label">Exec. Incentive {newCalcMode === 'rate' ? '(₹)' : '(%)'}</label>
+                    <input 
+                      type="number" 
+                      className="form-input" 
+                      placeholder={newCalcMode === 'rate' ? 'e.g. 50' : 'e.g. 4'} 
                       value={newExecutiveIncentive} 
                       onChange={e => setNewExecutiveIncentive(e.target.value)} 
-                      style={{ height: '38px', fontSize: '0.85rem' }}
+                      style={{ height: '36px', fontSize: '0.85rem' }}
                       required 
                     />
                   </div>
 
                   <div>
-                    <button type="submit" className="btn btn-emerald" style={{ width: '100%', padding: '0.6rem', fontWeight: 700, fontSize: '0.85rem' }}>
-                      Save Brand
+                    <button type="submit" className="btn btn-emerald" style={{ width: '100%', height: '36px', padding: '0.4rem', fontWeight: 700, fontSize: '0.85rem' }}>
+                      Save Brand Rules
                     </button>
                   </div>
                 </form>
               </div>
             )}
 
-            <div className="custom-table-container" style={{ maxWidth: '900px' }}>
+            <div className="custom-table-container">
               <table className="custom-table">
                 <thead>
                   <tr>
                     <th>Brand Name</th>
-                    <th>Max Margin %</th>
-                    <th>Customer Discount %</th>
-                    <th>Executive Incentive %</th>
+                    <th>Mode</th>
+                    <th>Max Margin</th>
+                    <th>Max Selling Price</th>
+                    <th>Min Selling Price</th>
+                    <th>Normal Selling Price (Imports)</th>
+                    <th>Executive Incentive</th>
                     <th style={{ textAlign: 'right' }}>Actions</th>
                   </tr>
                 </thead>
                 <tbody>
                   {(brands || []).map(brand => {
-
                     const isEditing = editingBrandName === brand.name;
+                    const mode = brand.calcMode || 'percent';
+                    const unit = mode === 'rate' ? '₹' : '%';
+
                     return (
                       <tr key={brand.name}>
                         <td style={{ fontWeight: 'bold' }}>
                           <span className={`brand-pill ${brand.name.toLowerCase()}`}>{brand.name}</span>
+                        </td>
+                        <td>
+                          {isEditing ? (
+                            <select 
+                              className="form-input" 
+                              value={editCalcMode} 
+                              onChange={e => setEditCalcMode(e.target.value)}
+                              style={{ width: '70px', padding: '0.2rem', fontSize: '0.7rem' }}
+                            >
+                              <option value="percent">%</option>
+                              <option value="rate">Rate ₹</option>
+                            </select>
+                          ) : (
+                            <span className="badge" style={{ background: 'rgba(255,255,255,0.06)', color: mode === 'rate' ? 'var(--accent-amber)' : 'var(--accent-cyan)', fontSize: '0.7rem' }}>
+                              {mode === 'rate' ? 'Rate ₹' : '% Percentage'}
+                            </span>
+                          )}
                         </td>
                         <td>
                           {isEditing ? (
@@ -2409,10 +2489,10 @@ function AdminPanel({
                               className="form-input"
                               value={editMaxMargin}
                               onChange={(e) => setEditMaxMargin(e.target.value)}
-                              style={{ width: '80px', padding: '0.25rem' }}
+                              style={{ width: '70px', padding: '0.25rem' }}
                             />
                           ) : (
-                            `${brand.maxMargin}%`
+                            `${brand.maxMargin ?? 45}${unit}`
                           )}
                         </td>
                         <td>
@@ -2420,12 +2500,38 @@ function AdminPanel({
                             <input 
                               type="number"
                               className="form-input"
-                              value={editCustomerDiscount}
-                              onChange={(e) => setEditCustomerDiscount(e.target.value)}
-                              style={{ width: '80px', padding: '0.25rem' }}
+                              value={editMaxSellingPrice}
+                              onChange={(e) => setEditMaxSellingPrice(e.target.value)}
+                              style={{ width: '70px', padding: '0.25rem' }}
                             />
                           ) : (
-                            `${brand.customerDiscount}%`
+                            `${brand.maxSellingPrice ?? brand.customerDiscount ?? 40}${unit}`
+                          )}
+                        </td>
+                        <td style={{ color: 'var(--accent-rose)', fontWeight: 700 }}>
+                          {isEditing ? (
+                            <input 
+                              type="number"
+                              className="form-input"
+                              value={editMinSellingPrice}
+                              onChange={(e) => setEditMinSellingPrice(e.target.value)}
+                              style={{ width: '70px', padding: '0.25rem' }}
+                            />
+                          ) : (
+                            `${brand.minSellingPrice ?? 35}${unit}`
+                          )}
+                        </td>
+                        <td>
+                          {isEditing ? (
+                            <input 
+                              type="number"
+                              className="form-input"
+                              value={editNormalSellingPrice}
+                              onChange={(e) => setEditNormalSellingPrice(e.target.value)}
+                              style={{ width: '70px', padding: '0.25rem' }}
+                            />
+                          ) : (
+                            `${brand.normalSellingPrice ?? 50}${unit}`
                           )}
                         </td>
                         <td style={{ fontWeight: 600, color: 'var(--accent-cyan)' }}>
@@ -2435,10 +2541,10 @@ function AdminPanel({
                               className="form-input"
                               value={editExecutiveIncentive}
                               onChange={(e) => setEditExecutiveIncentive(e.target.value)}
-                              style={{ width: '80px', padding: '0.25rem' }}
+                              style={{ width: '70px', padding: '0.25rem' }}
                             />
                           ) : (
-                            `${brand.executiveIncentive}%`
+                            `${brand.executiveIncentive ?? 4}${unit}`
                           )}
                         </td>
                         <td style={{ textAlign: 'right' }}>
@@ -2450,7 +2556,7 @@ function AdminPanel({
                           ) : (
                             <div style={{ display: 'flex', gap: '0.35rem', justifyContent: 'flex-end' }}>
                               <button className="btn btn-secondary" style={{ padding: '0.25rem 0.5rem', fontSize: '0.75rem' }} onClick={() => startEditingBrand(brand)}>
-                                Edit Margins
+                                Edit Rules
                               </button>
                               <button className="btn btn-danger" style={{ padding: '0.25rem 0.5rem', fontSize: '0.75rem' }} onClick={() => handleDeleteBrand(brand.name)}>
                                 Delete
@@ -2461,10 +2567,10 @@ function AdminPanel({
                       </tr>
                     );
                   })}
-
                 </tbody>
               </table>
             </div>
+
           </div>
         )}
 
