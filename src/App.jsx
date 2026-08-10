@@ -585,8 +585,9 @@ function App() {
 
   // Log a sale: subtract stock, add to ledger, update executive statistics
   const logSale = (invoiceNo, execId, customerMobile, cartItems) => {
-    const totalPaid = cartItems.reduce((sum, item) => sum + (item.specialPrice * item.qty), 0);
-    const totalMrp = cartItems.reduce((sum, item) => sum + (item.mrp * item.qty), 0);
+    const totalPaid = (cartItems || []).reduce((sum, item) => sum + (item.specialPrice * item.qty), 0);
+    const totalMrp = (cartItems || []).reduce((sum, item) => sum + (item.mrp * item.qty), 0);
+
 
     const updatedProducts = db.products.map(product => {
       const cartItem = cartItems.find(item => item.id === product.id);
