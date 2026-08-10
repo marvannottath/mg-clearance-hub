@@ -79,7 +79,8 @@ function AdminPanel({
   const [payoutProofFile, setPayoutProofFile] = useState('');
   const [payoutNotes, setPayoutNotes] = useState('');
 
-  const divisionsList = Array.from(new Set(products.map(p => p.division || 'Bathing')));
+  const divisionsList = Array.from(new Set((products || []).map(p => (p && p.division) || 'Bathing')));
+
   const [isSyncing, setIsSyncing] = useState(false);
 
 
@@ -1246,10 +1247,11 @@ function AdminPanel({
   };
 
   // Get active pending invoices list
-  const pendingQuotes = quotations.filter(q => q.status === 'pending_verification');
+  const pendingQuotes = (quotations || []).filter(q => q && q.status === 'pending_verification');
 
   // Earned leaderboard
-  const topEarners = [...executives].map(exec => {
+  const topEarners = [...(executives || [])].map(exec => {
+
     const totalEarned = exec.walletLedger
       ? exec.walletLedger.filter(l => l.type === 'incentive').reduce((sum, l) => sum + l.amount, 0)
       : 0;
@@ -1872,7 +1874,8 @@ function AdminPanel({
                           <td>
                             <div style={{ fontWeight: 600, fontSize: '0.8rem' }}>{totalQty} items reserved</div>
                             <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>
-                              {quote.items.map(i => `${i.name} (${i.qty})`).join(', ').slice(0, 45)}...
+                              {(quote.items || []).map(i => `${i.name} (${i.qty})`).join(', ').slice(0, 45)}...
+
                             </div>
                           </td>
                           <td style={{ fontWeight: 700, color: 'var(--accent-emerald)' }}>{formatRupee(totalVal)}</td>

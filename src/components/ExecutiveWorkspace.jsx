@@ -1364,9 +1364,10 @@ function ExecutiveWorkspace({ products = [], activeExecutive = {}, db = {}, onUp
   };
 
   const renderMobileCatalog = () => {
-    const brandsList = ['ALL', ...Array.from(new Set(products.map(p => p.brand).filter(isValidNameStr)))];
+    const brandsList = ['ALL', ...Array.from(new Set((products || []).map(p => (p && p.brand)).filter(isValidNameStr)))];
 
-    const activeProducts = products.filter(p => {
+    const activeProducts = (products || []).filter(p => {
+
       const matchBrand = selectedCatalogBrand === 'ALL' || p.brand === selectedCatalogBrand;
       const matchDivision = selectedCatalogDivision === 'ALL' || (p.division || 'Bathing').toLowerCase() === selectedCatalogDivision.toLowerCase();
       const matchCategory = selectedVisualCategory === 'ALL' || (
