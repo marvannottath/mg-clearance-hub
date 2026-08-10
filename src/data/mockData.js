@@ -263,23 +263,26 @@ export function loadDatabase() {
   }
   db.deletedProductIds = [...new Set([...(db.deletedProductIds || []), ...LEGACY_MOCK_IDS])];
 
-  // Ensure base collections exist and are valid arrays
-  if (!db.productsInitialized) {
-    if (!Array.isArray(db.products) || db.products.length === 0) {
-      db.products = INITIAL_PRODUCTS.filter(p => !LEGACY_MOCK_IDS.includes(p.id));
-    }
+  // Ensure base collections exist and are valid non-empty arrays
+  if (!Array.isArray(db.products) || db.products.length === 0) {
+    db.products = INITIAL_PRODUCTS.filter(p => p && !LEGACY_MOCK_IDS.includes(p.id));
     db.productsInitialized = true;
     migrated = true;
-  } else {
-    if (!Array.isArray(db.products)) db.products = [];
   }
 
-  if (!Array.isArray(db.executives) || db.executives.length === 0) db.executives = INITIAL_EXECUTIVES;
-  if (!Array.isArray(db.visualCategories) || db.visualCategories.length === 0) db.visualCategories = INITIAL_VISUAL_CATEGORIES;
+  if (!Array.isArray(db.executives) || db.executives.length === 0) {
+    db.executives = INITIAL_EXECUTIVES;
+    migrated = true;
+  }
+  if (!Array.isArray(db.visualCategories) || db.visualCategories.length === 0) {
+    db.visualCategories = INITIAL_VISUAL_CATEGORIES;
+    migrated = true;
+  }
   if (!Array.isArray(db.salesLedger)) db.salesLedger = INITIAL_SALES_LEDGER;
   if (!Array.isArray(db.notifications)) db.notifications = INITIAL_NOTIFICATIONS;
   if (!Array.isArray(db.quotations)) db.quotations = INITIAL_QUOTATIONS;
   if (!Array.isArray(db.systemLogs)) db.systemLogs = INITIAL_SYSTEM_LOGS;
+
 
   // Sanitize every quotation & salesLedger entry to guarantee valid items arrays
   db.quotations = (db.quotations || []).map(q => q ? ({ ...q, items: Array.isArray(q.items) ? q.items : [] }) : null).filter(Boolean);
@@ -414,17 +417,18 @@ export function loadDatabase() {
     { name: "LANGRACE", maxMargin: 45, customerDiscount: 40, executiveIncentive: 3 }
   ];
 
-  if (!db.brands) {
+  if (!db.brands || !Array.isArray(db.brands) || db.brands.length === 0) {
     db.brands = defaultBrands;
     migrated = true;
   } else {
     defaultBrands.forEach(dbb => {
-      if (!db.brands.some(b => b.name === dbb.name)) {
+      if (!db.brands.some(b => b && b.name === dbb.name)) {
         db.brands.push(dbb);
         migrated = true;
       }
     });
   }
+
 
   // 4. Ensure quotations list exists
   if (!db.quotations || db.quotations.length === 0) {
