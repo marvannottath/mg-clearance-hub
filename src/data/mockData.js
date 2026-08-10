@@ -287,17 +287,21 @@ export function loadDatabase() {
 
 
   // 1. Ensure executives have username/password, walletBalance, and walletLedger
-  if (db.executives) {
+  if (db.executives && Array.isArray(db.executives)) {
     db.executives = db.executives.map(e => {
+      if (!e) return e;
       let updated = { ...e };
       let updatedStatus = false;
+      
       if (!updated.username) {
         const initial = INITIAL_EXECUTIVES.find(ie => ie.id === e.id);
-        if (initial) {
-          updated.username = initial.username;
-          updated.password = initial.password;
-          updatedStatus = true;
-        }
+        updated.username = initial ? initial.username : (updated.name || 'exec').toLowerCase().split(' ')[0];
+        updatedStatus = true;
+      }
+      if (!updated.password) {
+        const initial = INITIAL_EXECUTIVES.find(ie => ie.id === e.id);
+        updated.password = initial ? initial.password : `${updated.username}123`;
+        updatedStatus = true;
       }
       if (updated.walletBalance === undefined) {
         updated.walletBalance = 0;
@@ -313,6 +317,7 @@ export function loadDatabase() {
       return updated;
     });
   }
+
 
   // 2. Ensure products have distinct MRP, landingCost, stickerStatus, etc.
   if (db.products) {
