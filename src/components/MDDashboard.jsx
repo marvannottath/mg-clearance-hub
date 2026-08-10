@@ -73,7 +73,7 @@ function MDDashboard({
   // 1. Data Prep: Cumulative Clearance Progress (Timeline)
   const getTimelineData = () => {
     if (filteredSalesLedger.length === 0) {
-      return [{ date: 'Start', Cleared: 0, RemainingInventory: targetLandingCost, TargetLine: targetLandingCost }];
+      return [{ date: 'Start', Cleared: 0, RemainingInventory: totalInventoryTarget, TargetLine: totalInventoryTarget }];
     }
     
     const sortedSales = [...filteredSalesLedger].sort((a, b) => new Date(a.date) - new Date(b.date));
@@ -85,13 +85,14 @@ function MDDashboard({
       return {
         date: formattedDate,
         Cleared: cumulative,
-        RemainingInventory: Math.max(0, targetLandingCost - cumulative),
-        TargetLine: targetLandingCost
+        RemainingInventory: Math.max(0, totalInventoryTarget - cumulative),
+        TargetLine: totalInventoryTarget
       };
     });
 
-    return [{ date: 'Launch', Cleared: 0, RemainingInventory: targetLandingCost, TargetLine: targetLandingCost }, ...chartData];
+    return [{ date: 'Launch', Cleared: 0, RemainingInventory: totalInventoryTarget, TargetLine: totalInventoryTarget }, ...chartData];
   };
+
 
   // 2. Data Prep: Brand-wise distribution
   const getBrandData = () => {
