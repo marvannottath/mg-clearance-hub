@@ -1322,11 +1322,12 @@ function AdminPanel({
                     style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}
                   >
                     <span>Quotation & Stock Audit</span>
-                    {quotations.filter(q => q.status === 'draft' || q.status === 'pending_verification').length > 0 && (
+                    {(quotations || []).filter(q => q && (q.status === 'draft' || q.status === 'pending_verification')).length > 0 && (
                       <span className="badge badge-cyan" style={{ padding: '0.1rem 0.35rem', fontSize: '0.65rem', borderRadius: '10px' }}>
-                        {quotations.filter(q => q.status === 'draft' || q.status === 'pending_verification').length}
+                        {(quotations || []).filter(q => q && (q.status === 'draft' || q.status === 'pending_verification')).length}
                       </span>
                     )}
+
                   </button>
                   <button 
                     type="button"
@@ -1850,18 +1851,19 @@ function AdminPanel({
                       </td>
                     </tr>
                   ) : (
-                    filteredAuditQuotations.map(quote => {
+                    (filteredAuditQuotations || []).map(quote => {
+                      if (!quote) return null;
                       const isPending = quote.status === 'draft' || quote.status === 'pending_verification';
-                      const totalVal = (quote.items || []).reduce((s, i) => s + ((i.specialPrice || i.pricePaid || 0) * i.qty), 0);
-                      const totalQty = (quote.items || []).reduce((s, i) => s + i.qty, 0);
-
+                      const totalVal = (quote.items || []).reduce((s, i) => s + ((i.specialPrice || i.pricePaid || 0) * (i.qty || 1)), 0);
+                      const totalQty = (quote.items || []).reduce((s, i) => s + (i.qty || 1), 0);
 
                       return (
-                        <tr key={quote.id}>
-                          <td style={{ fontWeight: 'bold', fontFamily: 'monospace' }}>{quote.id}</td>
+                        <tr key={quote.id || Math.random()}>
+                          <td style={{ fontWeight: 'bold', fontFamily: 'monospace' }}>{quote.id || 'N/A'}</td>
                           <td style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>
-                            {new Date(quote.date).toLocaleDateString('en-IN')}
+                            {quote.date ? new Date(quote.date).toLocaleDateString('en-IN') : 'N/A'}
                           </td>
+
                           <td style={{ fontWeight: 700, color: 'var(--text-primary)' }}>
                             <span className="badge" style={{ background: 'rgba(56, 189, 248, 0.1)', color: 'var(--accent-cyan)', border: '1px solid rgba(56, 189, 248, 0.2)' }}>
                               👤 {quote.executiveName}

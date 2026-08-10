@@ -1318,7 +1318,11 @@ h1, h2, h3, h4, h5, h6 {
   border-radius: var(--radius-lg);
   position: sticky;
   top: 5.5rem;
+  max-height: calc(100vh - 6.5rem);
+  overflow-y: auto;
+  scrollbar-width: none;
 }
+
 
 .sidebar-nav-btn {
   display: flex;
