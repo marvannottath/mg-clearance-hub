@@ -446,14 +446,36 @@ function App() {
                 !serverProducts.some(sp => sp.id === lp.id) && !deletedIds.has(lp.id)
               );
 
+              const mergedExecs = (result.data.executives && result.data.executives.length > 0)
+                ? result.data.executives
+                : ((prevDb && prevDb.executives && prevDb.executives.length > 0) ? prevDb.executives : []);
+
+              const mergedQuotations = (result.data.quotations && result.data.quotations.length > 0)
+                ? result.data.quotations
+                : ((prevDb && prevDb.quotations && prevDb.quotations.length > 0) ? prevDb.quotations : []);
+
+              const mergedSales = (result.data.salesLedger && result.data.salesLedger.length > 0)
+                ? result.data.salesLedger
+                : ((prevDb && prevDb.salesLedger && prevDb.salesLedger.length > 0) ? prevDb.salesLedger : []);
+
+              const mergedBrands = (result.data.brands && result.data.brands.length > 0)
+                ? result.data.brands
+                : ((prevDb && prevDb.brands && prevDb.brands.length > 0) ? prevDb.brands : []);
+
               const mergedDb = {
+                ...prevDb,
                 ...result.data,
                 products: [...localOnly, ...mergedProducts],
-                deletedProductIds: [...deletedIds], // Preserve deleted list
+                executives: mergedExecs.length > 0 ? mergedExecs : (prevDb.executives || []),
+                quotations: mergedQuotations.length > 0 ? mergedQuotations : (prevDb.quotations || []),
+                salesLedger: mergedSales.length > 0 ? mergedSales : (prevDb.salesLedger || []),
+                brands: mergedBrands.length > 0 ? mergedBrands : (prevDb.brands || []),
+                deletedProductIds: [...deletedIds],
                 productsInitialized: prevDb.productsInitialized || result.data.productsInitialized || false
               };
               saveDatabase(mergedDb);
               return mergedDb;
+
             });
           }
         })
