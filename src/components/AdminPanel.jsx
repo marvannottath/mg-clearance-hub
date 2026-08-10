@@ -3,8 +3,10 @@ import {
   Plus, Edit, Trash2, Download, Upload, UploadCloud, 
   Printer, Users, UserCheck, CheckCircle, FileSpreadsheet, PlusCircle, 
   CheckSquare, Square, DollarSign, AlertCircle, Percent, Star, 
-  Volume2, RefreshCw, Eye, FileText, Zap, ShieldAlert, Globe, Database, KeyRound, Layers
+  Volume2, RefreshCw, Eye, FileText, Zap, ShieldAlert, Globe, Database, KeyRound, Layers,
+  Package, BarChart2, QrCode, Sparkles, Grid, ChevronLeft, ChevronRight, PanelLeftOpen, PanelLeftClose
 } from 'lucide-react';
+
 
 
 import MDDashboard from './MDDashboard';
@@ -58,6 +60,11 @@ function AdminPanel({
   const [activeTab, setActiveTab] = useState(() => currentUser.role === 'manager' ? 'reports' : 'executives');
   const [logLevelFilter, setLogLevelFilter] = useState('ALL');
   const [logSearchQuery, setLogSearchQuery] = useState('');
+
+  // Sidebar Collapsible / Hover Expand state (Default collapsed icon-bar for max screen area, expands on hover)
+  const [isSidebarHovered, setIsSidebarHovered] = useState(false);
+  const [isSidebarPinned, setIsSidebarPinned] = useState(false);
+
 
 
   // Listen for notification navigation events
@@ -1294,180 +1301,265 @@ function AdminPanel({
           <p style={{ color: 'var(--text-secondary)', fontSize: '0.85rem' }}>
             {currentUser.role === 'admin' 
               ? 'System configurations, user account credentials & security controls' 
-              : 'Manage clearance stock, executive quotation audit, brand margins, weekly offers & invoice verification'}
+              : 'Manage promotions stock, executive quotation audit, brand margins, weekly offers & invoice verification'}
           </p>
         </div>
       </div>
 
+      {(() => {
+        const isExpanded = isSidebarHovered || isSidebarPinned;
+        return (
+          <div 
+            className="admin-panel-layout" 
+            style={{ 
+              display: 'grid', 
+              gridTemplateColumns: isExpanded ? '240px minmax(0, 1fr)' : '64px minmax(0, 1fr)', 
+              gap: '1.25rem', 
+              alignItems: 'start',
+              transition: 'grid-template-columns 0.22s cubic-bezier(0.4, 0, 0.2, 1)'
+            }}
+          >
 
+            {/* Left Sidebar Navigation (Default slim icons for maximum table area, expands on hover) */}
+            <aside 
+              className={`admin-sidebar ${isExpanded ? 'expanded' : 'collapsed'}`}
+              onMouseEnter={() => setIsSidebarHovered(true)}
+              onMouseLeave={() => setIsSidebarHovered(false)}
+              style={{ 
+                padding: isExpanded ? '1rem 0.85rem' : '0.85rem 0.4rem', 
+                display: 'flex', 
+                flexDirection: 'column', 
+                gap: '1rem',
+                transition: 'all 0.22s cubic-bezier(0.4, 0, 0.2, 1)',
+                overflowX: 'hidden'
+              }}
+            >
+              {/* Header Toggle / Pin */}
+              <div style={{ display: 'flex', justifyContent: isExpanded ? 'space-between' : 'center', alignItems: 'center', paddingBottom: '0.4rem', borderBottom: '1px solid var(--border-color)' }}>
+                {isExpanded && (
+                  <span style={{ fontSize: '0.68rem', fontWeight: 800, color: 'var(--accent-cyan)', letterSpacing: '0.06em', textTransform: 'uppercase' }}>
+                    Showroom Menu
+                  </span>
+                )}
+                <button 
+                  type="button"
+                  onClick={() => setIsSidebarPinned(!isSidebarPinned)}
+                  title={isSidebarPinned ? "Unpin sidebar (Auto-collapse on mouse leave)" : "Pin sidebar open"}
+                  style={{ background: 'transparent', border: 'none', color: isSidebarPinned ? 'var(--accent-cyan)' : 'var(--text-muted)', cursor: 'pointer', padding: '0.2rem', display: 'flex', alignItems: 'center' }}
+                >
+                  {isSidebarPinned ? <PanelLeftClose size={16} /> : <PanelLeftOpen size={16} />}
+                </button>
+              </div>
 
-      <div className="admin-panel-layout" style={{ display: 'grid', gridTemplateColumns: '250px minmax(0, 1fr)', gap: '1.5rem', alignItems: 'start' }}>
-
-        
-        {/* Left Sidebar Navigation */}
-        <aside className="admin-sidebar" style={{ padding: '1.25rem', display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
-          
-          {/* Manager Operations Sidebar - ONLY shown for Manager role */}
-          {currentUser.role === 'manager' && (
-            <>
-              <div>
-                <span style={{ fontSize: '0.65rem', color: 'var(--text-muted)', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', display: 'block', marginBottom: '0.4rem', paddingLeft: '0.5rem' }}>
-                  Main Operations
-                </span>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
-                  <button 
-                    type="button"
-                    className={`sidebar-nav-btn ${activeTab === 'inventory' ? 'active' : ''}`} 
-                    onClick={() => setActiveTab('inventory')}
-                  >
-                    Promotions Stock Inventory
-
-                  </button>
-                  <button 
-                    type="button"
-                    className={`sidebar-nav-btn ${activeTab === 'verify' ? 'active' : ''}`} 
-                    onClick={() => setActiveTab('verify')}
-                    style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}
-                  >
-                    <span>Verify Invoices</span>
-                    {pendingQuotes.length > 0 && (
-                      <span className="badge badge-rose" style={{ padding: '0.1rem 0.35rem', fontSize: '0.65rem', borderRadius: '10px' }}>
-                        {pendingQuotes.length}
+              {/* Manager Operations Sidebar - ONLY shown for Manager role */}
+              {currentUser.role === 'manager' && (
+                <>
+                  <div>
+                    {isExpanded && (
+                      <span style={{ fontSize: '0.62rem', color: 'var(--text-muted)', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', display: 'block', marginBottom: '0.35rem', paddingLeft: '0.5rem' }}>
+                        Main Operations
                       </span>
                     )}
-                  </button>
-                  <button 
-                    type="button"
-                    className={`sidebar-nav-btn ${activeTab === 'quotes_audit' ? 'active' : ''}`} 
-                    onClick={() => setActiveTab('quotes_audit')}
-                    style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}
-                  >
-                    <span>Quotation & Stock Audit</span>
-                    {(quotations || []).filter(q => q && (q.status === 'draft' || q.status === 'pending_verification')).length > 0 && (
-                      <span className="badge badge-cyan" style={{ padding: '0.1rem 0.35rem', fontSize: '0.65rem', borderRadius: '10px' }}>
-                        {(quotations || []).filter(q => q && (q.status === 'draft' || q.status === 'pending_verification')).length}
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.3rem' }}>
+                      <button 
+                        type="button"
+                        className={`sidebar-nav-btn ${activeTab === 'inventory' ? 'active' : ''}`} 
+                        onClick={() => setActiveTab('inventory')}
+                        title="Promotions Stock Inventory"
+                        style={{ justifyContent: isExpanded ? 'flex-start' : 'center', padding: isExpanded ? '0.65rem 0.85rem' : '0.65rem 0' }}
+                      >
+                        <Package size={18} style={{ flexShrink: 0 }} />
+                        {isExpanded && <span>Promotions Stock Inventory</span>}
+                      </button>
+
+                      <button 
+                        type="button"
+                        className={`sidebar-nav-btn ${activeTab === 'verify' ? 'active' : ''}`} 
+                        onClick={() => setActiveTab('verify')}
+                        title="Verify Invoices"
+                        style={{ justifyContent: isExpanded ? 'space-between' : 'center', padding: isExpanded ? '0.65rem 0.85rem' : '0.65rem 0' }}
+                      >
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+                          <CheckCircle size={18} style={{ flexShrink: 0 }} />
+                          {isExpanded && <span>Verify Invoices</span>}
+                        </div>
+                        {pendingQuotes.length > 0 && (
+                          <span className="badge badge-rose" style={{ padding: '0.1rem 0.35rem', fontSize: '0.65rem', borderRadius: '10px' }}>
+                            {pendingQuotes.length}
+                          </span>
+                        )}
+                      </button>
+
+                      <button 
+                        type="button"
+                        className={`sidebar-nav-btn ${activeTab === 'quotes_audit' ? 'active' : ''}`} 
+                        onClick={() => setActiveTab('quotes_audit')}
+                        title="Quotation & Stock Audit"
+                        style={{ justifyContent: isExpanded ? 'space-between' : 'center', padding: isExpanded ? '0.65rem 0.85rem' : '0.65rem 0' }}
+                      >
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+                          <FileText size={18} style={{ flexShrink: 0 }} />
+                          {isExpanded && <span>Quotation Audit</span>}
+                        </div>
+                        {(quotations || []).filter(q => q && (q.status === 'draft' || q.status === 'pending_verification')).length > 0 && (
+                          <span className="badge badge-cyan" style={{ padding: '0.1rem 0.35rem', fontSize: '0.65rem', borderRadius: '10px' }}>
+                            {(quotations || []).filter(q => q && (q.status === 'draft' || q.status === 'pending_verification')).length}
+                          </span>
+                        )}
+                      </button>
+
+                      <button 
+                        type="button"
+                        className={`sidebar-nav-btn ${activeTab === 'reports' ? 'active' : ''}`} 
+                        onClick={() => setActiveTab('reports')}
+                        title="Campaign Stock Analytics"
+                        style={{ justifyContent: isExpanded ? 'flex-start' : 'center', padding: isExpanded ? '0.65rem 0.85rem' : '0.65rem 0' }}
+                      >
+                        <BarChart2 size={18} style={{ flexShrink: 0 }} />
+                        {isExpanded && <span>Stock Analytics</span>}
+                      </button>
+                    </div>
+                  </div>
+
+                  <div>
+                    {isExpanded && (
+                      <span style={{ fontSize: '0.62rem', color: 'var(--text-muted)', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', display: 'block', marginBottom: '0.35rem', paddingLeft: '0.5rem' }}>
+                        Stock Management
                       </span>
                     )}
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.3rem' }}>
+                      <button 
+                        type="button"
+                        className={`sidebar-nav-btn ${activeTab === 'stickers' ? 'active' : ''}`} 
+                        onClick={() => setActiveTab('stickers')}
+                        title="Showroom QR Stickers"
+                        style={{ justifyContent: isExpanded ? 'flex-start' : 'center', padding: isExpanded ? '0.65rem 0.85rem' : '0.65rem 0' }}
+                      >
+                        <QrCode size={18} style={{ flexShrink: 0 }} />
+                        {isExpanded && <span>Showroom QR Stickers</span>}
+                      </button>
 
-                  </button>
-                  <button 
-                    type="button"
-                    className={`sidebar-nav-btn ${activeTab === 'reports' ? 'active' : ''}`} 
-                    onClick={() => setActiveTab('reports')}
-                  >
-                    Campaign Stock Analytics
-                  </button>
-                </div>
-              </div>
+                      <button 
+                        type="button"
+                        className={`sidebar-nav-btn ${activeTab === 'import' ? 'active' : ''}`} 
+                        onClick={() => setActiveTab('import')}
+                        title="Bulk Stock Import"
+                        style={{ justifyContent: isExpanded ? 'flex-start' : 'center', padding: isExpanded ? '0.65rem 0.85rem' : '0.65rem 0' }}
+                      >
+                        <UploadCloud size={18} style={{ flexShrink: 0 }} />
+                        {isExpanded && <span>Bulk Stock Import</span>}
+                      </button>
+                    </div>
+                  </div>
 
-              <div>
-                <span style={{ fontSize: '0.65rem', color: 'var(--text-muted)', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', display: 'block', marginBottom: '0.4rem', paddingLeft: '0.5rem' }}>
-                  Stock Management
-                </span>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
-                  <button 
-                    type="button"
-                    className={`sidebar-nav-btn ${activeTab === 'stickers' ? 'active' : ''}`} 
-                    onClick={() => setActiveTab('stickers')}
-                  >
-                    Showroom QR Stickers
-                  </button>
-                  <button 
-                    type="button"
-                    className={`sidebar-nav-btn ${activeTab === 'import' ? 'active' : ''}`} 
-                    onClick={() => setActiveTab('import')}
-                  >
-                    Bulk Stock Import
-                  </button>
-                </div>
-              </div>
+                  <div>
+                    {isExpanded && (
+                      <span style={{ fontSize: '0.62rem', color: 'var(--text-muted)', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', display: 'block', marginBottom: '0.35rem', paddingLeft: '0.5rem' }}>
+                        Campaign Config
+                      </span>
+                    )}
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.3rem' }}>
+                      <button 
+                        type="button"
+                        className={`sidebar-nav-btn ${activeTab === 'specials' ? 'active' : ''}`} 
+                        onClick={() => setActiveTab('specials')}
+                        title="Weekly Specials"
+                        style={{ justifyContent: isExpanded ? 'flex-start' : 'center', padding: isExpanded ? '0.65rem 0.85rem' : '0.65rem 0' }}
+                      >
+                        <Sparkles size={18} style={{ flexShrink: 0 }} />
+                        {isExpanded && <span>Weekly Specials</span>}
+                      </button>
 
-              <div>
-                <span style={{ fontSize: '0.65rem', color: 'var(--text-muted)', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', display: 'block', marginBottom: '0.4rem', paddingLeft: '0.5rem' }}>
-                  Campaign Config
-                </span>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
-                  <button 
-                    type="button"
-                    className={`sidebar-nav-btn ${activeTab === 'specials' ? 'active' : ''}`} 
-                    onClick={() => setActiveTab('specials')}
-                  >
-                    Weekly Specials
-                  </button>
-                  <button 
-                    type="button"
-                    className={`sidebar-nav-btn ${activeTab === 'brands_margins' ? 'active' : ''}`} 
-                    onClick={() => setActiveTab('brands_margins')}
-                  >
-                    Brand Setup & Margins
-                  </button>
-                  <button 
-                    type="button"
-                    className={`sidebar-nav-btn ${activeTab === 'categories' ? 'active' : ''}`} 
-                    onClick={() => setActiveTab('categories')}
-                  >
-                    Category Cards & Cover Photos
-                  </button>
-                </div>
-              </div>
+                      <button 
+                        type="button"
+                        className={`sidebar-nav-btn ${activeTab === 'brands_margins' ? 'active' : ''}`} 
+                        onClick={() => setActiveTab('brands_margins')}
+                        title="Brand Setup & Margins"
+                        style={{ justifyContent: isExpanded ? 'flex-start' : 'center', padding: isExpanded ? '0.65rem 0.85rem' : '0.65rem 0' }}
+                      >
+                        <Percent size={18} style={{ flexShrink: 0 }} />
+                        {isExpanded && <span>Brand Setup & Margins</span>}
+                      </button>
 
-            </>
-          )}
+                      <button 
+                        type="button"
+                        className={`sidebar-nav-btn ${activeTab === 'categories' ? 'active' : ''}`} 
+                        onClick={() => setActiveTab('categories')}
+                        title="Category Cards & Cover Photos"
+                        style={{ justifyContent: isExpanded ? 'flex-start' : 'center', padding: isExpanded ? '0.65rem 0.85rem' : '0.65rem 0' }}
+                      >
+                        <Grid size={18} style={{ flexShrink: 0 }} />
+                        {isExpanded && <span>Category Cards</span>}
+                      </button>
+                    </div>
+                  </div>
+                </>
+              )}
 
-          {/* Admin Only Root System Operations - ONLY shown for Admin role */}
-          {currentUser.role === 'admin' && (
-            <div>
-              <span style={{ fontSize: '0.65rem', color: 'var(--accent-emerald)', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', display: 'block', marginBottom: '0.4rem', paddingLeft: '0.5rem' }}>
-                System Administration
-              </span>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
-                <button 
-                  type="button"
-                  className={`sidebar-nav-btn ${activeTab === 'executives' ? 'active' : ''}`} 
-                  onClick={() => setActiveTab('executives')}
-                  style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}
-                >
-                  <KeyRound size={15} color="var(--accent-emerald)" />
-                  <span>Team Passwords & Security</span>
-                </button>
-                <button 
-                  type="button"
-                  className={`sidebar-nav-btn ${activeTab === 'dns' ? 'active' : ''}`} 
-                  onClick={() => setActiveTab('dns')}
-                  style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}
-                >
-                  <Globe size={15} color="var(--accent-emerald)" />
-                  <span>DNS & Custom Domain</span>
-                </button>
-                <button 
-                  type="button"
-                  className={`sidebar-nav-btn ${activeTab === 'db_tools' ? 'active' : ''}`} 
-                  onClick={() => setActiveTab('db_tools')}
-                  style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}
-                >
-                  <Database size={15} color="var(--accent-emerald)" />
-                  <span>Database Reset & Backup</span>
-                </button>
-                <button 
-                  type="button"
-                  className={`sidebar-nav-btn ${activeTab === 'system_logs' ? 'active' : ''}`} 
-                  onClick={() => setActiveTab('system_logs')}
-                  style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}
-                >
-                  <ShieldAlert size={15} color="var(--accent-rose)" />
-                  <span>System Error & Security Logs</span>
-                  {((db.systemLogs || []).filter(l => l.level === 'CRITICAL' || l.level === 'SECURITY').length) > 0 && (
-                    <span className="badge badge-rose" style={{ marginLeft: 'auto', fontSize: '0.6rem', padding: '0.1rem 0.35rem', fontWeight: 800 }}>
-                      {(db.systemLogs || []).filter(l => l.level === 'CRITICAL' || l.level === 'SECURITY').length}
+              {/* Admin Only Root System Operations - ONLY shown for Admin role */}
+              {currentUser.role === 'admin' && (
+                <div>
+                  {isExpanded && (
+                    <span style={{ fontSize: '0.62rem', color: 'var(--accent-emerald)', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', display: 'block', marginBottom: '0.35rem', paddingLeft: '0.5rem' }}>
+                      System Administration
                     </span>
                   )}
-                </button>
-              </div>
-            </div>
-          )}
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.3rem' }}>
+                    <button 
+                      type="button"
+                      className={`sidebar-nav-btn ${activeTab === 'executives' ? 'active' : ''}`} 
+                      onClick={() => setActiveTab('executives')}
+                      title="Team Passwords & Security"
+                      style={{ justifyContent: isExpanded ? 'flex-start' : 'center', padding: isExpanded ? '0.65rem 0.85rem' : '0.65rem 0' }}
+                    >
+                      <KeyRound size={18} color="var(--accent-emerald)" style={{ flexShrink: 0 }} />
+                      {isExpanded && <span>Team Passwords</span>}
+                    </button>
 
+                    <button 
+                      type="button"
+                      className={`sidebar-nav-btn ${activeTab === 'dns' ? 'active' : ''}`} 
+                      onClick={() => setActiveTab('dns')}
+                      title="DNS & Custom Domain"
+                      style={{ justifyContent: isExpanded ? 'flex-start' : 'center', padding: isExpanded ? '0.65rem 0.85rem' : '0.65rem 0' }}
+                    >
+                      <Globe size={18} color="var(--accent-emerald)" style={{ flexShrink: 0 }} />
+                      {isExpanded && <span>DNS & Custom Domain</span>}
+                    </button>
 
-        </aside>
+                    <button 
+                      type="button"
+                      className={`sidebar-nav-btn ${activeTab === 'db_tools' ? 'active' : ''}`} 
+                      onClick={() => setActiveTab('db_tools')}
+                      title="Database Reset & Backup"
+                      style={{ justifyContent: isExpanded ? 'flex-start' : 'center', padding: isExpanded ? '0.65rem 0.85rem' : '0.65rem 0' }}
+                    >
+                      <Database size={18} color="var(--accent-emerald)" style={{ flexShrink: 0 }} />
+                      {isExpanded && <span>Database Backup</span>}
+                    </button>
+
+                    <button 
+                      type="button"
+                      className={`sidebar-nav-btn ${activeTab === 'system_logs' ? 'active' : ''}`} 
+                      onClick={() => setActiveTab('system_logs')}
+                      title="System Error & Security Logs"
+                      style={{ justifyContent: isExpanded ? 'space-between' : 'center', padding: isExpanded ? '0.65rem 0.85rem' : '0.65rem 0' }}
+                    >
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+                        <ShieldAlert size={18} color="var(--accent-rose)" style={{ flexShrink: 0 }} />
+                        {isExpanded && <span>System Error Logs</span>}
+                      </div>
+                      {((db.systemLogs || []).filter(l => l.level === 'CRITICAL' || l.level === 'SECURITY').length) > 0 && (
+                        <span className="badge badge-rose" style={{ fontSize: '0.6rem', padding: '0.1rem 0.35rem', fontWeight: 800 }}>
+                          {(db.systemLogs || []).filter(l => l.level === 'CRITICAL' || l.level === 'SECURITY').length}
+                        </span>
+                      )}
+                    </button>
+                  </div>
+                </div>
+              )}
+            </aside>
+
 
         {/* Right Main Content Panel */}
         <div className="glass-panel dashboard-panel" style={{ minWidth: 0 }}>
@@ -3689,9 +3781,11 @@ function AdminPanel({
             />
           </div>
         )}
+      </div>
+          </div>
+        );
+      })()}
 
-      </div>
-      </div>
 
       {/* Product Add/Edit Modal */}
       {isProductModalOpen && (
