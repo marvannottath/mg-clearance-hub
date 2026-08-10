@@ -1203,11 +1203,12 @@ function App() {
             <>
               {currentUser.role === 'md' && (
                 <MDDashboard 
-                  products={db.products} 
-                  executives={db.executives} 
-                  salesLedger={db.salesLedger}
-                  brands={db.brands}
-                  quotations={db.quotations}
+                  products={db.products || []} 
+                  executives={db.executives || []} 
+                  salesLedger={db.salesLedger || []}
+                  brands={db.brands || []}
+                  quotations={db.quotations || []}
+
                   remainingLandingCost={remainingValue}
                   totalClearedLandingCost={totalClearedLandingCost}
                   dynamicTargetLandingCost={dynamicTargetValue}
@@ -1237,11 +1238,12 @@ function App() {
               {['admin', 'manager'].includes(currentUser.role) && (
                 <AdminPanel 
                   currentUser={currentUser}
-                  products={db.products}
-                  executives={db.executives}
-                  salesLedger={db.salesLedger}
-                  brands={db.brands}
-                  quotations={db.quotations}
+                  products={db.products || []}
+                  executives={db.executives || []}
+                  salesLedger={db.salesLedger || []}
+                  brands={db.brands || []}
+                  quotations={db.quotations || []}
+
                   remainingLandingCost={remainingValue}
                   totalClearedLandingCost={totalClearedLandingCost}
                   dynamicTargetLandingCost={dynamicTargetValue}

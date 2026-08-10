@@ -1492,9 +1492,10 @@ function AdminPanel({
                   style={{ padding: '0.35rem 0.75rem', fontSize: '0.75rem', borderRadius: '6px' }}
                 >
                   <option value="ALL">All Brands</option>
-                  {brands.map(b => (
+                  {(brands || []).map(b => (
                     <option key={b.name} value={b.name}>{b.name}</option>
                   ))}
+
                 </select>
 
                 <label style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--text-secondary)' }}>Availability:</label>
@@ -1808,9 +1809,10 @@ function AdminPanel({
                 style={{ padding: '0.35rem 0.75rem', fontSize: '0.75rem', borderRadius: '6px' }}
               >
                 <option value="ALL">All Executives</option>
-                {executives.map(e => (
+                {(executives || []).map(e => (
                   <option key={e.id} value={e.name}>{e.name}</option>
                 ))}
+
               </select>
 
               <label style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--text-secondary)' }}>Status Filter:</label>
@@ -2392,7 +2394,8 @@ function AdminPanel({
                   </tr>
                 </thead>
                 <tbody>
-                  {brands.map(brand => {
+                  {(brands || []).map(brand => {
+
                     const isEditing = editingBrandName === brand.name;
                     return (
                       <tr key={brand.name}>
@@ -2600,7 +2603,8 @@ function AdminPanel({
                   <label className="form-label">Brand</label>
                   <select className="form-input text-xs" style={{ height: '36px', padding: '0.2rem 0.5rem' }} value={stickerBrandFilter} onChange={(e)=>setStickerBrandFilter(e.target.value)}>
                     <option value="ALL">All Brands</option>
-                    {brands.map(b=><option key={b.name} value={b.name}>{b.name}</option>)}
+                    {(brands || []).map(b=><option key={b.name} value={b.name}>{b.name}</option>)}
+
                   </select>
                 </div>
                 <div className="form-group" style={{ marginBottom: 0 }}>
@@ -3035,7 +3039,8 @@ function AdminPanel({
                   </tr>
                 </thead>
                 <tbody>
-                  {executives.map(exec => (
+                  {(executives || []).map(exec => (
+
                     <tr key={exec.id}>
                       <td style={{ fontWeight: 700 }}>{exec.name}</td>
                       <td><code style={{ background: 'rgba(255,255,255,0.05)', padding: '0.1rem 0.4rem', borderRadius: '4px' }}>{exec.username}</code></td>
@@ -3637,9 +3642,10 @@ function AdminPanel({
                     value={productBrand} 
                     onChange={(e) => setProductBrand(e.target.value)}
                   >
-                    {brands.map(b => (
+                    {(brands || []).map(b => (
                       <option key={b.name} value={b.name}>{b.name}</option>
                     ))}
+
                   </select>
                 </div>
 
