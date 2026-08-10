@@ -382,37 +382,62 @@ h1, h2, h3, h4, h5, h6 {
   border: 1px solid var(--border-color);
   min-width: 0;
   width: 100%;
+  background: var(--bg-card);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+}
+
+.custom-table-container::-webkit-scrollbar {
+  height: 6px;
+  width: 6px;
+}
+.custom-table-container::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.02);
+}
+.custom-table-container::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 4px;
 }
 
 .custom-table {
   width: 100%;
-  border-collapse: collapse;
+  border-collapse: separate;
+  border-spacing: 0;
   text-align: left;
   font-size: 0.85rem;
-  min-width: 650px;
+  min-width: 1150px; /* Ensures table columns never squish when sidebar is active */
 }
 
 .custom-table th {
-  background: rgba(255, 255, 255, 0.03);
+  background: rgba(255, 255, 255, 0.04);
   color: var(--text-secondary);
   font-weight: 700;
-  font-size: 0.78rem;
-  letter-spacing: 0.03em;
+  font-size: 0.75rem;
+  letter-spacing: 0.05em;
   text-transform: uppercase;
-  padding: 0.85rem 1rem;
+  padding: 0.95rem 1.1rem;
   border-bottom: 1px solid var(--border-color);
   white-space: nowrap;
+  position: sticky;
+  top: 0;
+  z-index: 5;
+  backdrop-filter: blur(8px);
 }
 
 :root[data-theme="light"] .custom-table th {
-  background: rgba(15, 23, 42, 0.03);
+  background: rgba(15, 23, 42, 0.05);
 }
 
 .custom-table td {
-  padding: 0.85rem 1rem;
+  padding: 0.95rem 1.1rem;
   border-bottom: 1px solid var(--border-color);
   vertical-align: middle;
+  transition: background 0.15s ease;
 }
+
+.custom-table tbody tr:hover td {
+  background: rgba(255, 255, 255, 0.025);
+}
+
 
 /* Buttons */
 .btn {

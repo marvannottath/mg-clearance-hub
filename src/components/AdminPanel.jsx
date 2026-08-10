@@ -1301,7 +1301,8 @@ function AdminPanel({
 
 
 
-      <div className="admin-panel-layout" style={{ display: 'grid', gridTemplateColumns: '260px 1fr', gap: '1.5rem', alignItems: 'start' }}>
+      <div className="admin-panel-layout" style={{ display: 'grid', gridTemplateColumns: '250px minmax(0, 1fr)', gap: '1.5rem', alignItems: 'start' }}>
+
         
         {/* Left Sidebar Navigation */}
         <aside className="admin-sidebar" style={{ padding: '1.25rem', display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
