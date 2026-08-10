@@ -1591,7 +1591,8 @@ function AdminPanel({
                     <th>Brand</th>
                     <th>Stock</th>
                     <th>MRP Rate</th>
-                    <th>Maximum Rate</th>
+                    <th>NRP</th>
+
                     <th>MSP</th>
                     <th>Weekly Special</th>
                     <th>Actions</th>
@@ -2458,8 +2459,9 @@ function AdminPanel({
                     <th>Brand Name</th>
                     <th>Mode</th>
                     <th>Max Margin</th>
-                    <th>Max Selling Price</th>
-                    <th>Min Selling Price</th>
+                    <th>NRP (Max Price)</th>
+                    <th>MSP (Min Price)</th>
+
                     <th>Normal Selling Price (Imports)</th>
                     <th>Executive Incentive</th>
                     <th style={{ textAlign: 'right' }}>Actions</th>
