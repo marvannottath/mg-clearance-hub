@@ -761,18 +761,19 @@ function App() {
   };
 
   // Dynamic calculations based on Landing Cost
-  const remainingValue = db.products.reduce((sum, p) => sum + ((p.landingCost || Math.round(p.specialPrice * 0.8)) * p.stock), 0);
+  const remainingValue = (db.products || []).reduce((sum, p) => sum + ((p.landingCost || Math.round((p.specialPrice || 0) * 0.8)) * (p.stock || 0)), 0);
   
-  const totalClearedLandingCost = db.salesLedger.reduce((sum, sale) => {
-    return sum + sale.items.reduce((itemSum, item) => {
-      const prod = db.products.find(p => p.id === item.productId);
-      const itemLanding = prod ? (prod.landingCost || Math.round(prod.specialPrice * 0.8)) : Math.round(item.pricePaid * 0.8);
-      return itemSum + (itemLanding * item.qty);
+  const totalClearedLandingCost = (db.salesLedger || []).reduce((sum, sale) => {
+    return sum + ((sale && sale.items) || []).reduce((itemSum, item) => {
+      const prod = (db.products || []).find(p => p.id === item.productId);
+      const itemLanding = prod ? (prod.landingCost || Math.round((prod.specialPrice || 0) * 0.8)) : Math.round((item.pricePaid || 0) * 0.8);
+      return itemSum + (itemLanding * (item.qty || 1));
     }, 0);
   }, 0);
 
   const dynamicTargetValue = remainingValue + totalClearedLandingCost; // Target = current stock landing cost + sold landing cost
-  const totalClearedValue = db.salesLedger.reduce((sum, sale) => sum + sale.totalPaid, 0);
+  const totalClearedValue = (db.salesLedger || []).reduce((sum, sale) => sum + (sale.totalPaid || 0), 0);
+
 
   // LoginView sub-component is defined statically outside the App component
 
