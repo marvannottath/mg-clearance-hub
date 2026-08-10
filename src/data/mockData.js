@@ -206,12 +206,13 @@ export const INITIAL_SYSTEM_LOGS = [
 export function getProductActiveHoldQty(productId, quotations = []) {
   if (!productId || !Array.isArray(quotations)) return 0;
   return quotations
-    .filter(q => q.status === 'draft' || q.status === 'pending_verification')
+    .filter(q => q && (q.status === 'draft' || q.status === 'pending_verification'))
     .reduce((sum, q) => {
-      const item = (q.items || []).find(i => i.id === productId);
+      const item = ((q && q.items) || []).find(i => i && (i.id === productId || i.productId === productId));
       return sum + (item ? (item.qty || 1) : 0);
     }, 0);
 }
+
 
 export function logSystemEvent(db, { level = 'INFO', category = 'RUNTIME_ERROR', message = '', details = '', user = 'System' }) {
   if (!db) return db;
@@ -280,8 +281,10 @@ export function loadDatabase() {
   if (!Array.isArray(db.quotations)) db.quotations = INITIAL_QUOTATIONS;
   if (!Array.isArray(db.systemLogs)) db.systemLogs = INITIAL_SYSTEM_LOGS;
 
+  // Sanitize every quotation & salesLedger entry to guarantee valid items arrays
+  db.quotations = (db.quotations || []).map(q => q ? ({ ...q, items: Array.isArray(q.items) ? q.items : [] }) : null).filter(Boolean);
+  db.salesLedger = (db.salesLedger || []).map(s => s ? ({ ...s, items: Array.isArray(s.items) ? s.items : [] }) : null).filter(Boolean);
 
-  if (!Array.isArray(db.quotations)) db.quotations = INITIAL_QUOTATIONS;
 
   // 1. Ensure executives have username/password, walletBalance, and walletLedger
   if (db.executives) {
@@ -434,10 +437,11 @@ export function saveDatabase(db) {
   safeLocalStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(db));
 }
 
-export function calculateStockValue(products) {
-  // Sum of (Special price * Stock) representing current stock value on hand
-  return products.reduce((acc, p) => acc + (p.specialPrice * p.stock), 0);
+export function calculateStockValue(products = []) {
+  if (!Array.isArray(products)) return 0;
+  return products.reduce((acc, p) => acc + ((p ? p.specialPrice || 0 : 0) * (p ? p.stock || 0 : 0)), 0);
 }
+
 
 export function getLocalDateString() {
   const d = new Date();
