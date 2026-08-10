@@ -498,7 +498,7 @@ function AdminPanel({
     const updatedExecutives = db.executives.map(e => {
       if (e.id === quote.executiveId) {
         const currentCleared = e.cleared || 0;
-        const quoteTotalCleared = quote.items.reduce((sum, item) => sum + (item.specialPrice * item.qty), 0);
+        const quoteTotalCleared = (quote.items || []).reduce((sum, item) => sum + (item.specialPrice * item.qty), 0);
         return {
           ...e,
           walletBalance: (e.walletBalance || 0) + quote.incentiveAmount,
@@ -517,16 +517,17 @@ function AdminPanel({
       executiveName: quote.executiveName,
       date: new Date().toISOString(),
       customerMobile: quote.customerMobile,
-      items: quote.items.map(item => ({
+      items: (quote.items || []).map(item => ({
         productId: item.id || item.productId,
         name: item.name,
         qty: item.qty,
         pricePaid: item.specialPrice,
         mrp: item.mrp
       })),
-      totalPaid: quote.items.reduce((sum, item) => sum + (item.specialPrice * item.qty), 0),
-      totalMrp: quote.items.reduce((sum, item) => sum + (item.mrp * item.qty), 0)
+      totalPaid: (quote.items || []).reduce((sum, item) => sum + (item.specialPrice * item.qty), 0),
+      totalMrp: (quote.items || []).reduce((sum, item) => sum + (item.mrp * item.qty), 0)
     };
+
 
     // 4. Update Quotations status
     const updatedQuotations = db.quotations.map(q => {
@@ -1737,7 +1738,7 @@ function AdminPanel({
                           <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>{quote.customerMobile}</div>
                         </td>
                         <td style={{ fontWeight: 700, color: 'var(--accent-cyan)' }}>{quote.invoiceNo}</td>
-                        <td style={{ fontWeight: 600 }}>{formatRupee(quote.items.reduce((s,i)=>s+(i.specialPrice*i.qty),0))}</td>
+                        <td style={{ fontWeight: 600 }}>{formatRupee((quote.items || []).reduce((s,i)=>s+((i.specialPrice || i.pricePaid || 0)*i.qty),0))}</td>
                         <td style={{ fontWeight: 600, color: 'var(--accent-emerald)' }}>{formatRupee(quote.incentiveAmount)}</td>
                         <td>
                           {quote.uploadedBill ? (
@@ -1849,8 +1850,9 @@ function AdminPanel({
                   ) : (
                     filteredAuditQuotations.map(quote => {
                       const isPending = quote.status === 'draft' || quote.status === 'pending_verification';
-                      const totalVal = quote.items.reduce((s, i) => s + ((i.specialPrice || i.pricePaid || 0) * i.qty), 0);
-                      const totalQty = quote.items.reduce((s, i) => s + i.qty, 0);
+                      const totalVal = (quote.items || []).reduce((s, i) => s + ((i.specialPrice || i.pricePaid || 0) * i.qty), 0);
+                      const totalQty = (quote.items || []).reduce((s, i) => s + i.qty, 0);
+
 
                       return (
                         <tr key={quote.id}>
@@ -3893,7 +3895,8 @@ function AdminPanel({
               <div>
                 <strong>Executive:</strong> {selectedInvoiceDetail.executiveName}<br/>
                 <strong>Client:</strong> {selectedInvoiceDetail.customerName} ({selectedInvoiceDetail.customerMobile})<br/>
-                <strong>Clearance Quote Total:</strong> {formatRupee(selectedInvoiceDetail.items.reduce((s,i)=>s+(i.specialPrice*i.qty),0))}
+                <strong>Quote Total:</strong> {formatRupee(((selectedInvoiceDetail && selectedInvoiceDetail.items) || []).reduce((s,i)=>s+((i.specialPrice || i.pricePaid || 0)*i.qty),0))}
+
               </div>
               <div style={{ textAlign: 'right' }}>
                 <strong>Salesforce Invoice:</strong> <span style={{ color: 'var(--accent-cyan)', fontWeight: 700 }}>{selectedInvoiceDetail.invoiceNo}</span><br/>

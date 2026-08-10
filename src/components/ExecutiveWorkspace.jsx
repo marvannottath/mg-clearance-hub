@@ -2170,7 +2170,8 @@ function ExecutiveWorkspace({ products = [], activeExecutive = {}, db = {}, onUp
                 <div style={{ background: 'rgba(255,255,255,0.01)', padding: '0.75rem', border: '1px solid var(--border-color)', borderRadius: '6px', marginBottom: '1rem', fontSize: '0.8rem' }}>
                   <strong>Quote ID:</strong> {selectedQuoteToUpload.id}<br/>
                   <strong>Client:</strong> {selectedQuoteToUpload.customerName}<br/>
-                  <strong>Clearance Value:</strong> {formatRupee(selectedQuoteToUpload.items.reduce((s,i) => s + (i.specialPrice * i.qty), 0))}
+                  <strong>Quote Value:</strong> {formatRupee((selectedQuoteToUpload.items || []).reduce((s,i) => s + (i.specialPrice * i.qty), 0))}
+
                 </div>
 
                 <div className="form-group">
@@ -2547,8 +2548,9 @@ function ExecutiveWorkspace({ products = [], activeExecutive = {}, db = {}, onUp
                         .filter(q => q.executiveId === activeExecutive.id)
                         .sort((a,b) => new Date(b.date) - new Date(a.date))
                         .map(quote => {
-                          const itemsCount = quote.items.reduce((sum, i) => sum + i.qty, 0);
-                          const totalVal = quote.items.reduce((sum, i) => sum + (i.specialPrice * i.qty), 0);
+                          const itemsCount = (quote.items || []).reduce((sum, i) => sum + i.qty, 0);
+                          const totalVal = (quote.items || []).reduce((sum, i) => sum + (i.specialPrice * i.qty), 0);
+
                           
                           return (
                             <tr key={quote.id}>
@@ -3638,7 +3640,8 @@ function ExecutiveWorkspace({ products = [], activeExecutive = {}, db = {}, onUp
               <div style={{ background: 'rgba(255,255,255,0.01)', padding: '0.75rem', border: '1px solid var(--border-color)', borderRadius: '6px', marginBottom: '1rem', fontSize: '0.8rem' }}>
                 <strong>Quote ID:</strong> {selectedQuoteToUpload.id}<br/>
                 <strong>Client:</strong> {selectedQuoteToUpload.customerName}<br/>
-                <strong>Clearance Value:</strong> {formatRupee(selectedQuoteToUpload.items.reduce((s,i) => s + (i.specialPrice * i.qty), 0))}
+                <strong>Quote Value:</strong> {formatRupee((selectedQuoteToUpload.items || []).reduce((s,i) => s + (i.specialPrice * i.qty), 0))}
+
               </div>
 
               <div className="form-group">

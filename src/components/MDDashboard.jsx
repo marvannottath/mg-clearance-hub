@@ -61,12 +61,13 @@ function MDDashboard({
   const stuckLandingCost = filteredProducts.reduce((sum, p) => sum + ((p.landingCost || Math.round(p.specialPrice * 0.8)) * p.stock), 0);
   
   const soldLandingCost = filteredSalesLedger.reduce((sum, sale) => {
-    return sum + sale.items.reduce((itemSum, item) => {
+    return sum + (sale.items || []).reduce((itemSum, item) => {
       const prod = products.find(p => p.id === item.productId);
       const itemLanding = prod ? (prod.landingCost || Math.round(prod.specialPrice * 0.8)) : Math.round(item.pricePaid * 0.8);
       return itemSum + (itemLanding * item.qty);
     }, 0);
   }, 0);
+
 
   const targetLandingCost = stuckLandingCost + soldLandingCost;
   const clearedRevenue = filteredSalesLedger.reduce((sum, sale) => sum + sale.totalPaid, 0);
@@ -186,7 +187,8 @@ function MDDashboard({
     
     filteredSalesLedger.forEach(sale => {
       const dateStr = new Date(sale.date).toLocaleString('en-IN').replace(/,/g, '');
-      const itemsCount = sale.items.reduce((acc, item) => acc + item.qty, 0);
+      const itemsCount = (sale.items || []).reduce((acc, item) => acc + item.qty, 0);
+
       const savings = sale.totalMrp - sale.totalPaid;
       csvContent += `"${sale.billNo}","${dateStr}","${sale.executiveName}","${sale.customerMobile}",${itemsCount},${sale.totalPaid},${sale.totalMrp},${savings}\n`;
     });
@@ -728,7 +730,8 @@ function MDDashboard({
                         </td>
                         <td>{sale.executiveName}</td>
                         <td>{sale.customerMobile}</td>
-                        <td>{sale.items.reduce((acc, item) => acc + item.qty, 0)} items</td>
+                        <td>{(sale.items || []).reduce((acc, item) => acc + item.qty, 0)} items</td>
+
                         <td style={{ fontWeight: '600', color: 'var(--accent-emerald)' }}>{formatRupee(sale.totalPaid)}</td>
                         <td style={{ textDecoration: 'line-through', color: 'var(--text-muted)' }}>{formatRupee(sale.totalMrp)}</td>
                         <td>
