@@ -4,8 +4,10 @@ import {
   QrCode, ShoppingCart, Plus, Minus, Search, 
   Send, Printer, CheckCircle, PlayCircle, XCircle, X,
   Award, TrendingUp, IndianRupee, Bell, Volume2, 
-  Wallet, History, FileText, RefreshCw, BarChart2, Sliders
+  Wallet, History, FileText, RefreshCw, BarChart2, Sliders,
+  ArrowLeft, Tag, Package, Sparkles, Droplets, Layers, Grid, Percent, Filter, CheckCircle2, Zap, Box, Camera
 } from 'lucide-react';
+
 import { 
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell 
 } from 'recharts';
@@ -49,15 +51,16 @@ const safeLocalStorage = (() => {
 })();
 
 const VISUAL_CATEGORIES = [
-  { id: 'ALL', name: 'All Products', icon: '✨', image: 'https://images.unsplash.com/photo-1584622650111-993a426fbf0a?auto=format&fit=crop&w=600&q=80' },
-  { id: 'Faucets', name: 'Faucets & Mixers', icon: '🚰', image: 'https://images.unsplash.com/photo-1620626011761-996317b8d101?auto=format&fit=crop&w=600&q=80' },
-  { id: 'Washbasins', name: 'Washbasins & Bowls', icon: '🥣', image: 'https://images.unsplash.com/photo-1584622650111-993a426fbf0a?auto=format&fit=crop&w=600&q=80' },
-  { id: 'Showers', name: 'Showers & Cloud', icon: '🚿', image: 'https://images.unsplash.com/photo-1559825481-12a05cc00344?auto=format&fit=crop&w=600&q=80' },
-  { id: 'Sanitaryware', name: 'Sanitaryware & WCs', icon: '🚽', image: 'https://images.unsplash.com/photo-1564540586988-aa4e53c3d799?auto=format&fit=crop&w=600&q=80' },
-  { id: 'Spouts', name: 'Spouts & Diverters', icon: '💧', image: 'https://images.unsplash.com/photo-1585771724684-38269d6639fd?auto=format&fit=crop&w=600&q=80' },
-  { id: 'Tiles', name: 'Vitrified & Wall Tiles', icon: '🧱', image: 'https://images.unsplash.com/photo-1615873968403-89e068629265?auto=format&fit=crop&w=600&q=80' },
-  { id: 'Accessories', name: 'Bath Accessories', icon: '🧴', image: 'https://images.unsplash.com/photo-1600566753190-17f0baa2a6c3?auto=format&fit=crop&w=600&q=80' }
+  { id: 'ALL', name: 'All Products', iconName: 'Sparkles', image: 'https://images.unsplash.com/photo-1584622650111-993a426fbf0a?auto=format&fit=crop&w=600&q=80' },
+  { id: 'Faucets', name: 'Faucets & Mixers', iconName: 'Droplets', image: 'https://images.unsplash.com/photo-1620626011761-996317b8d101?auto=format&fit=crop&w=600&q=80' },
+  { id: 'Washbasins', name: 'Washbasins & Bowls', iconName: 'Box', image: 'https://images.unsplash.com/photo-1584622650111-993a426fbf0a?auto=format&fit=crop&w=600&q=80' },
+  { id: 'Showers', name: 'Showers & Cloud', iconName: 'Zap', image: 'https://images.unsplash.com/photo-1559825481-12a05cc00344?auto=format&fit=crop&w=600&q=80' },
+  { id: 'Sanitaryware', name: 'Sanitaryware & WCs', iconName: 'Package', image: 'https://images.unsplash.com/photo-1564540586988-aa4e53c3d799?auto=format&fit=crop&w=600&q=80' },
+  { id: 'Spouts', name: 'Spouts & Diverters', iconName: 'Droplets', image: 'https://images.unsplash.com/photo-1585771724684-38269d6639fd?auto=format&fit=crop&w=600&q=80' },
+  { id: 'Tiles', name: 'Vitrified & Wall Tiles', iconName: 'Layers', image: 'https://images.unsplash.com/photo-1615873968403-89e068629265?auto=format&fit=crop&w=600&q=80' },
+  { id: 'Accessories', name: 'Bath Accessories', iconName: 'Tag', image: 'https://images.unsplash.com/photo-1600566753190-17f0baa2a6c3?auto=format&fit=crop&w=600&q=80' }
 ];
+
 
 function ExecutiveWorkspace({ products = [], activeExecutive = {}, db = {}, onUpdateDb }) {
   const safeProducts = products || [];
@@ -1430,56 +1433,71 @@ function ExecutiveWorkspace({ products = [], activeExecutive = {}, db = {}, onUp
 
         {/* Jaquar-Style Visual Category Navigation Cards */}
         <div>
-          <div style={{ fontSize: '0.75rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.04em', color: 'var(--text-secondary)', marginBottom: '0.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <span>🖼️ Showroom Visual Categories</span>
-            {selectedVisualCategory !== 'ALL' && (
-              <button 
-                style={{ border: 'none', background: 'transparent', color: 'var(--accent-cyan)', fontSize: '0.7rem', fontWeight: 700, cursor: 'pointer' }}
-                onClick={() => setSelectedVisualCategory('ALL')}
-              >
-                Reset Filter
-              </button>
-            )}
-          </div>
-
-          <div style={{ display: 'flex', gap: '0.5rem', overflowX: 'auto', paddingBottom: '0.25rem' }} className="no-scrollbar">
-            {VISUAL_CATEGORIES.map(cat => {
-              const isSelected = selectedVisualCategory === cat.id;
-              return (
-                <div
-                  key={cat.id}
-                  onClick={() => setSelectedVisualCategory(cat.id)}
-                  style={{
-                    flexShrink: 0,
-                    width: '100px',
-                    cursor: 'pointer',
-                    borderRadius: '10px',
-                    overflow: 'hidden',
-                    border: isSelected ? '2px solid var(--accent-cyan)' : '1px solid var(--border-color)',
-                    background: 'var(--bg-card)',
-                    boxShadow: isSelected ? '0 0 12px rgba(6,182,212,0.35)' : 'none',
-                    position: 'relative'
-                  }}
+          {selectedVisualCategory !== 'ALL' ? (
+            <div className="glass-panel" style={{ padding: '0.85rem 1rem', marginBottom: '1rem', borderLeft: '4px solid var(--accent-cyan)', background: 'rgba(14,165,233,0.06)' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.75rem' }}>
+                <button 
+                  className="btn btn-secondary" 
+                  onClick={() => setSelectedVisualCategory('ALL')}
+                  style={{ padding: '0.4rem 0.85rem', fontSize: '0.78rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}
                 >
-                  <div style={{ height: '54px', width: '100%', position: 'relative', overflow: 'hidden', background: '#1e293b' }}>
-                    <img 
-                      src={cat.image} 
-                      alt={cat.name}
-                      style={{ width: '100%', height: '100%', objectFit: 'cover', opacity: 0.85 }}
-                    />
-                    <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(15,23,42,0.9) 0%, transparent 70%)' }} />
-                    <span style={{ position: 'absolute', top: '4px', left: '4px', fontSize: '0.85rem' }}>{cat.icon}</span>
+                  <ArrowLeft size={16} />
+                  <span>Back to All Categories</span>
+                </button>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+                  <div style={{ fontSize: '1rem', fontWeight: 800, color: 'var(--text-primary)' }}>
+                    Category: <span style={{ color: 'var(--accent-cyan)' }}>{VISUAL_CATEGORIES.find(c => c.id === selectedVisualCategory)?.name || selectedVisualCategory}</span>
                   </div>
-                  <div style={{ padding: '0.25rem 0.2rem', textAlign: 'center' }}>
-                    <div style={{ fontSize: '0.62rem', fontWeight: isSelected ? 800 : 600, color: isSelected ? 'var(--accent-cyan)' : 'var(--text-primary)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                      {cat.name}
-                    </div>
-                  </div>
+                  <span className="badge badge-cyan" style={{ fontSize: '0.7rem' }}>{activeProducts.length} Items Available</span>
                 </div>
-              );
-            })}
-          </div>
+              </div>
+            </div>
+          ) : (
+            <>
+              <div style={{ fontSize: '0.75rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.04em', color: 'var(--text-secondary)', marginBottom: '0.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <span style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}><Grid size={15} color="var(--accent-cyan)" /> Showroom Visual Categories</span>
+              </div>
+
+              <div style={{ display: 'flex', gap: '0.5rem', overflowX: 'auto', paddingBottom: '0.25rem' }} className="no-scrollbar">
+                {VISUAL_CATEGORIES.map(cat => {
+                  const isSelected = selectedVisualCategory === cat.id;
+                  return (
+                    <div
+                      key={cat.id}
+                      onClick={() => setSelectedVisualCategory(cat.id)}
+                      style={{
+                        flexShrink: 0,
+                        width: '105px',
+                        cursor: 'pointer',
+                        borderRadius: '10px',
+                        overflow: 'hidden',
+                        border: isSelected ? '2px solid var(--accent-cyan)' : '1px solid var(--border-color)',
+                        background: 'var(--bg-card)',
+                        boxShadow: isSelected ? '0 0 12px rgba(6,182,212,0.35)' : 'none',
+                        position: 'relative'
+                      }}
+                    >
+                      <div style={{ height: '54px', width: '100%', position: 'relative', overflow: 'hidden', background: '#1e293b' }}>
+                        <img 
+                          src={cat.image} 
+                          alt={cat.name}
+                          style={{ width: '100%', height: '100%', objectFit: 'cover', opacity: 0.85 }}
+                        />
+                        <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(15,23,42,0.9) 0%, transparent 70%)' }} />
+                      </div>
+                      <div style={{ padding: '0.3rem 0.2rem', textAlign: 'center' }}>
+                        <div style={{ fontSize: '0.65rem', fontWeight: isSelected ? 800 : 600, color: isSelected ? 'var(--accent-cyan)' : 'var(--text-primary)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                          {cat.name}
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </>
+          )}
         </div>
+
 
         {/* Division Selector */}
         <div style={{ display: 'flex', gap: '0.25rem', border: '1px solid var(--border-color)', borderRadius: '20px', padding: '2px', background: 'rgba(0,0,0,0.2)', width: 'fit-content' }}>
@@ -1621,17 +1639,18 @@ function ExecutiveWorkspace({ products = [], activeExecutive = {}, db = {}, onUp
                           )}
                         </div>
 
-                        {/* 3-Tier Price Box: MRP -> Regular Selling Price -> Special Offer Rate */}
-                        <div style={{ marginTop: '0.35rem', background: 'rgba(0,0,0,0.2)', padding: '0.45rem', borderRadius: '6px' }}>
-                          <div style={{ display: 'flex', gap: '0.6rem', fontSize: '0.62rem', color: 'var(--text-muted)', marginBottom: '0.15rem' }}>
-                            <span>MRP: <s style={{ opacity: 0.7 }}>{formatRupee(p.mrp)}</s></span>
-                            <span>Regular: <s style={{ opacity: 0.7 }}>{formatRupee(p.mgPrice || Math.round(p.mrp * 0.8))}</s></span>
+                        {/* 3-Tier Price Box: MRP -> NRP (Max Rate) -> MSP (Min Price) */}
+                        <div style={{ marginTop: '0.35rem', background: 'rgba(0,0,0,0.25)', padding: '0.5rem 0.65rem', borderRadius: '8px', border: '1px solid var(--border-color)' }}>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.68rem', color: 'var(--text-muted)', marginBottom: '0.25rem', flexWrap: 'wrap', gap: '0.4rem' }}>
+                            <span>MRP: <s style={{ opacity: 0.75 }}>{formatRupee(p.mrp)}</s></span>
+                            <span>NRP: <strong style={{ color: 'var(--accent-amber)' }}>{formatRupee(p.maxRate || p.mgPrice || Math.round(p.mrp * 0.85))}</strong></span>
                           </div>
                           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                            <span style={{ fontSize: '0.62rem', color: 'var(--accent-emerald)', fontWeight: 700 }}>Special Offer Rate</span>
-                            <span style={{ fontSize: '1.05rem', fontWeight: 900, color: 'var(--accent-emerald)' }}>{formatRupee(finalPrice)}</span>
+                            <span style={{ fontSize: '0.7rem', color: 'var(--accent-emerald)', fontWeight: 800 }}>MSP (Min Price)</span>
+                            <span style={{ fontSize: '1.05rem', fontWeight: 900, color: 'var(--accent-emerald)' }}>{formatRupee(p.specialPrice || p.minSellingPrice || finalPrice)}</span>
                           </div>
                         </div>
+
 
                         <div style={{ fontSize: '0.62rem', color: 'var(--accent-amber)', marginTop: '0.3rem', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
                           <Award size={12} color="var(--accent-amber)" />

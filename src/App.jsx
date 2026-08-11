@@ -986,13 +986,31 @@ function App() {
                         userNotifications.map(n => (
                           <div 
                             key={n.id} 
+                            onClick={() => {
+                              setNotifications(prev => prev.map(item => item.id === n.id ? { ...item, read: true } : item));
+                              setIsNotificationOpen(false);
+                              const title = (n.title || '').toLowerCase();
+                              const msg = (n.message || '').toLowerCase();
+                              let targetTab = 'inventory';
+                              if (title.includes('invoice') || msg.includes('invoice') || title.includes('verify')) {
+                                targetTab = 'verify';
+                              } else if (title.includes('quote') || title.includes('quotation') || msg.includes('quotation')) {
+                                targetTab = 'quotes_audit';
+                              } else if (title.includes('stock') || title.includes('inventory') || msg.includes('stock')) {
+                                targetTab = 'inventory';
+                              }
+                              window.dispatchEvent(new CustomEvent('mg_change_admin_tab', { detail: targetTab }));
+                            }}
                             style={{ 
                               padding: '0.65rem', 
                               borderRadius: '8px', 
                               background: n.read ? 'rgba(255,255,255,0.02)' : 'rgba(14, 165, 233, 0.08)',
                               borderLeft: `3px solid ${n.type === 'success' ? 'var(--accent-emerald)' : n.type === 'warning' ? 'var(--accent-amber)' : 'var(--accent-cyan)'}`,
-                              fontSize: '0.78rem'
+                              fontSize: '0.78rem',
+                              cursor: 'pointer',
+                              transition: 'background 0.15s ease'
                             }}
+                            className="notification-item-hover"
                           >
                             <div style={{ display: 'flex', justifyContent: 'space-between', fontWeight: 700, color: 'var(--text-primary)', marginBottom: '0.15rem' }}>
                               <span>{n.title}</span>
@@ -1006,6 +1024,7 @@ function App() {
                           </div>
                         ))
                       )}
+
                     </div>
                   </div>
                 )}
