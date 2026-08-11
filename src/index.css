@@ -1343,30 +1343,32 @@ h1, h2, h3, h4, h5, h6 {
   border-radius: var(--radius-lg);
   position: sticky;
   top: 5.5rem;
+  z-index: 50;
   max-height: calc(100vh - 6.5rem);
   overflow-y: auto;
   scrollbar-width: none;
 }
 
-
 .sidebar-nav-btn {
   display: flex;
   align-items: center;
-  gap: 0.6rem;
+  gap: 0.65rem;
   width: 100%;
   text-align: left;
   background: transparent;
   border: none;
   color: var(--text-secondary);
   font-family: var(--font-heading);
-  font-size: 0.9rem;
+  font-size: 0.88rem;
   font-weight: 600;
   padding: 0.65rem 0.85rem;
-  border-radius: var(--radius-sm);
+  border-radius: var(--radius-md);
   cursor: pointer;
   transition: var(--transition-smooth);
   outline: none;
+  white-space: nowrap;
 }
+
 
 .sidebar-nav-btn:hover {
   background: rgba(255, 255, 255, 0.03);
