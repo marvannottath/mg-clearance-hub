@@ -2434,8 +2434,9 @@ function ExecutiveWorkspace({ products = [], activeExecutive = {}, db = {}, onUp
           <div className="panel-tabs">
             <button className={`panel-tab ${activePortalTab === 'offers' ? 'active' : ''}`} onClick={() => setActivePortalTab('offers')}>
               <Award size={14} style={{ marginRight: '0.25rem' }} />
-              🔥 Showroom Offers & Promotions
+              Showroom Offers & Promotions
             </button>
+
             <button className={`panel-tab ${activePortalTab === 'dashboard' ? 'active' : ''}`} onClick={() => setActivePortalTab('dashboard')}>
               <Bell size={14} style={{ marginRight: '0.25rem' }} />
               Overview Dashboard
@@ -3103,7 +3104,7 @@ function ExecutiveWorkspace({ products = [], activeExecutive = {}, db = {}, onUp
                                     <div>
                                       <div style={{ fontWeight: 700, color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '0.4rem', fontSize: '0.85rem' }}>
                                         {p.name}
-                                        {isWeeklySpecial && <span className="badge badge-warning" style={{ fontSize: '0.55rem', padding: '0.05rem 0.3rem' }}>⚡ Offer</span>}
+                                        {isWeeklySpecial && <span className="badge badge-warning" style={{ fontSize: '0.55rem', padding: '0.05rem 0.3rem' }}>Offer</span>}
                                         {cartItem && <span className="badge badge-success" style={{ fontSize: '0.55rem', padding: '0.05rem 0.35rem' }}>In Quote ({cartItem.qty})</span>}
                                       </div>
                                       <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', marginTop: '0.1rem' }}>Code: <strong style={{ color: 'var(--accent-cyan)' }}>{p.id}</strong></div>
@@ -3113,11 +3114,11 @@ function ExecutiveWorkspace({ products = [], activeExecutive = {}, db = {}, onUp
                                 <td style={{ padding: '0.75rem 0.8rem' }}>
                                   <span className={`brand-pill ${p.brand.toLowerCase()}`} style={{ fontSize: '0.62rem', padding: '0.15rem 0.5rem' }}>{p.brand}</span>
                                   <div style={{ fontSize: '0.7rem', color: 'var(--accent-cyan)', marginTop: '0.2rem', fontWeight: 600 }}>
-                                    📍 {p.location || 'Showroom Floor'}
+                                    Loc: {p.location || 'Showroom Floor'}
                                   </div>
                                   {p.division === 'Tiles' && (
                                     <div style={{ fontSize: '0.68rem', color: 'var(--text-secondary)', marginTop: '0.15rem' }}>
-                                      <span>📏 {p.size || '60x120 cm'}</span> • <span>✨ {p.finishing || 'Soft'}</span> • <span style={{ color: 'var(--accent-emerald)', fontWeight: 700 }}>📐 {p.coverageSqFt || '15.5'} Sq.Ft/Box</span>
+                                      <span>Size: {p.size || '60x120 cm'}</span> • <span>Finish: {p.finishing || 'Soft'}</span> • <span style={{ color: 'var(--accent-emerald)', fontWeight: 700 }}>Coverage: {p.coverageSqFt || '15.5'} Sq.Ft/Box</span>
                                     </div>
                                   )}
                                 </td>
@@ -3349,11 +3350,11 @@ function ExecutiveWorkspace({ products = [], activeExecutive = {}, db = {}, onUp
                             <div style={{ fontSize: '0.85rem', fontWeight: 600, textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap' }} title={item.name}>{item.name}</div>
                             <span style={{ fontSize: '0.65rem', color: 'var(--text-muted)' }}>{item.brand} ({item.id})</span>
                             <span style={{ fontSize: '0.65rem', color: 'var(--accent-cyan)', fontWeight: 'bold', marginLeft: '0.5rem', background: 'rgba(6,182,212,0.05)', padding: '1px 4px', borderRadius: '3px' }}>
-                              💰 Comm: {formatRupee(getProductIncentiveAmount(item, item.qty, db.brands || []))}
+                              Inc: {formatRupee(getProductIncentiveAmount(item, item.qty, db.brands || []))}
                             </span>
                             {item.division === 'Tiles' && (
                               <div style={{ fontSize: '0.65rem', color: 'var(--text-secondary)', marginTop: '0.1rem' }}>
-                                📏 {item.size || 'N/A'} | ✨ {item.finishing || 'N/A'} | 📍 Loc: {item.location || 'N/A'}
+                                Size: {item.size || 'N/A'} | Finish: {item.finishing || 'N/A'} | Loc: {item.location || 'N/A'}
                               </div>
                             )}
                           </div>

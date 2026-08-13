@@ -195,14 +195,15 @@ function CheckerWorkspace({ currentUser, db, onUpdateDb }) {
             onClick={() => setFilter('UNBILLED')}
             style={{ fontSize: '0.8rem', padding: '0.4rem 0.85rem' }}
           >
-            ⚡ Pending Salesforce Entry ({quotations.filter(q => q.status === 'draft' && !q.invoiceNo).length})
+            Pending Salesforce Entry ({quotations.filter(q => q.status === 'draft' && !q.invoiceNo).length})
           </button>
           <button 
             className={`btn ${filter === 'BILLED' ? 'btn-primary' : 'btn-secondary'}`}
             onClick={() => setFilter('BILLED')}
             style={{ fontSize: '0.8rem', padding: '0.4rem 0.85rem' }}
           >
-            ✅ Billed / Under Verification ({quotations.filter(q => q.status === 'pending_verification' || q.status === 'verified').length})
+            Billed / Under Verification ({quotations.filter(q => q.status === 'pending_verification' || q.status === 'verified').length})
+
           </button>
           <button 
             className={`btn ${filter === 'ALL' ? 'btn-primary' : 'btn-secondary'}`}

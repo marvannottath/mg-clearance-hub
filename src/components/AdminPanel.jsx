@@ -3624,7 +3624,8 @@ function AdminPanel({
                   <div className="glass-panel" style={{ padding: '1rem', borderLeft: '4px solid var(--accent-emerald)' }}>
                     <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>SYSTEM AUDIT STATUS</div>
                     <div style={{ fontSize: '1.1rem', fontWeight: 800, color: 'var(--accent-emerald)', marginTop: '0.2rem' }}>
-                      {criticalCount === 0 ? '🟢 Operational' : '🔴 Action Needed'}
+                      {criticalCount === 0 ? 'Operational' : 'Action Needed'}
+
                     </div>
                   </div>
                 </div>
