@@ -1614,12 +1614,12 @@ function ExecutiveWorkspace({ products = [], activeExecutive = {}, db = {}, onUp
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.6rem' }}>
                       <span className={`brand-pill ${p.brand.toLowerCase()}`} style={{ fontSize: '0.6rem' }}>{p.brand}</span>
                       <div style={{ display: 'flex', gap: '0.35rem', alignItems: 'center' }}>
-                        {isWeeklyOffer && <span className="badge badge-warning" style={{ fontSize: '0.5rem', padding: '0.08rem 0.3rem' }}>⚡ Special Offer</span>}
-                        {cartItem && <span className="badge badge-success" style={{ fontSize: '0.5rem', padding: '0.08rem 0.3rem' }}>✓ In Quote</span>}
+                        {isWeeklyOffer && <span className="badge badge-warning" style={{ fontSize: '0.5rem', padding: '0.08rem 0.3rem' }}>Special Offer</span>}
                         <span style={{ fontSize: '0.65rem', color: p.stock > 0 ? 'var(--accent-emerald)' : 'var(--accent-rose)', fontWeight: 600 }}>
                           {p.stock > 0 ? `${p.stock} pcs` : 'Out of Stock'}
                         </span>
                       </div>
+
                     </div>
                     
                     {/* Image + Product Info Row */}
@@ -3131,7 +3131,6 @@ function ExecutiveWorkspace({ products = [], activeExecutive = {}, db = {}, onUp
                                       <div style={{ fontWeight: 700, color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '0.4rem', fontSize: '0.85rem' }}>
                                         {p.name}
                                         {isWeeklySpecial && <span className="badge badge-warning" style={{ fontSize: '0.55rem', padding: '0.05rem 0.3rem' }}>Offer</span>}
-                                        {cartItem && <span className="badge badge-success" style={{ fontSize: '0.55rem', padding: '0.05rem 0.35rem' }}>In Quote ({cartItem.qty})</span>}
                                       </div>
                                       <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', marginTop: '0.1rem' }}>Code: <strong style={{ color: 'var(--accent-cyan)' }}>{p.id}</strong></div>
                                     </div>
@@ -3427,7 +3426,7 @@ function ExecutiveWorkspace({ products = [], activeExecutive = {}, db = {}, onUp
                               <button className="btn btn-secondary" style={{ padding: '0.15rem 0.4rem', height: '26px' }} onClick={() => updateCartQty(item.id, item.qty - 1, item.stock)}>
                                 <Minus size={10} />
                               </button>
-                              <span style={{ fontSize: '0.85rem', fontWeight: 800, minWidth: '24px', textAlign: 'center', color: 'var(--text-primary)' }}>{item.qty}</span>
+                              <span style={{ fontSize: '0.85rem', fontWeight: 800, minWidth: '24px', textAlign: 'center', color: 'var(--text-primary)' }}>{item.qty} {item.division === 'Tiles' ? 'Box' : ''}</span>
                               <button className="btn btn-secondary" style={{ padding: '0.15rem 0.4rem', height: '26px' }} onClick={() => updateCartQty(item.id, item.qty + 1, item.stock)}>
                                 <Plus size={10} />
                               </button>
@@ -3440,10 +3439,32 @@ function ExecutiveWorkspace({ products = [], activeExecutive = {}, db = {}, onUp
                             </div>
                           </div>
 
+                          {/* Dynamic Tile Area & Sq.Ft Calculations */}
+                          {item.division === 'Tiles' && (
+                            <div style={{ background: 'rgba(16,185,129,0.06)', padding: '0.5rem 0.65rem', borderRadius: '6px', border: '1px solid rgba(16,185,129,0.25)', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.4rem 0.6rem' }}>
+                              <div>
+                                <span style={{ fontSize: '0.6rem', color: 'var(--text-muted)', display: 'block' }}>Box Quantity:</span>
+                                <span style={{ fontSize: '0.8rem', fontWeight: 800, color: 'var(--text-primary)' }}>{item.qty} Boxes</span>
+                              </div>
+                              <div>
+                                <span style={{ fontSize: '0.6rem', color: 'var(--text-muted)', display: 'block' }}>Total Area (Sq.Ft):</span>
+                                <span style={{ fontSize: '0.82rem', fontWeight: 900, color: 'var(--accent-emerald)' }}>{(item.qty * (item.coverageSqFt || 15.5)).toFixed(1)} Sq.Ft</span>
+                              </div>
+                              <div>
+                                <span style={{ fontSize: '0.6rem', color: 'var(--text-muted)', display: 'block' }}>Area (Sq.Mtr):</span>
+                                <span style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--accent-cyan)' }}>{((item.qty * (item.coverageSqFt || 15.5)) / 10.764).toFixed(2)} Sqm</span>
+                              </div>
+                              <div>
+                                <span style={{ fontSize: '0.6rem', color: 'var(--text-muted)', display: 'block' }}>Rate / Sq.Ft:</span>
+                                <span style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--accent-amber)' }}>₹{(itemUnitPrice / (item.coverageSqFt || 15.5)).toFixed(2)}/Sq.Ft</span>
+                              </div>
+                            </div>
+                          )}
+
                           {/* Quoted Unit Price Adjustment Input */}
                           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '0.5rem', background: 'rgba(14,165,233,0.06)', padding: '0.45rem 0.65rem', borderRadius: '6px', border: '1px dashed var(--accent-cyan)' }}>
                             <div style={{ display: 'flex', flexDirection: 'column' }}>
-                              <span style={{ fontSize: '0.68rem', color: 'var(--accent-cyan)', fontWeight: 700 }}>Quoted Price (₹/unit):</span>
+                              <span style={{ fontSize: '0.68rem', color: 'var(--accent-cyan)', fontWeight: 700 }}>Quoted Price ({item.division === 'Tiles' ? '₹/Box' : '₹/Unit'}):</span>
                               <span style={{ fontSize: '0.58rem', color: 'var(--text-muted)' }}>MSP: {formatRupee(msp)} | MRP: {formatRupee(item.mrp)}</span>
                             </div>
                             <input 
@@ -3456,6 +3477,7 @@ function ExecutiveWorkspace({ products = [], activeExecutive = {}, db = {}, onUp
                               max={item.mrp}
                             />
                           </div>
+
 
                           {/* Dynamic Executive Incentive Display */}
                           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.68rem', color: 'var(--accent-amber)', background: 'rgba(245,158,11,0.08)', padding: '0.35rem 0.5rem', borderRadius: '6px', fontWeight: 700 }}>
