@@ -524,11 +524,30 @@ function ExecutiveWorkspace({ products = [], activeExecutive = {}, db = {}, onUp
     }
   };
 
-  // Cart Calculations
-  const cartTotalPaid = cart.reduce((sum, item) => sum + (getProductFinalPrice(item) * item.qty), 0);
+  // Cart Item Price & Calculations
+  const getCartItemUnitPrice = (item) => {
+    if (!item) return 0;
+    if (item.quotedPrice !== undefined && item.quotedPrice !== null && !isNaN(Number(item.quotedPrice))) {
+      return Number(item.quotedPrice);
+    }
+    return getProductFinalPrice(item);
+  };
+
+  const updateCartItemPrice = (productId, newPrice) => {
+    const numVal = Number(newPrice);
+    setCart(prev => prev.map(item => {
+      if (item.id === productId) {
+        return { ...item, quotedPrice: isNaN(numVal) ? getProductFinalPrice(item) : numVal };
+      }
+      return item;
+    }));
+  };
+
+  const cartTotalPaid = cart.reduce((sum, item) => sum + (getCartItemUnitPrice(item) * item.qty), 0);
   const cartTotalMrp = cart.reduce((sum, item) => sum + (item.mrp * item.qty), 0);
   const totalSavings = cartTotalMrp - cartTotalPaid;
   const totalItemsCount = cart.reduce((sum, item) => sum + item.qty, 0);
+
 
   // Generate WhatsApp compressed Base64 URL link
   // Generate WhatsApp clean short URL link
@@ -644,29 +663,36 @@ function ExecutiveWorkspace({ products = [], activeExecutive = {}, db = {}, onUp
         customerMobile: customerMobile || 'N/A',
         executiveId: activeExecutive.id,
         executiveName: activeExecutive.name,
-        items: cart.map(item => ({
+      items: cart.map(item => {
+        const itemPrice = getCartItemUnitPrice(item);
+        return {
           id: item.id,
           productId: item.id,
           name: item.name,
           brand: item.brand,
           qty: item.qty,
           mrp: item.mrp,
-          specialPrice: getProductFinalPrice(item),
+          specialPrice: itemPrice,
+          quotedPrice: itemPrice,
+          unitPrice: itemPrice,
+          pricePaid: itemPrice,
           incentivePct: getProductIncentivePct(item, db.brands),
           division: item.division || 'Bathing',
           size: item.division === 'Tiles' ? item.size : undefined,
           finishing: item.division === 'Tiles' ? item.finishing : undefined,
           location: item.division === 'Tiles' ? item.location : undefined
-        })),
-        status: 'draft',
-        date: new Date().toISOString(),
-        invoiceNo: '',
-        uploadedBill: '',
-        incentiveAmount: cart.reduce((sum, item) => sum + getProductIncentiveAmount(item, item.qty, db.brands), 0)
-      };
-      updatedQuotes = [...(db.quotations || []), newQuote];
-      showToast(`Quotation ${quoteId} saved as draft.`);
-    }
+        };
+      }),
+      status: 'draft',
+      date: new Date().toISOString(),
+      invoiceNo: '',
+      uploadedBill: '',
+      incentiveAmount: cart.reduce((sum, item) => sum + getProductIncentiveAmount(item, item.qty, db.brands), 0)
+    };
+    updatedQuotes = [...(db.quotations || []), newQuote];
+    showToast(`Quotation ${quoteId} saved as draft.`);
+  }
+
 
     onUpdateDb({ ...db, quotations: updatedQuotes });
     setIsSessionActive(false);
@@ -3336,63 +3362,111 @@ function ExecutiveWorkspace({ products = [], activeExecutive = {}, db = {}, onUp
                 </div>
               ) : (
                 <div>
-                  <div className="cart-list" style={{ maxHeight: '280px', overflowY: 'auto', marginBottom: '1rem' }}>
+                  <div className="cart-list" style={{ maxHeight: '340px', overflowY: 'auto', marginBottom: '1rem', paddingRight: '0.2rem' }}>
                     {cart.map(item => {
-                      const finalPrice = getProductFinalPrice(item);
+                      const itemUnitPrice = getCartItemUnitPrice(item);
+                      const itemLineTotal = itemUnitPrice * item.qty;
+                      const itemIncentive = getProductIncentiveAmount(item, item.qty, db.brands || []);
+                      const msp = Number(item.specialPrice || item.minSellingPrice || Math.round(item.mrp * 0.6));
+
                       return (
-                        <div key={item.id} className="cart-item" style={{ display: 'grid', gridTemplateColumns: 'auto 1fr auto auto auto', gap: '0.5rem', alignItems: 'center', padding: '0.5rem 0', borderBottom: '1px solid rgba(255,255,255,0.02)' }}>
-                          {item.image ? (
-                            <img src={item.image} alt={item.name} style={{ width: '32px', height: '32px', objectFit: 'cover', borderRadius: '4px' }} />
-                          ) : (
-                            <div className="brand-pill" style={{ width: '32px', height: '32px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.6rem', padding: 0 }}>{item.brand[0]}</div>
-                          )}
-                          <div style={{ minWidth: 0 }}>
-                            <div style={{ fontSize: '0.85rem', fontWeight: 600, textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap' }} title={item.name}>{item.name}</div>
-                            <span style={{ fontSize: '0.65rem', color: 'var(--text-muted)' }}>{item.brand} ({item.id})</span>
-                            <span style={{ fontSize: '0.65rem', color: 'var(--accent-cyan)', fontWeight: 'bold', marginLeft: '0.5rem', background: 'rgba(6,182,212,0.05)', padding: '1px 4px', borderRadius: '3px' }}>
-                              Inc: {formatRupee(getProductIncentiveAmount(item, item.qty, db.brands || []))}
-                            </span>
-                            {item.division === 'Tiles' && (
-                              <div style={{ fontSize: '0.65rem', color: 'var(--text-secondary)', marginTop: '0.1rem' }}>
-                                Size: {item.size || 'N/A'} | Finish: {item.finishing || 'N/A'} | Loc: {item.location || 'N/A'}
+                        <div 
+                          key={item.id} 
+                          className="cart-item-card" 
+                          style={{
+                            padding: '0.75rem',
+                            marginBottom: '0.75rem',
+                            background: 'var(--bg-card)',
+                            borderRadius: '10px',
+                            border: '1px solid var(--border-color)',
+                            boxShadow: '0 2px 8px rgba(0,0,0,0.15)',
+                            display: 'flex',
+                            flexDirection: 'column',
+                            gap: '0.55rem'
+                          }}
+                        >
+                          {/* Top Row: Title + Code + Delete */}
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '0.5rem' }}>
+                            <div style={{ minWidth: 0, flex: 1 }}>
+                              <div style={{ fontSize: '0.82rem', fontWeight: 700, color: 'var(--text-primary)', lineHeight: 1.3, wordBreak: 'break-word' }}>
+                                {item.name}
                               </div>
-                            )}
-                          </div>
-                          
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.1rem' }}>
-                            <button className="btn btn-secondary" style={{ padding: '0.1rem 0.25rem', height: '24px' }} onClick={() => updateCartQty(item.id, item.qty - 1, item.stock)}>
-                              <Minus size={8} />
-                            </button>
-                            <span style={{ fontSize: '0.85rem', fontWeight: 600, width: '22px', textAlign: 'center' }}>{item.qty}</span>
-                            <button className="btn btn-secondary" style={{ padding: '0.1rem 0.25rem', height: '24px' }} onClick={() => updateCartQty(item.id, item.qty + 1, item.stock)}>
-                              <Plus size={8} />
+                              <div style={{ fontSize: '0.68rem', color: 'var(--text-muted)', marginTop: '0.15rem' }}>
+                                {item.brand} • Code: <strong style={{ color: 'var(--accent-cyan)' }}>{item.id}</strong>
+                              </div>
+                              {item.division === 'Tiles' && (
+                                <div style={{ fontSize: '0.65rem', color: 'var(--text-secondary)', marginTop: '0.1rem' }}>
+                                  Size: {item.size || 'N/A'} | Finish: {item.finishing || 'N/A'} | Loc: {item.location || 'N/A'}
+                                </div>
+                              )}
+                            </div>
+
+                            <button 
+                              onClick={() => removeFromCart(item.id)}
+                              style={{ 
+                                background: 'rgba(244,63,94,0.1)', 
+                                border: 'none', 
+                                color: 'var(--accent-rose)', 
+                                cursor: 'pointer', 
+                                padding: '0.3rem', 
+                                borderRadius: '6px',
+                                flexShrink: 0,
+                                display: 'flex',
+                                alignItems: 'center'
+                              }} 
+                              title="Remove item from quote"
+                            >
+                              <X size={14} />
                             </button>
                           </div>
 
-                          <div style={{ textAlign: 'right', minWidth: '70px' }}>
-                            <div style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--accent-emerald)' }}>{formatRupee(finalPrice * item.qty)}</div>
+                          {/* Middle Row: Quantity Controls & Line Total */}
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'rgba(0,0,0,0.2)', padding: '0.4rem 0.6rem', borderRadius: '6px' }}>
+                            {/* Quantity Selector */}
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+                              <button className="btn btn-secondary" style={{ padding: '0.15rem 0.4rem', height: '26px' }} onClick={() => updateCartQty(item.id, item.qty - 1, item.stock)}>
+                                <Minus size={10} />
+                              </button>
+                              <span style={{ fontSize: '0.85rem', fontWeight: 800, minWidth: '24px', textAlign: 'center', color: 'var(--text-primary)' }}>{item.qty}</span>
+                              <button className="btn btn-secondary" style={{ padding: '0.15rem 0.4rem', height: '26px' }} onClick={() => updateCartQty(item.id, item.qty + 1, item.stock)}>
+                                <Plus size={10} />
+                              </button>
+                            </div>
+
+                            {/* Line Total */}
+                            <div style={{ textAlign: 'right' }}>
+                              <span style={{ fontSize: '0.62rem', color: 'var(--text-muted)', display: 'block' }}>Line Total</span>
+                              <span style={{ fontSize: '0.95rem', fontWeight: 900, color: 'var(--accent-emerald)' }}>{formatRupee(itemLineTotal)}</span>
+                            </div>
                           </div>
 
-                          <button 
-                            className="btn" 
-                            style={{ 
-                              padding: '0.2rem', 
-                              background: 'transparent', 
-                              border: 'none', 
-                              color: 'var(--accent-rose)', 
-                              cursor: 'pointer',
-                              display: 'flex',
-                              alignItems: 'center'
-                            }} 
-                            onClick={() => removeFromCart(item.id)}
-                            title="Remove item"
-                          >
-                            <X size={16} />
-                          </button>
+                          {/* Quoted Unit Price Adjustment Input */}
+                          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '0.5rem', background: 'rgba(14,165,233,0.06)', padding: '0.45rem 0.65rem', borderRadius: '6px', border: '1px dashed var(--accent-cyan)' }}>
+                            <div style={{ display: 'flex', flexDirection: 'column' }}>
+                              <span style={{ fontSize: '0.68rem', color: 'var(--accent-cyan)', fontWeight: 700 }}>Quoted Price (₹/unit):</span>
+                              <span style={{ fontSize: '0.58rem', color: 'var(--text-muted)' }}>MSP: {formatRupee(msp)} | MRP: {formatRupee(item.mrp)}</span>
+                            </div>
+                            <input 
+                              type="number"
+                              className="form-input"
+                              value={item.quotedPrice !== undefined ? item.quotedPrice : getProductFinalPrice(item)}
+                              onChange={(e) => updateCartItemPrice(item.id, e.target.value)}
+                              style={{ width: '85px', height: '28px', padding: '0.2rem 0.4rem', fontSize: '0.82rem', fontWeight: 800, color: 'var(--accent-emerald)', textAlign: 'right' }}
+                              min={msp}
+                              max={item.mrp}
+                            />
+                          </div>
+
+                          {/* Dynamic Executive Incentive Display */}
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.68rem', color: 'var(--accent-amber)', background: 'rgba(245,158,11,0.08)', padding: '0.35rem 0.5rem', borderRadius: '6px', fontWeight: 700 }}>
+                            <span>Executive Incentive:</span>
+                            <span style={{ fontSize: '0.78rem', fontWeight: 900 }}>{formatRupee(itemIncentive)} ({formatRupee(Math.round(itemIncentive / item.qty))}/unit)</span>
+                          </div>
                         </div>
                       );
                     })}
                   </div>
+
                   <div className="cart-total-section" style={{ background: 'rgba(255,255,255,0.01)', border: '1px solid var(--border-color)', padding: '0.75rem', borderRadius: '8px', marginBottom: '1rem' }}>
                     <div className="cart-total-row" style={{ fontSize: '0.75rem', display: 'flex', justifyContent: 'space-between', marginBottom: '0.25rem' }}>
                       <span>MRP Total:</span>
