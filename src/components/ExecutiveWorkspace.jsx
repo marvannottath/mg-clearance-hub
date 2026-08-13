@@ -3426,7 +3426,7 @@ function ExecutiveWorkspace({ products = [], activeExecutive = {}, db = {}, onUp
                               <button className="btn btn-secondary" style={{ padding: '0.15rem 0.4rem', height: '26px' }} onClick={() => updateCartQty(item.id, item.qty - 1, item.stock)}>
                                 <Minus size={10} />
                               </button>
-                              <span style={{ fontSize: '0.85rem', fontWeight: 800, minWidth: '24px', textAlign: 'center', color: 'var(--text-primary)' }}>{item.qty} {item.division === 'Tiles' ? 'Box' : ''}</span>
+                              <span style={{ fontSize: '0.85rem', fontWeight: 800, minWidth: '24px', textAlign: 'center', color: 'var(--text-primary)' }}>{item.qty} {item.division === 'Tiles' ? 'Box' : 'Pcs'}</span>
                               <button className="btn btn-secondary" style={{ padding: '0.15rem 0.4rem', height: '26px' }} onClick={() => updateCartQty(item.id, item.qty + 1, item.stock)}>
                                 <Plus size={10} />
                               </button>
@@ -3464,9 +3464,10 @@ function ExecutiveWorkspace({ products = [], activeExecutive = {}, db = {}, onUp
                           {/* Quoted Unit Price Adjustment Input */}
                           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '0.5rem', background: 'rgba(14,165,233,0.06)', padding: '0.45rem 0.65rem', borderRadius: '6px', border: '1px dashed var(--accent-cyan)' }}>
                             <div style={{ display: 'flex', flexDirection: 'column' }}>
-                              <span style={{ fontSize: '0.68rem', color: 'var(--accent-cyan)', fontWeight: 700 }}>Quoted Price ({item.division === 'Tiles' ? '₹/Box' : '₹/Unit'}):</span>
+                              <span style={{ fontSize: '0.68rem', color: 'var(--accent-cyan)', fontWeight: 700 }}>Quoted Price ({item.division === 'Tiles' ? '₹/Box' : '₹/Pcs'}):</span>
                               <span style={{ fontSize: '0.58rem', color: 'var(--text-muted)' }}>MSP: {formatRupee(msp)} | MRP: {formatRupee(item.mrp)}</span>
                             </div>
+
                             <input 
                               type="number"
                               className="form-input"
