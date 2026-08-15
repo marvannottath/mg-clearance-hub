@@ -3454,19 +3454,27 @@ function ExecutiveWorkspace({ products = [], activeExecutive = {}, db = {}, onUp
                             </button>
                           </div>
 
-                          {/* Middle Row: Quantity Controls & Line Total */}
-                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'rgba(0,0,0,0.2)', padding: '0.4rem 0.6rem', borderRadius: '6px' }}>
-                            {/* Quantity Selector */}
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
-                              <button className="btn btn-secondary" style={{ padding: '0.15rem 0.4rem', height: '26px' }} onClick={() => updateCartQty(item.id, item.qty - 1, item.stock)}>
-                                <Minus size={10} />
-                              </button>
-                              <span style={{ fontSize: '0.82rem', fontWeight: 800, minWidth: '24px', textAlign: 'center', color: 'var(--text-primary)' }}>
-                                {item.qty} {item.division === 'Tiles' ? `Box (${item.qty * (item.pcsPerBox || 2)} Pcs)` : 'Pcs'}
+                          {/* Middle Row: Direct Typeable Quantity Input & Line Total */}
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'rgba(0,0,0,0.2)', padding: '0.45rem 0.65rem', borderRadius: '6px' }}>
+                            {/* Typeable Quantity Field */}
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                              <span style={{ fontSize: '0.7rem', color: 'var(--text-secondary)', fontWeight: 700 }}>Qty:</span>
+                              <input 
+                                type="number"
+                                className="form-input"
+                                value={item.qty}
+                                onChange={(e) => updateCartQty(item.id, parseInt(e.target.value) || 1, item.stock)}
+                                onBlur={(e) => {
+                                  const val = parseInt(e.target.value);
+                                  if (isNaN(val) || val < 1) updateCartQty(item.id, 1, item.stock);
+                                }}
+                                style={{ width: '60px', height: '28px', padding: '0.2rem 0.4rem', fontSize: '0.85rem', fontWeight: 800, textAlign: 'center', color: 'var(--text-primary)' }}
+                                min="1"
+                                max={item.stock}
+                              />
+                              <span style={{ fontSize: '0.72rem', fontWeight: 700, color: 'var(--accent-cyan)' }}>
+                                {item.division === 'Tiles' ? 'Boxes' : 'Pcs'}
                               </span>
-                              <button className="btn btn-secondary" style={{ padding: '0.15rem 0.4rem', height: '26px' }} onClick={() => updateCartQty(item.id, item.qty + 1, item.stock)}>
-                                <Plus size={10} />
-                              </button>
                             </div>
 
                             {/* Line Total */}
@@ -3476,27 +3484,6 @@ function ExecutiveWorkspace({ products = [], activeExecutive = {}, db = {}, onUp
                             </div>
                           </div>
 
-                          {/* Dynamic Tile Area & Sq.Ft Calculations */}
-                          {item.division === 'Tiles' && (
-                            <div style={{ background: 'rgba(16,185,129,0.06)', padding: '0.5rem 0.65rem', borderRadius: '6px', border: '1px solid rgba(16,185,129,0.25)', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.4rem 0.6rem' }}>
-                              <div>
-                                <span style={{ fontSize: '0.6rem', color: 'var(--text-muted)', display: 'block' }}>Tile Count (Pieces):</span>
-                                <span style={{ fontSize: '0.82rem', fontWeight: 900, color: 'var(--accent-cyan)' }}>{item.qty * (item.pcsPerBox || 2)} Pcs Tile</span>
-                              </div>
-                              <div>
-                                <span style={{ fontSize: '0.6rem', color: 'var(--text-muted)', display: 'block' }}>Box Quantity:</span>
-                                <span style={{ fontSize: '0.8rem', fontWeight: 800, color: 'var(--text-primary)' }}>{item.qty} Boxes</span>
-                              </div>
-                              <div>
-                                <span style={{ fontSize: '0.6rem', color: 'var(--text-muted)', display: 'block' }}>Total Area (Sq.Ft):</span>
-                                <span style={{ fontSize: '0.82rem', fontWeight: 900, color: 'var(--accent-emerald)' }}>{(item.qty * (item.coverageSqFt || 15.5)).toFixed(1)} Sq.Ft</span>
-                              </div>
-                              <div>
-                                <span style={{ fontSize: '0.6rem', color: 'var(--text-muted)', display: 'block' }}>Rate / Sq.Ft:</span>
-                                <span style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--accent-amber)' }}>₹{(itemUnitPrice / (item.coverageSqFt || 15.5)).toFixed(2)}/Sq.Ft</span>
-                              </div>
-                            </div>
-                          )}
 
 
                           {/* Quoted Unit Price Adjustment Input */}
