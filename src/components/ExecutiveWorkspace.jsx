@@ -5,8 +5,9 @@ import {
   Send, Printer, CheckCircle, PlayCircle, XCircle, X,
   Award, TrendingUp, IndianRupee, Bell, Volume2, 
   Wallet, History, FileText, RefreshCw, BarChart2, Sliders,
-  ArrowLeft, Tag, Package, Sparkles, Droplets, Layers, Grid, Percent, Filter, CheckCircle2, Zap, Box, Camera
+  ArrowLeft, Tag, Package, Sparkles, Droplets, Layers, Grid, Percent, Filter, CheckCircle2, Zap, Box, Camera, Eye
 } from 'lucide-react';
+
 
 import { 
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell 
@@ -1095,7 +1096,8 @@ function ExecutiveWorkspace({ products = [], activeExecutive = {}, db = {}, onUp
                         <div style={{ fontSize: '0.65rem', color: 'var(--text-muted)', marginTop: '0.1rem' }}>Code: <strong style={{ color: 'var(--accent-cyan)' }}>{p.id}</strong> | Stock: {p.stock}</div>
                         
                         {/* 3-Tier Price Box: MRP -> Regular Price -> Special Offer Rate */}
-                        <div style={{ marginTop: '0.35rem', background: 'rgba(0,0,0,0.2)', padding: '0.45rem', borderRadius: '6px' }}>
+                        <div style={{ marginTop: '0.35rem', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', padding: '0.45rem', borderRadius: '6px' }}>
+
                           <div style={{ display: 'flex', gap: '0.5rem', fontSize: '0.62rem', color: 'var(--text-muted)', marginBottom: '0.15rem' }}>
                             <span>MRP: <s style={{ opacity: 0.7 }}>{formatRupee(p.mrp)}</s></span>
                             <span>Regular: <s style={{ opacity: 0.7 }}>{formatRupee(p.mgPrice || Math.round(p.mrp * 0.8))}</s></span>
@@ -1175,7 +1177,8 @@ function ExecutiveWorkspace({ products = [], activeExecutive = {}, db = {}, onUp
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.75rem' }}>
             <div>
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.25rem' }}>
-                <span className="badge badge-warning" style={{ fontSize: '0.7rem', fontWeight: 800 }}>🔥 Active Showroom Offers</span>
+                <span className="badge badge-warning" style={{ fontSize: '0.7rem', fontWeight: 800 }}>Active Showroom Offers</span>
+
                 <span style={{ fontSize: '0.7rem', color: 'var(--accent-cyan)', fontWeight: 700 }}>Priority: Bathing Division</span>
               </div>
               <h2 style={{ fontSize: '1.25rem', fontWeight: 800, color: 'var(--text-primary)', margin: 0 }}>
@@ -1217,7 +1220,8 @@ function ExecutiveWorkspace({ products = [], activeExecutive = {}, db = {}, onUp
                 }}
                 onClick={() => setSelectedCatalogDivision('Tiles')}
               >
-                🧱 Tiles Division ({safeProducts.filter(p => p.division === 'Tiles').length})
+                Tiles Division ({safeProducts.filter(p => p.division === 'Tiles').length})
+
               </button>
             </div>
           </div>
@@ -1257,20 +1261,31 @@ function ExecutiveWorkspace({ products = [], activeExecutive = {}, db = {}, onUp
                     position: 'relative'
                   }}
                 >
-                  <div style={{ height: '56px', width: '100%', position: 'relative', overflow: 'hidden', background: '#1e293b' }}>
-                    <img 
-                      src={cat.image} 
-                      alt={cat.name}
-                      style={{ width: '100%', height: '100%', objectFit: 'cover', opacity: 0.85 }}
-                    />
-                    <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(15,23,42,0.9) 0%, transparent 60%)' }} />
-                    <span style={{ position: 'absolute', top: '4px', left: '4px', fontSize: '0.85rem' }}>{cat.icon}</span>
+                  <div style={{
+                    height: '56px', width: '100%', position: 'relative', overflow: 'hidden',
+                    background: isSelected 
+                      ? 'linear-gradient(135deg, rgba(6,182,212,0.25), rgba(16,185,129,0.25))' 
+                      : 'linear-gradient(135deg, rgba(255,255,255,0.04), rgba(255,255,255,0.08))',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justify: 'center'
+                  }}>
+                    {cat.image ? (
+                      <img 
+                        src={cat.image} 
+                        alt={cat.name}
+                        style={{ width: '100%', height: '100%', objectFit: 'cover', opacity: 0.5 }}
+                        onError={(e) => { e.target.style.display = 'none'; }}
+                      />
+                    ) : null}
+                    <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(15,23,42,0.85) 0%, transparent 70%)' }} />
                   </div>
-                  <div style={{ padding: '0.25rem 0.2rem', textAlign: 'center' }}>
-                    <div style={{ fontSize: '0.62rem', fontWeight: isSelected ? 800 : 600, color: isSelected ? 'var(--accent-cyan)' : 'var(--text-primary)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                  <div style={{ padding: '0.35rem 0.25rem', textAlign: 'center', background: isSelected ? 'rgba(6,182,212,0.1)' : 'var(--bg-card)' }}>
+                    <div style={{ fontSize: '0.68rem', fontWeight: isSelected ? 800 : 700, color: isSelected ? 'var(--accent-cyan)' : 'var(--text-primary)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                       {cat.name}
                     </div>
                   </div>
+
                 </div>
               );
             })}
@@ -1366,7 +1381,8 @@ function ExecutiveWorkspace({ products = [], activeExecutive = {}, db = {}, onUp
                     </div>
 
                     {/* 3-Tier Pricing Box: MRP -> Regular Selling Price -> Special Offer Rate */}
-                    <div style={{ background: 'rgba(0,0,0,0.25)', padding: '0.65rem', borderRadius: '8px', marginBottom: '0.75rem' }}>
+                    <div style={{ background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', padding: '0.65rem', borderRadius: '8px', marginBottom: '0.75rem' }}>
+
                       <div style={{ display: 'flex', gap: '0.75rem', fontSize: '0.65rem', color: 'var(--text-muted)', marginBottom: '0.2rem' }}>
                         <span>MRP: <s style={{ opacity: 0.7 }}>{formatRupee(p.mrp)}</s></span>
                         <span>Regular Price: <s style={{ opacity: 0.7 }}>{formatRupee(p.mgPrice || Math.round(p.mrp * 0.8))}</s></span>
@@ -1666,7 +1682,8 @@ function ExecutiveWorkspace({ products = [], activeExecutive = {}, db = {}, onUp
                         </div>
 
                         {/* 3-Tier Price Box: MRP -> NRP (Max Rate) -> MSP (Min Price) */}
-                        <div style={{ marginTop: '0.35rem', background: 'rgba(0,0,0,0.25)', padding: '0.5rem 0.65rem', borderRadius: '8px', border: '1px solid var(--border-color)' }}>
+                        <div style={{ marginTop: '0.35rem', background: 'var(--bg-secondary)', padding: '0.5rem 0.65rem', borderRadius: '8px', border: '1px solid var(--border-color)' }}>
+
                           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.68rem', color: 'var(--text-muted)', marginBottom: '0.25rem', flexWrap: 'wrap', gap: '0.4rem' }}>
                             <span>MRP: <s style={{ opacity: 0.75 }}>{formatRupee(p.mrp)}</s></span>
                             <span>NRP: <strong style={{ color: 'var(--accent-amber)' }}>{formatRupee(p.maxRate || p.mgPrice || Math.round(p.mrp * 0.85))}</strong></span>
@@ -3426,7 +3443,9 @@ function ExecutiveWorkspace({ products = [], activeExecutive = {}, db = {}, onUp
                               <button className="btn btn-secondary" style={{ padding: '0.15rem 0.4rem', height: '26px' }} onClick={() => updateCartQty(item.id, item.qty - 1, item.stock)}>
                                 <Minus size={10} />
                               </button>
-                              <span style={{ fontSize: '0.85rem', fontWeight: 800, minWidth: '24px', textAlign: 'center', color: 'var(--text-primary)' }}>{item.qty} {item.division === 'Tiles' ? 'Box' : 'Pcs'}</span>
+                              <span style={{ fontSize: '0.82rem', fontWeight: 800, minWidth: '24px', textAlign: 'center', color: 'var(--text-primary)' }}>
+                                {item.qty} {item.division === 'Tiles' ? `Box (${item.qty * (item.pcsPerBox || 2)} Pcs)` : 'Pcs'}
+                              </span>
                               <button className="btn btn-secondary" style={{ padding: '0.15rem 0.4rem', height: '26px' }} onClick={() => updateCartQty(item.id, item.qty + 1, item.stock)}>
                                 <Plus size={10} />
                               </button>
@@ -3443,6 +3462,10 @@ function ExecutiveWorkspace({ products = [], activeExecutive = {}, db = {}, onUp
                           {item.division === 'Tiles' && (
                             <div style={{ background: 'rgba(16,185,129,0.06)', padding: '0.5rem 0.65rem', borderRadius: '6px', border: '1px solid rgba(16,185,129,0.25)', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.4rem 0.6rem' }}>
                               <div>
+                                <span style={{ fontSize: '0.6rem', color: 'var(--text-muted)', display: 'block' }}>Tile Count (Pieces):</span>
+                                <span style={{ fontSize: '0.82rem', fontWeight: 900, color: 'var(--accent-cyan)' }}>{item.qty * (item.pcsPerBox || 2)} Pcs Tile</span>
+                              </div>
+                              <div>
                                 <span style={{ fontSize: '0.6rem', color: 'var(--text-muted)', display: 'block' }}>Box Quantity:</span>
                                 <span style={{ fontSize: '0.8rem', fontWeight: 800, color: 'var(--text-primary)' }}>{item.qty} Boxes</span>
                               </div>
@@ -3451,15 +3474,12 @@ function ExecutiveWorkspace({ products = [], activeExecutive = {}, db = {}, onUp
                                 <span style={{ fontSize: '0.82rem', fontWeight: 900, color: 'var(--accent-emerald)' }}>{(item.qty * (item.coverageSqFt || 15.5)).toFixed(1)} Sq.Ft</span>
                               </div>
                               <div>
-                                <span style={{ fontSize: '0.6rem', color: 'var(--text-muted)', display: 'block' }}>Area (Sq.Mtr):</span>
-                                <span style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--accent-cyan)' }}>{((item.qty * (item.coverageSqFt || 15.5)) / 10.764).toFixed(2)} Sqm</span>
-                              </div>
-                              <div>
                                 <span style={{ fontSize: '0.6rem', color: 'var(--text-muted)', display: 'block' }}>Rate / Sq.Ft:</span>
                                 <span style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--accent-amber)' }}>₹{(itemUnitPrice / (item.coverageSqFt || 15.5)).toFixed(2)}/Sq.Ft</span>
                               </div>
                             </div>
                           )}
+
 
                           {/* Quoted Unit Price Adjustment Input */}
                           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '0.5rem', background: 'rgba(14,165,233,0.06)', padding: '0.45rem 0.65rem', borderRadius: '6px', border: '1px dashed var(--accent-cyan)' }}>
