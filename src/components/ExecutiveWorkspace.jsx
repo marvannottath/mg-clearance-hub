@@ -200,7 +200,10 @@ function ExecutiveWorkspace({ products = [], activeExecutive = {}, db = {}, onUp
     if (!product) return 0;
     const qtyNum = Number(qty) || 1;
     const msp = Number(product.specialPrice || product.minSellingPrice || product.mrp || 0);
-    const quotedUnitPrice = product.unitPrice !== undefined ? Number(product.unitPrice) : (product.pricePaid !== undefined ? Number(product.pricePaid) : msp);
+    const quotedUnitPrice = product.quotedPrice !== undefined && product.quotedPrice !== null && !isNaN(Number(product.quotedPrice))
+      ? Number(product.quotedPrice)
+      : (product.unitPrice !== undefined ? Number(product.unitPrice) : (product.pricePaid !== undefined ? Number(product.pricePaid) : msp));
+
     
     // 1. Base Incentive Amount at MSP (from Brand rules or percentage)
     const brandObj = (brandsTable || []).find(b => b && b.name && b.name.toUpperCase() === (product.brand || '').toUpperCase());
