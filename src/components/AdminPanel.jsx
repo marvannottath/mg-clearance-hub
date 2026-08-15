@@ -1356,6 +1356,17 @@ function AdminPanel({
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
                   <button 
                     type="button"
+                    className={`sidebar-nav-btn ${activeTab === 'reports' ? 'active' : ''}`} 
+                    onClick={() => setActiveTab('reports')}
+                    title="Stock Analytics"
+                    style={{ justifyContent: isExpanded ? 'flex-start' : 'center', padding: isExpanded ? '0.65rem 0.85rem' : '0.65rem 0' }}
+                  >
+                    <BarChart2 size={18} style={{ flexShrink: 0, color: 'var(--accent-cyan)' }} />
+                    {isExpanded && <span style={{ whiteSpace: 'nowrap', fontWeight: 800 }}>Stock Analytics</span>}
+                  </button>
+
+                  <button 
+                    type="button"
                     className={`sidebar-nav-btn ${activeTab === 'inventory' ? 'active' : ''}`} 
                     onClick={() => setActiveTab('inventory')}
                     title="Promotions Inventory"
@@ -1409,18 +1420,6 @@ function AdminPanel({
                     )}
                   </button>
 
-
-                  <button 
-                    type="button"
-                    className={`sidebar-nav-btn ${activeTab === 'reports' ? 'active' : ''}`} 
-                    onClick={() => setActiveTab('reports')}
-                    title="Stock Analytics"
-                    style={{ justifyContent: isExpanded ? 'flex-start' : 'center', padding: isExpanded ? '0.65rem 0.85rem' : '0.65rem 0' }}
-                  >
-                    <BarChart2 size={18} style={{ flexShrink: 0 }} />
-                    {isExpanded && <span style={{ whiteSpace: 'nowrap' }}>Stock Analytics</span>}
-                  </button>
-
                   <button 
                     type="button"
                     className={`sidebar-nav-btn ${activeTab === 'stickers' ? 'active' : ''}`} 
@@ -1447,11 +1446,11 @@ function AdminPanel({
                     type="button"
                     className={`sidebar-nav-btn ${activeTab === 'specials' ? 'active' : ''}`} 
                     onClick={() => setActiveTab('specials')}
-                    title="Weekly Specials"
+                    title="Special Offers"
                     style={{ justifyContent: isExpanded ? 'flex-start' : 'center', padding: isExpanded ? '0.65rem 0.85rem' : '0.65rem 0' }}
                   >
                     <Sparkles size={18} style={{ flexShrink: 0 }} />
-                    {isExpanded && <span style={{ whiteSpace: 'nowrap' }}>Weekly Specials</span>}
+                    {isExpanded && <span style={{ whiteSpace: 'nowrap' }}>Special Offers</span>}
                   </button>
 
                   <button 
@@ -1668,8 +1667,9 @@ function AdminPanel({
                     <th>NRP</th>
 
                     <th>MSP</th>
-                    <th>Weekly Special</th>
+                    <th>Special</th>
                     <th>Actions</th>
+
                   </tr>
                 </thead>
                 <tbody>
@@ -2564,9 +2564,10 @@ function AdminPanel({
                               <option value="rate">Rate ₹</option>
                             </select>
                           ) : (
-                            <span className="badge" style={{ background: 'rgba(255,255,255,0.06)', color: mode === 'rate' ? 'var(--accent-amber)' : 'var(--accent-cyan)', fontSize: '0.7rem' }}>
-                              {mode === 'rate' ? 'Rate ₹' : '% Percentage'}
+                            <span className="badge" style={{ background: mode === 'rate' ? 'rgba(245,158,11,0.1)' : 'rgba(6,182,212,0.1)', color: mode === 'rate' ? 'var(--accent-amber)' : 'var(--accent-cyan)', fontSize: '0.72rem', fontWeight: 700, padding: '0.2rem 0.5rem' }}>
+                              {mode === 'rate' ? 'Rate (₹/unit)' : '% Percentage'}
                             </span>
+
                           )}
                         </td>
                         <td>
@@ -2688,7 +2689,8 @@ function AdminPanel({
                     image: 'https://images.unsplash.com/photo-1584622650111-993a426fbf0a?auto=format&fit=crop&w=600&q=80'
                   };
                   const updated = [...(db.visualCategories || INITIAL_VISUAL_CATEGORIES), newCat];
-                  onUpdateDb({ visualCategories: updated });
+                  onUpdateDb({ ...db, visualCategories: updated });
+                  showToast("New Category Card added successfully.");
                 }}
               >
                 <Plus size={16} /> Add New Category
@@ -2716,7 +2718,7 @@ function AdminPanel({
                       onChange={e => {
                         const updated = [...(db.visualCategories || INITIAL_VISUAL_CATEGORIES)];
                         updated[idx] = { ...updated[idx], name: e.target.value };
-                        onUpdateDb({ visualCategories: updated });
+                        onUpdateDb({ ...db, visualCategories: updated });
                       }}
                     />
                   </div>
@@ -2751,7 +2753,7 @@ function AdminPanel({
                               const b64 = canvas.toDataURL('image/jpeg', 0.82);
                               const updated = [...(db.visualCategories || INITIAL_VISUAL_CATEGORIES)];
                               updated[idx] = { ...updated[idx], image: b64 };
-                              onUpdateDb({ visualCategories: updated });
+                              onUpdateDb({ ...db, visualCategories: updated });
                             };
                             img.src = ev.target.result;
                           };
@@ -2761,24 +2763,24 @@ function AdminPanel({
                     />
                   </div>
 
-                  <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
-                    <button
-                      type="button"
-                      className="btn btn-danger"
-                      style={{ padding: '0.25rem 0.65rem', fontSize: '0.7rem' }}
-                      onClick={() => {
-                        const updated = (db.visualCategories || INITIAL_VISUAL_CATEGORIES).filter((_, i) => i !== idx);
-                        onUpdateDb({ visualCategories: updated });
-                      }}
-                    >
-                      Delete
-                    </button>
-                  </div>
+                  <button
+                    className="btn btn-secondary"
+                    style={{ color: 'var(--accent-rose)', width: '100%', fontSize: '0.75rem', padding: '0.35rem' }}
+                    onClick={() => {
+                      const updated = (db.visualCategories || INITIAL_VISUAL_CATEGORIES).filter((_, i) => i !== idx);
+                      onUpdateDb({ ...db, visualCategories: updated });
+                      showToast("Category Card removed.");
+                    }}
+                  >
+                    Delete Category
+                  </button>
                 </div>
               ))}
             </div>
           </div>
         )}
+
+
 
 
 
