@@ -250,9 +250,9 @@ function MDDashboard({
               <option key={b.name} value={b.name}>{b.name}</option>
             ))}
           </select>
-          <span className="badge badge-success" style={{ padding: '0.4rem 0.65rem', fontSize: '0.7rem' }}>Campaign Live</span>
         </div>
       </div>
+
 
       {/* KPI Cards Grid */}
       <div className="stat-grid">

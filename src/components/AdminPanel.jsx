@@ -1370,16 +1370,20 @@ function AdminPanel({
                     className={`sidebar-nav-btn ${activeTab === 'verify' ? 'active' : ''}`} 
                     onClick={() => setActiveTab('verify')}
                     title="Verify Invoices"
-                    style={{ justifyContent: isExpanded ? 'space-between' : 'center', padding: isExpanded ? '0.65rem 0.85rem' : '0.65rem 0' }}
+                    style={{ justifyContent: isExpanded ? 'space-between' : 'center', padding: isExpanded ? '0.65rem 0.85rem' : '0.65rem 0', position: 'relative' }}
                   >
                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
                       <CheckCircle size={18} style={{ flexShrink: 0 }} />
                       {isExpanded && <span style={{ whiteSpace: 'nowrap' }}>Verify Invoices</span>}
                     </div>
                     {pendingQuotes.length > 0 && (
-                      <span className="badge badge-rose" style={{ padding: '0.1rem 0.35rem', fontSize: '0.65rem', borderRadius: '10px' }}>
-                        {pendingQuotes.length}
-                      </span>
+                      isExpanded ? (
+                        <span className="badge badge-rose" style={{ padding: '0.1rem 0.35rem', fontSize: '0.65rem', borderRadius: '10px' }}>
+                          {pendingQuotes.length}
+                        </span>
+                      ) : (
+                        <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: 'var(--accent-rose)', position: 'absolute', top: '6px', right: '6px', boxShadow: '0 0 6px var(--accent-rose)' }} />
+                      )
                     )}
                   </button>
 
@@ -1388,18 +1392,23 @@ function AdminPanel({
                     className={`sidebar-nav-btn ${activeTab === 'quotes_audit' ? 'active' : ''}`} 
                     onClick={() => setActiveTab('quotes_audit')}
                     title="Quotation Audit"
-                    style={{ justifyContent: isExpanded ? 'space-between' : 'center', padding: isExpanded ? '0.65rem 0.85rem' : '0.65rem 0' }}
+                    style={{ justifyContent: isExpanded ? 'space-between' : 'center', padding: isExpanded ? '0.65rem 0.85rem' : '0.65rem 0', position: 'relative' }}
                   >
                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
                       <FileText size={18} style={{ flexShrink: 0 }} />
                       {isExpanded && <span style={{ whiteSpace: 'nowrap' }}>Quotation Audit</span>}
                     </div>
                     {(quotations || []).filter(q => q && (q.status === 'draft' || q.status === 'pending_verification')).length > 0 && (
-                      <span className="badge badge-cyan" style={{ padding: '0.1rem 0.35rem', fontSize: '0.65rem', borderRadius: '10px' }}>
-                        {(quotations || []).filter(q => q && (q.status === 'draft' || q.status === 'pending_verification')).length}
-                      </span>
+                      isExpanded ? (
+                        <span className="badge badge-cyan" style={{ padding: '0.1rem 0.35rem', fontSize: '0.65rem', borderRadius: '10px' }}>
+                          {(quotations || []).filter(q => q && (q.status === 'draft' || q.status === 'pending_verification')).length}
+                        </span>
+                      ) : (
+                        <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: 'var(--accent-cyan)', position: 'absolute', top: '6px', right: '6px', boxShadow: '0 0 6px var(--accent-cyan)' }} />
+                      )
                     )}
                   </button>
+
 
                   <button 
                     type="button"
@@ -1510,18 +1519,23 @@ function AdminPanel({
                     className={`sidebar-nav-btn ${activeTab === 'system_logs' ? 'active' : ''}`} 
                     onClick={() => setActiveTab('system_logs')}
                     title="System Error & Security Logs"
-                    style={{ justifyContent: isExpanded ? 'space-between' : 'center', padding: isExpanded ? '0.65rem 0.85rem' : '0.65rem 0' }}
+                    style={{ justifyContent: isExpanded ? 'space-between' : 'center', padding: isExpanded ? '0.65rem 0.85rem' : '0.65rem 0', position: 'relative' }}
                   >
                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
                       <ShieldAlert size={18} color="var(--accent-rose)" style={{ flexShrink: 0 }} />
                       {isExpanded && <span style={{ whiteSpace: 'nowrap' }}>System Error Logs</span>}
                     </div>
                     {((db.systemLogs || []).filter(l => l.level === 'CRITICAL' || l.level === 'SECURITY').length) > 0 && (
-                      <span className="badge badge-rose" style={{ fontSize: '0.6rem', padding: '0.1rem 0.35rem', fontWeight: 800 }}>
-                        {(db.systemLogs || []).filter(l => l.level === 'CRITICAL' || l.level === 'SECURITY').length}
-                      </span>
+                      isExpanded ? (
+                        <span className="badge badge-rose" style={{ fontSize: '0.6rem', padding: '0.1rem 0.35rem', fontWeight: 800 }}>
+                          {(db.systemLogs || []).filter(l => l.level === 'CRITICAL' || l.level === 'SECURITY').length}
+                        </span>
+                      ) : (
+                        <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: 'var(--accent-rose)', position: 'absolute', top: '6px', right: '6px', boxShadow: '0 0 6px var(--accent-rose)' }} />
+                      )
                     )}
                   </button>
+
                 </div>
               )}
 
