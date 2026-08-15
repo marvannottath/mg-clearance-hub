@@ -541,11 +541,14 @@ function ExecutiveWorkspace({ products = [], activeExecutive = {}, db = {}, onUp
     const numVal = Number(newPrice);
     setCart(prev => prev.map(item => {
       if (item.id === productId) {
-        return { ...item, quotedPrice: isNaN(numVal) ? getProductFinalPrice(item) : numVal };
+        const msp = getProductFinalPrice(item);
+        const safePrice = isNaN(numVal) || numVal === 0 ? msp : Math.max(msp, numVal);
+        return { ...item, quotedPrice: safePrice };
       }
       return item;
     }));
   };
+
 
   const cartTotalPaid = cart.reduce((sum, item) => sum + (getCartItemUnitPrice(item) * item.qty), 0);
   const cartTotalMrp = cart.reduce((sum, item) => sum + (item.mrp * item.qty), 0);
@@ -1418,7 +1421,8 @@ function ExecutiveWorkspace({ products = [], activeExecutive = {}, db = {}, onUp
                       addProductToCartDirect(p);
                     }}
                   >
-                    {cartItem ? `✓ Added (${cartItem.qty} in Quote)` : '+ Select & Add to Quote'}
+                    {cartItem ? `✓ Added (${cartItem.qty} in Quote)` : '+ Add to Quote'}
+
                   </button>
                 </div>
               );
@@ -1733,7 +1737,8 @@ function ExecutiveWorkspace({ products = [], activeExecutive = {}, db = {}, onUp
                             }
                             addProductToCartDirect(p);
                           }}>
-                          {p.stock === 0 ? 'Out of Stock' : '+ Select & Add to Quote'}
+                          {p.stock === 0 ? 'Out of Stock' : '+ Add to Quote'}
+
                         </button>
                       )}
                     </div>
@@ -3210,11 +3215,21 @@ function ExecutiveWorkspace({ products = [], activeExecutive = {}, db = {}, onUp
                                     <button 
                                       type="button" 
                                       className="btn btn-cyan" 
-                                      style={{ padding: '0.4rem 0.95rem', fontSize: '0.75rem', fontWeight: 700 }}
+                                      style={{ 
+                                        width: '36px', 
+                                        height: '36px', 
+                                        borderRadius: '10px', 
+                                        padding: 0, 
+                                        display: 'inline-flex', 
+                                        alignItems: 'center', 
+                                        justifyContent: 'center',
+                                        boxShadow: '0 2px 8px rgba(6,182,212,0.3)'
+                                      }}
                                       disabled={isOutOfStock}
                                       onClick={() => addProductToCartDirect(p)}
+                                      title="Add to Quote"
                                     >
-                                      + Add to Quote
+                                      <Plus size={18} />
                                     </button>
                                   )}
                                 </td>
@@ -3496,10 +3511,17 @@ function ExecutiveWorkspace({ products = [], activeExecutive = {}, db = {}, onUp
                               className="form-input"
                               value={item.quotedPrice !== undefined ? item.quotedPrice : getProductFinalPrice(item)}
                               onChange={(e) => updateCartItemPrice(item.id, e.target.value)}
+                              onBlur={(e) => {
+                                const val = Number(e.target.value);
+                                if (isNaN(val) || val < msp) {
+                                  updateCartItemPrice(item.id, msp);
+                                }
+                              }}
                               style={{ width: '85px', height: '28px', padding: '0.2rem 0.4rem', fontSize: '0.82rem', fontWeight: 800, color: 'var(--accent-emerald)', textAlign: 'right' }}
                               min={msp}
                               max={item.mrp}
                             />
+
                           </div>
 
 
